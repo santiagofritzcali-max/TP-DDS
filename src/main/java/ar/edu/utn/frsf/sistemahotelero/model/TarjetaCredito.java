@@ -1,4 +1,4 @@
-package ar.edu.utn.frsf.sistemahotelero.modelo;
+package ar.edu.utn.frsf.sistemahotelero.model;
 
 public class TarjetaCredito extends Tarjeta {
     private Integer cuotas;

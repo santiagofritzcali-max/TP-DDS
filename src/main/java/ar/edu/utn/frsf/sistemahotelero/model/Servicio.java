@@ -1,4 +1,4 @@
-package ar.edu.utn.frsf.sistemahotelero.modelo;
+package ar.edu.utn.frsf.sistemahotelero.model;
 
 import ar.edu.utn.frsf.sistemahotelero.enums.Consumos;
 import java.util.Date;

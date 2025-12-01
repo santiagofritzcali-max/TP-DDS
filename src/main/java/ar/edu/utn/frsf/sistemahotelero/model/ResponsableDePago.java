@@ -1,4 +1,4 @@
-package ar.edu.utn.frsf.sistemahotelero.modelo;
+package ar.edu.utn.frsf.sistemahotelero.model;
 
 public abstract class ResponsableDePago {
     private String cuit;
