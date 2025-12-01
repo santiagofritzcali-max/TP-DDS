@@ -7,11 +7,7 @@ import lombok.*;
 @Data  
 @NoArgsConstructor
 @AllArgsConstructor
-public class DireccionDTO {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class DireccionRequest {
 
     private String nroDoc;
 

@@ -10,7 +10,7 @@ import java.time.LocalDate;
 @Data  
 @NoArgsConstructor  
 @AllArgsConstructor 
-public class HuespedDTO {
+public class HuespedResponse {
 
     @Size(max = 50)
     private String apellido;
@@ -43,6 +43,6 @@ public class HuespedDTO {
 
     private PosicionIVA posicionIVA;
 
-    private DireccionDTO direccion;  
+    private DireccionResponse direccion;  
 
 }
