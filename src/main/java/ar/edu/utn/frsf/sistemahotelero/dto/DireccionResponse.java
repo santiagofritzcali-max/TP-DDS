@@ -1,6 +1,7 @@
 package ar.edu.utn.frsf.sistemahotelero.dto;
 
 import ar.edu.utn.frsf.sistemahotelero.enums.TipoDocumento;
+import ar.edu.utn.frsf.sistemahotelero.model.Direccion;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,6 +25,16 @@ public class DireccionResponse {
     private String piso;
     private String codigoPostal;
     private String localidad;
+    private String ciudad;
     private String provincia;
     private String pais;
+    
+        public DireccionResponse(Direccion direccion) {
+        this.id = direccion.getId();  
+        this.calle = direccion.getCalle();
+        this.numero = direccion.getNumero();
+        this.ciudad = direccion.getCiudad();
+        this.provincia = direccion.getProvincia();
+        this.codigoPostal = direccion.getCodigoPostal();
+    }
 }

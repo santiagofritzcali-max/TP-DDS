@@ -2,6 +2,7 @@ package ar.edu.utn.frsf.sistemahotelero.dto;
 
 import ar.edu.utn.frsf.sistemahotelero.enums.PosicionIVA;
 import ar.edu.utn.frsf.sistemahotelero.enums.TipoDocumento;
+import ar.edu.utn.frsf.sistemahotelero.model.Huesped;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -43,6 +44,22 @@ public class HuespedResponse {
 
     private PosicionIVA posicionIVA;
 
-    private DireccionResponse direccion;  
+    private DireccionResponse direccion;
+    
+     // Constructor que acepta la entidad Huesped
+    public HuespedResponse(Huesped huesped) {
+        this.nroDoc = huesped.getNroDoc();
+        this.tipoDoc = huesped.getTipoDoc();
+        this.apellido = huesped.getApellido();
+        this.nombre = huesped.getNombre();
+        this.fechaNacimiento = huesped.getFechaNacimiento();
+        this.telefono = huesped.getTelefono();
+        this.email = huesped.getEmail();
+        this.ocupacion = huesped.getOcupacion();
+        this.nacionalidad = huesped.getNacionalidad();
+        this.cuit = huesped.getCuit();
+        this.posicionIVA = huesped.getPosicionIVA();
+        this.direccion = new DireccionResponse(huesped.getDireccion());  // Suponiendo que DireccionResponse tiene el constructor correspondiente
+    }
 
 }

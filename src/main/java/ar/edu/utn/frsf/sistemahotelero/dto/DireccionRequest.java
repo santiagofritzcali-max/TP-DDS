@@ -20,6 +20,7 @@ public class DireccionRequest {
     private String piso;
     private String codigoPostal;
     private String localidad;
+    private String ciudad;
     private String provincia;
     private String pais;
 }
