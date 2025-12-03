@@ -26,11 +26,11 @@ public class Huesped {
     private TipoDocumento tipoDoc;  // Segundo campo de la clave primaria
 
     @NotBlank
-    @Size(max = 50)
+    @Size(max = 100)
     private String apellido;
 
     @NotBlank
-    @Size(max = 50)
+    @Size(max = 100)
     private String nombre;
 
     @Past
@@ -46,7 +46,7 @@ public class Huesped {
     @Size(max = 100)
     private String ocupacion;
 
-    @Size(max = 50)
+    @Size(max = 100)
     private String nacionalidad;
 
     @Size(max = 20)

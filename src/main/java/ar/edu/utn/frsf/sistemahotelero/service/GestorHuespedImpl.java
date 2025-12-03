@@ -64,9 +64,11 @@ public class GestorHuespedImpl implements GestorHuesped {
                 huespedRequest.getNroDoc(),
                 huespedRequest.getTipoDoc()
         );
-
+        
+        
+        boolean yaExiste = huespedDAO.existsById(id);
         // 2) Verificar si ya existe un huésped con ese tipo + nro de documento
-        if (huespedDAO.existsById(id)) {
+        if (yaExiste && (huespedRequest.getAceptarDuplicado() == null || !huespedRequest.getAceptarDuplicado())) {
             throw new HuespedDuplicadoException(
                     huespedRequest.getTipoDoc(),
                     huespedRequest.getNroDoc()

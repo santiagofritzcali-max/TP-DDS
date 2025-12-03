@@ -13,10 +13,10 @@ import java.time.LocalDate;
 @AllArgsConstructor 
 public class HuespedResponse {
 
-    @Size(max = 50)
+    @Size(max = 100)
     private String apellido;
 
-    @Size(max = 50)
+    @Size(max = 100)
     private String nombre;
 
     private TipoDocumento tipoDoc;
@@ -30,13 +30,13 @@ public class HuespedResponse {
     private String telefono;
 
     @Email
-    @Size(max = 50)
+    @Size(max = 100)
     private String email;
 
     @Size(max = 100)
     private String ocupacion;
 
-    @Size(max = 50)
+    @Size(max = 100)
     private String nacionalidad;
 
     @Size(max = 20)

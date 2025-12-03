@@ -3,6 +3,7 @@ package ar.edu.utn.frsf.sistemahotelero.controller;
 import ar.edu.utn.frsf.sistemahotelero.dto.HuespedResponse;
 import ar.edu.utn.frsf.sistemahotelero.dto.HuespedRequest;
 import ar.edu.utn.frsf.sistemahotelero.service.GestorHuesped;
+import jakarta.validation.Valid;
 import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +39,7 @@ public class HuespedController {
 
     // Endpoint para dar de alta un nuevo huesped
     @PostMapping
-    public ResponseEntity<HuespedResponse> darAltaHuesped(@RequestBody HuespedRequest huespedRequest) {
+    public ResponseEntity<HuespedResponse> darAltaHuesped(@Valid @RequestBody HuespedRequest huespedRequest) {
         HuespedResponse huespedResponse = gestorHuesped.darAltaHuesped(huespedRequest);
         return ResponseEntity.status(201).body(huespedResponse);  // Retornamos el nuevo huesped con un estado 201
     }
