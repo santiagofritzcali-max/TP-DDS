@@ -9,7 +9,7 @@ import lombok.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "huesped")
+@Table(name = "G17_huesped")
 @IdClass(HuespedId.class)  // Definimos HuespedId como la clave primaria compuesta
 @Data
 @NoArgsConstructor
@@ -56,7 +56,7 @@ public class Huesped {
     private PosicionIVA posicionIVA;
 
     @OneToOne(cascade = CascadeType.ALL, optional = true)
-    @JoinColumn(name = "direccion_id")
+    @JoinColumn(name = "direccion_id", referencedColumnName = "id")
     private Direccion direccion;
 
 }

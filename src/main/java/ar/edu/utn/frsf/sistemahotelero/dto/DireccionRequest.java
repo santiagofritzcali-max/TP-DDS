@@ -1,18 +1,11 @@
 package ar.edu.utn.frsf.sistemahotelero.dto;
 
-import ar.edu.utn.frsf.sistemahotelero.enums.TipoDocumento;
-import jakarta.persistence.*;
 import lombok.*;
 
 @Data  
 @NoArgsConstructor
 @AllArgsConstructor
 public class DireccionRequest {
-
-    private String nroDoc;
-
-    @Enumerated(EnumType.STRING) 
-    private TipoDocumento tipoDoc;
 
     private String calle;
     private String numero;

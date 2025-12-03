@@ -1,6 +1,5 @@
 package ar.edu.utn.frsf.sistemahotelero.dto;
 
-import ar.edu.utn.frsf.sistemahotelero.enums.TipoDocumento;
 import ar.edu.utn.frsf.sistemahotelero.model.Direccion;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,11 +12,6 @@ public class DireccionResponse {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private String nroDoc;
-
-    @Enumerated(EnumType.STRING) 
-    private TipoDocumento tipoDoc;
 
     private String calle;
     private String numero;

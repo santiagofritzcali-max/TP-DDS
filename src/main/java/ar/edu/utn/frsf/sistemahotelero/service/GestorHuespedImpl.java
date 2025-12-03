@@ -2,9 +2,11 @@ package ar.edu.utn.frsf.sistemahotelero.service;
 
 import ar.edu.utn.frsf.sistemahotelero.dao.HuespedDAO;
 import ar.edu.utn.frsf.sistemahotelero.dto.*;
+import ar.edu.utn.frsf.sistemahotelero.excepciones.HuespedDuplicadoException;
 import ar.edu.utn.frsf.sistemahotelero.model.Direccion;
 
 import ar.edu.utn.frsf.sistemahotelero.model.Huesped;
+import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.HuespedId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -56,7 +58,22 @@ public class GestorHuespedImpl implements GestorHuesped {
 
     @Override
     public HuespedResponse darAltaHuesped(HuespedRequest huespedRequest) {
-        // Convertir el HuespedRequest a la entidad Huesped
+
+        // 1) Construir la PK compuesta a partir del request
+        HuespedId id = new HuespedId(
+                huespedRequest.getNroDoc(),
+                huespedRequest.getTipoDoc()
+        );
+
+        // 2) Verificar si ya existe un huésped con ese tipo + nro de documento
+        if (huespedDAO.existsById(id)) {
+            throw new HuespedDuplicadoException(
+                    huespedRequest.getTipoDoc(),
+                    huespedRequest.getNroDoc()
+            );
+        }
+
+        // 3) Convertir el HuespedRequest a la entidad Huesped
         Huesped huesped = new Huesped(
                 huespedRequest.getNroDoc(),
                 huespedRequest.getTipoDoc(),
@@ -69,15 +86,11 @@ public class GestorHuespedImpl implements GestorHuesped {
                 huespedRequest.getNacionalidad(),
                 huespedRequest.getCuit(),
                 huespedRequest.getPosicionIVA(),
-                // Convertir la dirección (asumimos que es un campo en HuespedRequest)
                 new Direccion(huespedRequest.getDireccion())
         );
 
-        // Guardar el nuevo huesped en la base de datos
+        // 4) Guardar y devolver response
         Huesped huespedGuardado = huespedDAO.save(huesped);
-
-        // Convertir la entidad guardada en un HuespedResponse y devolverlo
         return new HuespedResponse(huespedGuardado);
     }
-
 }

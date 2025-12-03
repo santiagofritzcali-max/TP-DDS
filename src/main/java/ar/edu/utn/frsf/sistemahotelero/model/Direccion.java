@@ -6,7 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "direccion")
+@Table(name = "G17_direccion")
 @Data  
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,11 +15,6 @@ public class Direccion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    private String nroDoc;
-
-    @Enumerated(EnumType.STRING) 
-    private TipoDocumento tipoDoc;
 
     private String calle;
     private String numero;
