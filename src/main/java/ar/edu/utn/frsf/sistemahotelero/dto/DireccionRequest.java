@@ -1,5 +1,6 @@
 package ar.edu.utn.frsf.sistemahotelero.dto;
 
+import ar.edu.utn.frsf.sistemahotelero.validaciones.ValidPiso;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -25,10 +26,7 @@ public class DireccionRequest {
     
     private String departamento;
     
-    @Pattern(
-        regexp = "^[0-9]+$",
-        message = "El piso solo puede contener números"
-    )
+    @ValidPiso
     private String piso;
     
     @NotBlank(message = "El código postal es obligatorio")

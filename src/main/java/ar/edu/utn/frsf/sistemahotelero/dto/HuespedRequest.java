@@ -2,6 +2,8 @@ package ar.edu.utn.frsf.sistemahotelero.dto;
 
 import ar.edu.utn.frsf.sistemahotelero.enums.PosicionIVA;
 import ar.edu.utn.frsf.sistemahotelero.enums.TipoDocumento;
+import ar.edu.utn.frsf.sistemahotelero.validaciones.ValidCuit;
+import ar.edu.utn.frsf.sistemahotelero.validaciones.ValidEmail;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -47,7 +49,7 @@ public class HuespedRequest {
     private String telefono;
 
     @Size(max = 100)
-    @Email(message = "El email no tiene un formato válido")
+    @ValidEmail(message = "El email no tiene un formato válido")
     private String email;
 
     @Size(max = 100)
@@ -66,7 +68,7 @@ public class HuespedRequest {
     )
     private String nacionalidad;
 
-    @Size(max = 20)
+    @ValidCuit(message = "El CUIT debe tener el formato XX-XXXXXXXX-X")
     private String cuit;
 
     @NotNull(message = "La posición frente al IVA es obligatoria")

@@ -45,6 +45,7 @@ public class HuespedResponse {
     private PosicionIVA posicionIVA;
 
     private DireccionResponse direccion;
+   
     
      // Constructor que acepta la entidad Huesped
     public HuespedResponse(Huesped huesped) {
@@ -61,5 +62,6 @@ public class HuespedResponse {
         this.posicionIVA = huesped.getPosicionIVA();
         this.direccion = new DireccionResponse(huesped.getDireccion());  // Suponiendo que DireccionResponse tiene el constructor correspondiente
     }
+    
 
 }

@@ -56,43 +56,46 @@ public class GestorHuespedImpl implements GestorHuesped {
         );
     }
 
-    @Override
-    public HuespedResponse darAltaHuesped(HuespedRequest huespedRequest) {
+ @Override
+ public HuespedResponse darAltaHuesped(HuespedRequest huespedRequest) {
 
-        // 1) Construir la PK compuesta a partir del request
-        HuespedId id = new HuespedId(
-                huespedRequest.getNroDoc(),
-                huespedRequest.getTipoDoc()
-        );
-        
-        
-        boolean yaExiste = huespedDAO.existsById(id);
-        // 2) Verificar si ya existe un huésped con ese tipo + nro de documento
-        if (yaExiste && (huespedRequest.getAceptarDuplicado() == null || !huespedRequest.getAceptarDuplicado())) {
-            throw new HuespedDuplicadoException(
-                    huespedRequest.getTipoDoc(),
-                    huespedRequest.getNroDoc()
-            );
-        }
+    // 1) Construir la PK compuesta
+    HuespedId id = new HuespedId(
+            huespedRequest.getNroDoc(),
+            huespedRequest.getTipoDoc()
+    );
 
-        // 3) Convertir el HuespedRequest a la entidad Huesped
-        Huesped huesped = new Huesped(
-                huespedRequest.getNroDoc(),
+    boolean yaExiste = huespedDAO.existsById(id);
+
+    // 2) Si ya existe y NO se autorizó a sobrescribir, lanzo excepción 409
+    if (yaExiste && (huespedRequest.getAceptarDuplicado() == null
+            || !huespedRequest.getAceptarDuplicado())) {
+        throw new HuespedDuplicadoException(
                 huespedRequest.getTipoDoc(),
-                huespedRequest.getApellido(),
-                huespedRequest.getNombre(),
-                huespedRequest.getFechaNacimiento(),
-                huespedRequest.getTelefono(),
-                huespedRequest.getEmail(),
-                huespedRequest.getOcupacion(),
-                huespedRequest.getNacionalidad(),
-                huespedRequest.getCuit(),
-                huespedRequest.getPosicionIVA(),
-                new Direccion(huespedRequest.getDireccion())
+                huespedRequest.getNroDoc()
         );
-
-        // 4) Guardar y devolver response
-        Huesped huespedGuardado = huespedDAO.save(huesped);
-        return new HuespedResponse(huespedGuardado);
     }
+
+    // 3) Mapear DTO -> entidad (nuevo estado del huésped)
+    Huesped huesped = new Huesped(
+            huespedRequest.getNroDoc(),
+            huespedRequest.getTipoDoc(),
+            huespedRequest.getApellido(),
+            huespedRequest.getNombre(),
+            huespedRequest.getFechaNacimiento(),
+            huespedRequest.getTelefono(),
+            huespedRequest.getEmail(),
+            huespedRequest.getOcupacion(),
+            huespedRequest.getNacionalidad(),
+            huespedRequest.getCuit(),
+            huespedRequest.getPosicionIVA(),
+            new Direccion(huespedRequest.getDireccion())
+    );
+
+    // 4) Guardar
+    
+    Huesped huespedGuardado = huespedDAO.save(huesped);
+
+    return new HuespedResponse(huespedGuardado);
+ }
 }
