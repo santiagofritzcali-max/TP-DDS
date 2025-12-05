@@ -1,0 +1,1 @@
+public enum EstadoCelda { DISPONIBLE, RESERVADA, OCUPADA, NO_DISPONIBLE }
