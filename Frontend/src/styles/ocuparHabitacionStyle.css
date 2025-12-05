@@ -1,0 +1,221 @@
+/* CONTENEDOR GENERAL, IGUAL QUE LAS OTRAS PÁGINAS */
+.page-ocupar {
+  max-width: 1100px;
+  margin: 30px auto 40px;
+  padding: 32px 40px 40px;
+  background-color: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* TÍTULO “Ocupar Habitación” */
+.page-title {
+  margin: 0 0 32px;
+  font-size: 26px;
+  font-weight: 500;
+}
+
+/* INFO HABITACIÓN (SI LA USÁS) */
+.info-habitacion {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.info-label {
+  font-weight: 600;
+  color: #555;
+}
+
+.info-value {
+  color: #333;
+}
+
+/* LAYOUT DOS COLUMNAS CON LÍNEA VERTICAL EN EL MEDIO */
+.layout-ocupar {
+  display: grid;
+  grid-template-columns: 1.2fr 1.8fr;
+  column-gap: 40px;
+}
+
+/* PANEL IZQUIERDO Y DERECHO */
+.panel-left {
+  padding-right: 40px;
+  border-right: 1px solid #e0e0e0;
+}
+
+.panel-right {
+  padding-left: 40px;
+}
+
+/* TÍTULOS “Buscar Huésped” / “Resultados de búsqueda” */
+.panel-title {
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* FORMULARIO DE BÚSQUEDA */
+.form-busqueda {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.form-row label {
+  color: #555;
+}
+
+.form-row input,
+.form-row select {
+  margin-top: 4px;
+  padding: 8px 9px;
+  border-radius: 2px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  outline: none;
+  background-color: #fff;
+}
+
+/* FILA TIPO DOC / NRO DOC */
+.form-row-inline {
+  flex-direction: row;
+  gap: 16px;
+}
+
+.form-row-inline label {
+  flex: 1;
+}
+
+/* BOTONES IZQUIERDA: CANCELAR / ACEPTAR */
+.form-actions-left {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+/* TABLA RESULTADOS */
+.tabla-wrapper {
+  border: 1px solid #ddd;
+  margin-top: 8px;
+  overflow-x: auto;
+}
+
+.tabla-huespedes {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tabla-huespedes thead {
+  background-color: #f2f2f2;
+}
+
+.tabla-huespedes th,
+.tabla-huespedes td {
+  border: 1px solid #ddd;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.tabla-empty {
+  text-align: center;
+  padding: 10px 0;
+  color: #777;
+}
+
+/* PIE DERECHO: CHECK + BOTÓN ACEPTAR */
+.panel-footer-right {
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.checkbox-inline {
+  font-size: 13px;
+  color: #555;
+}
+
+.checkbox-inline input {
+  margin-right: 6px;
+}
+
+/* PIE INFERIOR: SEGIR CARGANDO / CARGAR OTRA HABITACIÓN / SALIR */
+.panel-footer-bottom {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+}
+
+.panel-footer-bottom-left {
+  display: flex;
+  gap: 40px;
+}
+
+/* BOTONES GENERALES */
+.btn-primary {
+  min-width: 120px;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 2px;
+  border: none;
+  background-color: #333;
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Botones grises tipo “Cancelar” (arriba izq) */
+.btn-secondary {
+  min-width: 120px;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 2px;
+  border: none;
+  background-color: #e0e0e0;
+  color: #555;
+  cursor: pointer;
+}
+
+/* En la fila de abajo queremos un gris más clarito, tipo deshabilitado */
+.panel-footer-bottom .btn-secondary {
+  color: #555;
+  background-color: #e0e0e0;
+  color: #555;
+  cursor: pointer;
+}
+
+/* MENSAJES */
+.alert {
+  margin-top: 24px;
+  padding: 10px 14px;
+  border-radius: 2px;
+  font-size: 13px;
+}
+
+.alert-error {
+  background-color: #fdecea;
+  border: 1px solid #f5c2c0;
+  color: #b02a37;
+}
+
+.alert-success {
+  background-color: #e7f6e7;
+  border: 1px solid #a3d7a3;
+  color: #256029;
+}

@@ -1,0 +1,66 @@
+.topBar {
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 10px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Izquierda */
+.topBarLeft {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Derecha */
+.topBarRight {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.topBarMenuLink {
+  text-decoration: none;
+  color: #444;
+  margin: 0 4px;
+  font-size: 14px;
+  cursor: pointer;
+  margin: 1.5rem;
+}
+
+.topBarMenuLink:hover {
+  text-decoration: underline;
+}
+
+.topBarMenuLink.disabled {
+  cursor: default;
+}
+
+.topBarMenuLink.disabled:hover {
+  text-decoration: none;
+}
+
+.topBarSeparator {
+  color: #ccc;
+  margin: 0 2px;
+}
+
+/* Botón conserje */
+.btnSmallDark {
+  border-radius: 20px;
+  border: none;
+  padding: 6px 18px;
+  background-color: #333;
+  color: #fff;
+  cursor: default;
+  font-size: 13px;
+}
+
+/* Logo */
+.logoImage {
+  height: 90px;
+  width: auto;
+}
