@@ -5,7 +5,7 @@ import java.time.LocalDate;
 
 public class ReservaResponse {
 
-    private Long idReserva;
+    private String idReserva;
     private String numeroHabitacion;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
@@ -14,8 +14,8 @@ public class ReservaResponse {
     private String telefono;
 
     // Getters y setters
-    public Long getIdReserva() { return idReserva; }
-    public void setIdReserva(Long idReserva) { this.idReserva = idReserva; }
+    public String getIdReserva() { return idReserva; }
+    public void setIdReserva(String idReserva) { this.idReserva = idReserva; }
 
     public String getNumeroHabitacion() { return numeroHabitacion; }
     public void setNumeroHabitacion(String numeroHabitacion) { this.numeroHabitacion = numeroHabitacion; }
