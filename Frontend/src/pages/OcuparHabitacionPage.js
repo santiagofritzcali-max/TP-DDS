@@ -170,7 +170,7 @@ const OcuparHabitacionPage = () => {
           <form className="form-busqueda" onSubmit={handleBuscar}>
             <div className="form-row">
               <label>
-                Nombre
+                Nombre <br/>
                 <input
                   type="text"
                   value={filtroNombre}
@@ -181,7 +181,7 @@ const OcuparHabitacionPage = () => {
 
             <div className="form-row">
               <label>
-                Apellido
+                Apellido<br/>
                 <input
                   type="text"
                   value={filtroApellido}
@@ -238,7 +238,7 @@ const OcuparHabitacionPage = () => {
 
           <div className="tabla-wrapper">
             <table className="tabla-huespedes">
-              <thead>
+              <thead className="tabla-encabezado">
                 <tr>
                   <th>Apellido</th>
                   <th>Nombre</th>
