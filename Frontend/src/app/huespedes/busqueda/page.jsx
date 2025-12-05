@@ -183,10 +183,21 @@ const styles = {
     justifyContent: 'flex-end',
     gap: '16px',
   },
+  searchActions: {
+    marginTop: '12px',
+    display: 'flex',
+    gap: '12px',
+  },
   btnPrimary: {
     minWidth: '120px',
     padding: '10px 18px',
     fontSize: '14px',
+    height: '42px',
+    boxSizing: 'border-box',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    lineHeight: 1.2,
     borderRadius: '2px',
     border: 'none',
     backgroundColor: '#333',
@@ -201,11 +212,18 @@ const styles = {
     minWidth: '120px',
     padding: '10px 18px',
     fontSize: '14px',
+    height: '42px',
+    boxSizing: 'border-box',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    lineHeight: 1.2,
     borderRadius: '2px',
     border: 'none',
     backgroundColor: '#e0e0e0',
     color: '#444',
     cursor: 'pointer',
+    marginTop: '18px',
   },
   logoImage: {
     height: 90,
@@ -269,8 +287,8 @@ const styles = {
   listActions: {
     display: 'flex',
     justifyContent: 'flex-end',
-    marginTop: 0,
-    alignItems: 'flex-start',
+    marginTop: '12px',
+    alignItems: 'center',
     alignSelf: 'stretch',
   },
 };
@@ -356,6 +374,13 @@ const BusquedaHuespedPage = () => {
         setLoadingMore(false);
       }
     }
+  };
+
+  const handleCancelar = () => {
+    setForm(initialSearchForm);
+    setHuespedes([]);
+    setHuespedSeleccionado(null);
+    setMensaje('');
   };
 
   const handleAceptarSeleccion = () => {
@@ -453,14 +478,24 @@ const BusquedaHuespedPage = () => {
                 </div>
               </section>
 
-              <button
-                type="button"
-                style={styles.btnPrimary}
-                onClick={handleBuscar}
-                disabled={cargando}
-              >
-                {cargando ? 'Buscando...' : 'Buscar'}
-              </button>
+              <div style={styles.searchActions}>
+                <button
+                  type="button"
+                  style={styles.btnSecondary}
+                  onClick={handleCancelar}
+                  disabled={cargando}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  style={styles.btnPrimary}
+                  onClick={handleBuscar}
+                  disabled={cargando}
+                >
+                  {cargando ? 'Buscando...' : 'Buscar'}
+                </button>
+              </div>
             </div>
 
             <div style={styles.resultsColumn}>
