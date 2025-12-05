@@ -1,52 +1,36 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
-import java.util.Date;
+import ar.edu.utn.frsf.sistemahotelero.enums.EstadoHabitacion;
+import jakarta.persistence.*;
+import java.time.LocalDate;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Entity
+@Table(name = "estadia")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Estadia {
-    private Date fechaIngreso;
-    private Date fechaEgreso;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "fecha_ingreso", nullable = false)
+    private LocalDate fechaIngreso;
+
+    @Column(name = "fecha_egreso", nullable = false)
+    private LocalDate fechaEgreso;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "habitacion_id", nullable = false)
     private Habitacion habitacion;
-    private Factura factura;
+
+    @OneToOne(optional = true)
+    @JoinColumn(name = "reserva_id")
     private Reserva reserva;
-    
-    public Date getFechaIngreso() {
-        return fechaIngreso;
-    }
 
-    public void setFechaIngreso(Date fechaIngreso) {
-        this.fechaIngreso = fechaIngreso;
-    }
-
-    public Date getFechaEgreso() {
-        return fechaEgreso;
-    }
-
-    public void setFechaEgreso(Date fechaEgreso) {
-        this.fechaEgreso = fechaEgreso;
-    }
-
-    public Habitacion getHabitacion() {
-        return habitacion;
-    }
-
-    public void setHabitacion(Habitacion habitacion) {
-        this.habitacion = habitacion;
-    }
-
-    public Factura getFactura() {
-        return factura;
-    }
-
-    public void setFactura(Factura factura) {
-        this.factura = factura;
-    }
-
-    public Reserva getReserva() {
-        return reserva;
-    }
-
-    public void setReserva(Reserva reserva) {
-        this.reserva = reserva;
-    }
-
+    //DSP HAGO LO DE ASOCIAR LOS HUESPEDES
 }

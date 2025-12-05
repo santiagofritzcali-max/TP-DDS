@@ -1,71 +1,41 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
-import java.util.Date;
+import jakarta.persistence.*;
+import java.time.LocalDate;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Entity
+@Table(name = "reserva")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Reserva {
-    private Date fechaInicio;
-    private Date fechaFin;
-    private Date fechReserva;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "fecha_inicio", nullable = false)
+    private LocalDate fechaInicio;
+
+    @Column(name = "fecha_fin", nullable = false)
+    private LocalDate fechaFin;
+
+    @Column(name = "fecha_reserva", nullable = false)
+    private LocalDate fechaReserva;
+
+    @Column(name = "nombre", nullable = false, length = 100)
     private String nombre;
+
+    @Column(name = "apellido", nullable = false, length = 100)
     private String apellido;
+
+    @Column(name = "telefono", length = 30)
     private String telefono;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "habitacion_id", nullable = false)
     private Habitacion habitacion;
-
-    public Date getFechaInicio() {
-        return fechaInicio;
-    }
-
-    public void setFechaInicio(Date fechaInicio) {
-        this.fechaInicio = fechaInicio;
-    }
-
-    public Date getFechaFin() {
-        return fechaFin;
-    }
-
-    public void setFechaFin(Date fechaFin) {
-        this.fechaFin = fechaFin;
-    }
-
-    public Date getFechReserva() {
-        return fechReserva;
-    }
-
-    public void setFechReserva(Date fechReserva) {
-        this.fechReserva = fechReserva;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public String getApellido() {
-        return apellido;
-    }
-
-    public void setApellido(String apellido) {
-        this.apellido = apellido;
-    }
-
-    public String getTelefono() {
-        return telefono;
-    }
-
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
-    }
-
-    public Habitacion getHabitacion() {
-        return habitacion;
-    }
-
-    public void setHabitacion(Habitacion habitacion) {
-        this.habitacion = habitacion;
-    }
-    
-    
 }
