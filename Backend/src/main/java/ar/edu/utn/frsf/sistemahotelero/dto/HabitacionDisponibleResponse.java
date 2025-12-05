@@ -1,33 +1,20 @@
-package ar.edu.utn.frsf.sistemahotelero.model;
-
+package ar.edu.utn.frsf.sistemahotelero.dto;
 import ar.edu.utn.frsf.sistemahotelero.enums.EstadoHabitacion;
 import ar.edu.utn.frsf.sistemahotelero.enums.tipoCama;
-import jakarta.persistence.*;
 
+//DTO de una habitación disponible para mostrar en la grilla de la UI
 
-@Entity
-@Table(name = "G17_Habitacion")
-@Inheritance(strategy = InheritanceType.JOINED)
-public abstract class Habitacion {
+public class HabitacionDisponibleResponse {
 
-    @Id
-    private String numero;          
-
+    private String numero;
     private String piso;
-
-    @Enumerated(EnumType.STRING)
     private EstadoHabitacion estado;
-
     private Double tarifaBase;
     private String descripcion;
-
     private Integer cantidadCamas;
-
-    @Enumerated(EnumType.STRING)
     private tipoCama tipoDeCama;
 
     // Getters y setters
-
     public String getNumero() { return numero; }
     public void setNumero(String numero) { this.numero = numero; }
 

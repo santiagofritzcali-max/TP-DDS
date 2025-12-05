@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OcuparHabitacionResponse {
 
-    private Long estadiaId;
-    private Integer numeroHabitacion;
+    private String estadiaId;
+    private String numeroHabitacion;
     private LocalDate fechaIngreso;
     private LocalDate fechaEgreso;
     private String mensaje;

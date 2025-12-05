@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "estadia")
+@Table(name = "G17_estadia")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -16,7 +16,7 @@ public class Estadia {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private String id;
 
     @Column(name = "fecha_ingreso", nullable = false)
     private LocalDate fechaIngreso;

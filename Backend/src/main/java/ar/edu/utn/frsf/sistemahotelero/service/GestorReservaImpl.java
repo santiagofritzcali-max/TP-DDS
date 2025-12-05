@@ -14,7 +14,6 @@ import ar.edu.utn.frsf.sistemahotelero.excepciones.ReglaNegocioException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.util.*;
 
@@ -33,14 +32,12 @@ public class GestorReservaImpl implements GestorReserva {
     @Autowired
     private GestorHabitacion gestorHabitacion;
 
-    // ============================================================
-    // CU05 - Reservar habitaciones
-    // ============================================================
+    // CU04 - Reservar habitaciones
     @Override
     @Transactional
     public List<Reserva> reservarHabitaciones(List<String> numerosHabitacion,
-                                              Date fechaInicio,
-                                              Date fechaFin,
+                                              LocalDate fechaInicio,
+                                              LocalDate fechaFin,
                                               String nombre,
                                               String apellido,
                                               String telefono) {
@@ -55,28 +52,20 @@ public class GestorReservaImpl implements GestorReserva {
             // si ya procesamos ese número, lo salteamos
             if (!habitacionesProcesadas.add(nro)) continue;
 
-            // si tu HabitacionDAO usa findByNumero(Integer), usamos eso:
-            Integer nroInt;
-            try {
-                nroInt = Integer.valueOf(nro);
-            } catch (NumberFormatException ex) {
-                throw new IllegalArgumentException("Número de habitación inválido: " + nro);
+            Habitacion habitacion = habitacionDAO.findByNumero(nro).orElseThrow(() -> new IllegalArgumentException("No existe la habitación número " + nro));
+
+            //paso 6.1, se envia llama al gestor habitacion para ver que los rangos sean validos
+            if (!gestorHabitacion.validarDisponibilidad(habitacion, fechaInicio, fechaFin)){
+                throw new IllegalStateException("La habitación " + nro + " no está disponible."); //paso 9, error al seleccionar
             }
 
-            Habitacion habitacion = habitacionDAO.findByNumero(nroInt)
-                    .orElseThrow(() ->
-                            new IllegalArgumentException("No existe la habitación número " + nro));
-
-            // se delega en GestorHabitacion la validación de disponibilidad
-            if (!gestorHabitacion.validarDisponibilidad(habitacion, fechaInicio, fechaFin)) {
-                throw new IllegalStateException("La habitación " + nro + " no está disponible.");
-            }
-
-            // crear la reserva
-            Reserva r = new Reserva();
+            //paso 21, solicitud de creacion de reserva 
+            Reserva r = new Reserva(); //paso 22, creo la reserva
+           
+            //pasos 23 a 29
             r.setHabitacion(habitacion);
-            r.setFechaInicio(convertToLocalDate(fechaInicio));
-            r.setFechaFin(convertToLocalDate(fechaFin));
+            r.setFechaInicio(fechaInicio);
+            r.setFechaFin(fechaFin);
             r.setFechaReserva(LocalDate.now());
             r.setNombre(nombre);
             r.setApellido(apellido);
@@ -85,9 +74,9 @@ public class GestorReservaImpl implements GestorReserva {
             Reserva guardada = reservaDAO.save(r);
             reservasCreadas.add(guardada);
 
+            //Se tiene que eliminar de la lista de disponibles, que se obtiene del CU del lauti
             // actualizar estado de la habitación a RESERVADA
-            // ajustá el nombre de la constante si en tu enum es distinto
-            gestorHabitacion.actualizarEstado(nroInt, EstadoHabitacion.Reservada);
+            gestorHabitacion.actualizarEstado(nro, EstadoHabitacion.Reservada);
         }
 
         return reservasCreadas;
@@ -98,16 +87,15 @@ public class GestorReservaImpl implements GestorReserva {
         return date.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
     }
 
-    // ============================================================
+
     // CU15 - Ocupar habitación
-    // ============================================================
     @Override
     @Transactional
     public OcuparHabitacionResponse ocuparHabitacion(OcuparHabitacionRequest request) {
 
-        Integer nroHab;
+        String nroHab;
         try {
-            nroHab = Integer.valueOf(request.getNumeroHabitacion());
+            nroHab = String.valueOf(request.getNumeroHabitacion());
         } catch (NumberFormatException ex) {
             throw new ReglaNegocioException("Número de habitación inválido");
         }
