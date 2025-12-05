@@ -6,11 +6,11 @@ import java.util.List;
 
 public interface GestorHuesped {
 
-    // Método para obtener todos los huespedes
-    List<HuespedResponse> obtenerTodosLosHuespedes();
+    /*// Método para obtener todos los huespedes
+    List<HuespedResponse> obtenerTodosLosHuespedes();*/
 
     // Método para buscar huespedes por los criterios de búsqueda
-    List<HuespedResponse> buscarPorCriterios(String apellido, String nombre, String nroDoc, String tipoDoc);
+    List<HuespedResponse> buscarPorCriterios(HuespedSearchRequest searchRequest);
     
     // Método para dar de alta un nuevo huesped
     HuespedResponse darAltaHuesped(HuespedRequest huespedRequest);
