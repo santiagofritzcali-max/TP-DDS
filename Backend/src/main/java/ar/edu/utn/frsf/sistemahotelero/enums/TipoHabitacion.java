@@ -1,1 +1,8 @@
-public enum TipoHabitacion { INDIVIDUAL_ESTANDAR, DOBLE_ESTANDAR, DOBLE_SUPERIOR, SUPERIOR_FAMILY, SUITE_DOBLE }
+package ar.edu.utn.frsf.sistemahotelero.enums;
+
+
+public enum TipoHabitacion {INDIVIDUAL_ESTANDAR, 
+DOBLE_ESTANDAR, 
+DOBLE_SUPERIOR, 
+SUPERIOR_FAMILY, 
+SUITE_DOBLE }

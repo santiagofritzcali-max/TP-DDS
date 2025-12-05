@@ -1,3 +1,5 @@
+package ar.edu.utn.frsf.sistemahotelero.dto;
+
 import java.time.LocalDate;
 import java.util.*;
 

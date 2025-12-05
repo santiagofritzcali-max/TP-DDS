@@ -1,51 +1,55 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
-import ar.edu.utn.frsf.sistemahotelero.enums.EstadoHabitacion;
-import ar.edu.utn.frsf.sistemahotelero.enums.tipoCama;
+import ar.edu.utn.frsf.sistemahotelero.enums.*;
+import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.HabitacionId;
 import jakarta.persistence.*;
-
+import lombok.*;
+import java.math.BigDecimal;
 
 @Entity
-@Table(name = "G17_Habitacion")
-@Inheritance(strategy = InheritanceType.JOINED)
-public abstract class Habitacion {
+@Table(name = "G17_habitacion")
+@IdClass(HabitacionId.class)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+
+public class Habitacion {
 
     @Id
-    private String numero;          
+    @Column(name = "nro_piso", nullable = false)
+    private String nroPiso;
 
-    private String piso;
+    @Id
+    @Column(name = "nro_habitacion", nullable = false)
+    private String nroHabitacion;
+
 
     @Enumerated(EnumType.STRING)
-    private EstadoHabitacion estado;
+    @Column(name = "tipoDeHabitacion", nullable = false)
+    private TipoHabitacion tipoDeHabitacion;
 
-    private Double tarifaBase;
-    private String descripcion;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipoDeCama", nullable = false)
+    private tipoCama tipoDeCama;
 
+    @Column(name = "cantidadCamas", nullable = false)
     private Integer cantidadCamas;
 
     @Enumerated(EnumType.STRING)
-    private tipoCama tipoDeCama;
+    @Column(name = "estado", nullable = false)
+    private EstadoHabitacion estado;
 
-    // Getters y setters
+    @Column(name = "descripcion")
+    private String descripcion;
 
-    public String getNumero() { return numero; }
-    public void setNumero(String numero) { this.numero = numero; }
+    @Column(name = "tarifa", nullable = false, precision = 10, scale = 2)
+    private BigDecimal tarifa;
 
-    public String getPiso() { return piso; }
-    public void setPiso(String piso) { this.piso = piso; }
-
-    public EstadoHabitacion getEstado() { return estado; }
-    public void setEstado(EstadoHabitacion estado) { this.estado = estado; }
-
-    public Double getTarifaBase() { return tarifaBase; }
-    public void setTarifaBase(Double tarifaBase) { this.tarifaBase = tarifaBase; }
-
-    public String getDescripcion() { return descripcion; }
-    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
-
-    public Integer getCantidadCamas() { return cantidadCamas; }
-    public void setCantidadCamas(Integer cantidadCamas) { this.cantidadCamas = cantidadCamas; }
-
-    public tipoCama getTipoDeCama() { return tipoDeCama; }
-    public void setTipoDeCama(tipoCama tipoDeCama) { this.tipoDeCama = tipoDeCama; }
+    public Habitacion(String nroPiso, String nroHabitacion) {
+        this.nroPiso = nroPiso;
+        this.nroHabitacion = nroHabitacion;
+    }
+    
+    
 }

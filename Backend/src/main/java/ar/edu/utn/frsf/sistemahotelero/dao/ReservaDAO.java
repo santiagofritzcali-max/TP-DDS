@@ -24,5 +24,14 @@ public interface ReservaDAO extends CrudRepository<Reserva, Long> {
             @Param("desde") LocalDate desde,
             @Param("hasta") LocalDate hasta
     );
+    
+    @Query("""
+            SELECT r
+            FROM Reserva r
+            WHERE r.fechaInicio < :hasta
+              AND r.fechaFin    > :desde
+           """)
+    List<Reserva> findSolapadas(
+                @Param("desde") LocalDate desde, 
+                @Param("hasta") LocalDate hasta);
 }
-

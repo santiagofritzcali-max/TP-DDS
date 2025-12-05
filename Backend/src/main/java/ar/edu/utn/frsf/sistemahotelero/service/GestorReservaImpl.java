@@ -147,10 +147,10 @@ public class GestorReservaImpl implements GestorReserva {
 
         return new OcuparHabitacionResponse(
                 guardada.getId(),
-                habitacion.getNumero(),
+                habitacion.getNroHabitacion(),
                 guardada.getFechaIngreso(),
                 guardada.getFechaEgreso(),
-                "Habitación " + habitacion.getNumero() + " ocupada correctamente."
+                "Habitación " + habitacion.getNroHabitacion() + " ocupada correctamente."
         );
     }
 }

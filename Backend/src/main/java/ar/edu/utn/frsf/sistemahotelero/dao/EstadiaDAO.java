@@ -24,4 +24,15 @@ public interface EstadiaDAO extends CrudRepository<Estadia, Long> {
             @Param("desde") LocalDate desde,
             @Param("hasta") LocalDate hasta
     );
+    
+        @Query("""
+            SELECT e
+            FROM Estadia e
+            WHERE e.fechaIngreso < :hasta
+              AND e.fechaEgreso  > :desde
+           """)
+        
+        List<Estadia> findSolapadas(
+                @Param("desde") LocalDate desde, 
+                @Param("hasta") LocalDate hasta);
 }

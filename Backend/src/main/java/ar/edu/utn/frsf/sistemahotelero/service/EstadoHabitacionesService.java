@@ -1,49 +1,65 @@
+package ar.edu.utn.frsf.sistemahotelero.service;
+
+import ar.edu.utn.frsf.sistemahotelero.dao.*;
+import ar.edu.utn.frsf.sistemahotelero.model.*;
+import ar.edu.utn.frsf.sistemahotelero.dto.*;
+import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.HabitacionId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class EstadoHabitacionesService {
-  private final HabitacionRepository habitacionRepo;
-  private final ReservaRepository reservaRepo;
-  private final EstadiaRepository estadiaRepo;
+  
+    @Autowired
+    private HabitacionDAO habitacionDAO;
+    
+    @Autowired
+    private ReservaDAO reservaDAO;
+    
+    @Autowired
+    private EstadiaDAO estadiaDAO;
 
-  public EstadoHabitacionesService(HabitacionRepository h, ReservaRepository r, EstadiaRepository e) {
-    this.habitacionRepo = h; this.reservaRepo = r; this.estadiaRepo = e;
+  public EstadoHabitacionesService(HabitacionDAO h, ReservaDAO r, EstadiaDAO e) {
+    this.habitacionDAO = h; this.reservaDAO = r; this.estadiaDAO = e;
   }
 
   @Transactional(readOnly = true)
   public EstadoHabitacionesResponse obtener(LocalDate desde, LocalDate hasta) {
 
     // 1) columnas (habitaciones) ordenadas por tipo y número
-    List<Habitacion> habitaciones = habitacionRepo.findAllOrdenadas();
-    Map<Long, Habitacion> habPorId = habitaciones.stream().collect(Collectors.toMap(Habitacion::getId, x->x));
+    List<Habitacion> habitaciones = habitacionDAO.findAllOrdenadas();
+    Map<HabitacionId, Habitacion> habPorId = habitaciones.stream()
+        .collect(Collectors.toMap(
+                      h -> new HabitacionId(h.getNroPiso(), h.getNroHabitacion()),
+                      h -> h));
+                
 
     // 2) rango de días (inclusivo)
     List<LocalDate> dias = new ArrayList<>();
     for (LocalDate d = desde; !d.isAfter(hasta); d = d.plusDays(1)) dias.add(d);
 
     // 3) cargar eventos solapados (un solo hit a DB)
-    List<Reserva> reservas = reservaRepo.findSolapadas(desde, hasta);
-    List<Estadia> estadias = estadiaRepo.findSolapadas(desde, hasta);
+    List<Reserva> reservas = reservaDAO.findSolapadas(desde, hasta);
+    List<Estadia> estadias = estadiaDAO.findSolapadas(desde, hasta);
 
     // 4) indexar por habitación para lookup rápido
-    Map<Long, List<Reserva>> resPorHab = reservas.stream()
-        .collect(Collectors.groupingBy(r -> r.getHabitacion().getId()));
-    Map<Long, List<Estadia>> estPorHab = estadias.stream()
-        .collect(Collectors.groupingBy(e -> e.getHabitacion().getId()));
+    Map<String, List<Reserva>> resPorHab = reservas.stream().collect(Collectors.groupingBy(r -> r.getHabitacion().getNroPiso()));
+    Map<String, List<Estadia>> estPorHab = estadias.stream().collect(Collectors.groupingBy(e -> e.getHabitacion().getNroHabitacion()));
 
     // 5) grupos por tipo (para el front, como en tu imagen)
     List<GrupoHabitaciones> grupos = habitaciones.stream()
-        .collect(Collectors.groupingBy(h -> h.getTipoHabitacion().name(), LinkedHashMap::new, Collectors.toList()))
+        .collect(Collectors.groupingBy(h -> h.getTipoDeHabitacion().name(), LinkedHashMap::new, Collectors.toList()))
         .entrySet().stream()
         .map(e -> new GrupoHabitaciones(
             e.getKey(),
-            e.getValue().stream().map(h -> new HabitacionCol(h.getId(), h.getNumero())).toList()
-        )).toList();
+            e.getValue().stream().map(h -> new HabitacionCol(new HabitacionId(h.getNroPiso(), 
+                    h.getNroHabitacion())
+                    h.getNroHabitacion())).toList()))
+                    .toList();
 
     // 6) construir filas
     List<FilaDia> filas = new ArrayList<>();
