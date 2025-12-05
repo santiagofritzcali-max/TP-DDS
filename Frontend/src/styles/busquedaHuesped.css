@@ -1,0 +1,125 @@
+
+.page {
+  max-width: 1100px;
+  margin: 300px auto 40px;
+  padding: 32px 40px 40px;
+  background-color: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.h1 {
+  margin: 0 0 24px;
+  font-size: 26px;
+  font-weight: 500;
+}
+
+.alert {
+  padding: 10px 14px;
+  border-radius: 2px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  background-color: #fdecea;
+  border: 1px solid #f5c2c0;
+  color: #b02a37;
+}
+
+/* FORMULARIO */
+.formMainGrid {
+  display: grid;
+  grid-template-columns: 2fr 1.2fr;
+  column-gap: 40px;
+  row-gap: 30px;
+}
+
+.formSection {
+  margin-bottom: 24px;
+}
+
+.formSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #777;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 6px;
+  margin-bottom: 16px;
+}
+
+.formGrid2 {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 14px 24px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.label {
+  margin-bottom: 4px;
+  color: #555;
+}
+
+.input {
+  padding: 8px 9px;
+  border-radius: 2px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  outline: none;
+  background-color: #fff;
+}
+
+.btnPrimary {
+  min-width: 120px;
+  padding: 10px 18px;
+  margin-top: 18px;
+  font-size: 14px;
+  border-radius: 2px;
+  border: none;
+  background-color: #333;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* RESULTADOS */
+.resultsColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.userList {
+  height: 190px;
+  overflow-y: scroll;
+}
+
+.userItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 15px;
+  cursor: pointer;
+}
+
+.userRowLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.userIconImage {
+  width: 30px;
+  height: 30px;
+}
+
+.userText {
+  font-size: 14px;
+}
+
+.userRadio {
+  width: 16px;
+}
+
