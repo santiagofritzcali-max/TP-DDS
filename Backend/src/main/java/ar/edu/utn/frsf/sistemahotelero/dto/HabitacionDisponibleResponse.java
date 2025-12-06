@@ -1,6 +1,6 @@
 package ar.edu.utn.frsf.sistemahotelero.dto;
-import ar.edu.utn.frsf.sistemahotelero.enums.EstadoHabitacion;
-import ar.edu.utn.frsf.sistemahotelero.enums.TipoCama;
+import ar.edu.utn.frsf.sistemahotelero.enums.*;
+//import ar.edu.utn.frsf.sistemahotelero.enums.TipoCama;
 
 //DTO de una habitación disponible para mostrar en la grilla de la UI
 
