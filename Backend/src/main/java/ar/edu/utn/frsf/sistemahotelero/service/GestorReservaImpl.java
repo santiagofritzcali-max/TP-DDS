@@ -16,6 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.*;
+import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.HabitacionId;
+import ar.edu.utn.frsf.sistemahotelero.util.HabitacionKeyUtil;
+
 
 @Service
 public class GestorReservaImpl implements GestorReserva {
@@ -52,7 +55,9 @@ public class GestorReservaImpl implements GestorReserva {
             // si ya procesamos ese número, lo salteamos
             if (!habitacionesProcesadas.add(nro)) continue;
 
-            Habitacion habitacion = habitacionDAO.findByNumero(nro).orElseThrow(() -> new IllegalArgumentException("No existe la habitación número " + nro));
+            HabitacionId id = HabitacionKeyUtil.parse(nro);
+            Habitacion habitacion = habitacionDAO.findById(id).orElseThrow(() -> new IllegalArgumentException("No existe la habitación " + nro));
+
 
             //paso 6.1, se envia llama al gestor habitacion para ver que los rangos sean validos
             if (!gestorHabitacion.validarDisponibilidad(habitacion, fechaInicio, fechaFin)){
@@ -82,12 +87,6 @@ public class GestorReservaImpl implements GestorReserva {
         return reservasCreadas;
     }
 
-    // helper para pasar de java.util.Date a LocalDate
-    private LocalDate convertToLocalDate(Date date) {
-        return date.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate();
-    }
-
-
     // CU15 - Ocupar habitación
     @Override
     @Transactional
@@ -100,9 +99,9 @@ public class GestorReservaImpl implements GestorReserva {
             throw new ReglaNegocioException("Número de habitación inválido");
         }
 
-        Habitacion habitacion = habitacionDAO.findByNumero(nroHab)
-                .orElseThrow(() -> new ReglaNegocioException(
-                        "No existe la habitación " + nroHab));
+        HabitacionId id = HabitacionKeyUtil.parse(nroHab);
+        Habitacion habitacion = habitacionDAO.findById(id).orElseThrow(() -> new IllegalArgumentException("No existe la habitación " + nroHab));
+
 
         LocalDate desde = request.getFechaIngreso();
         LocalDate hasta = request.getFechaEgreso();
@@ -144,13 +143,16 @@ public class GestorReservaImpl implements GestorReserva {
 
         // 5) Guardar estadía
         Estadia guardada = estadiaDAO.save(estadia);
+        
+        // Si usás @EmbeddedId:
+        Integer nroHabitacion = habitacion.getId().getNroHabitacion();
 
         return new OcuparHabitacionResponse(
                 guardada.getId(),
-                habitacion.getNroHabitacion(),
+                String.valueOf(nroHabitacion),
                 guardada.getFechaIngreso(),
                 guardada.getFechaEgreso(),
-                "Habitación " + habitacion.getNroHabitacion() + " ocupada correctamente."
+                "Habitación " + nroHab + " ocupada correctamente."
         );
     }
 }

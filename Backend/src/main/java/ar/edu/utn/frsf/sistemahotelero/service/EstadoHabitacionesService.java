@@ -1,105 +1,157 @@
 package ar.edu.utn.frsf.sistemahotelero.service;
 
-import ar.edu.utn.frsf.sistemahotelero.dao.*;
-import ar.edu.utn.frsf.sistemahotelero.model.*;
-import ar.edu.utn.frsf.sistemahotelero.dto.*;
+import ar.edu.utn.frsf.sistemahotelero.dao.EstadiaDAO;
+import ar.edu.utn.frsf.sistemahotelero.dao.HabitacionDAO;
+import ar.edu.utn.frsf.sistemahotelero.dao.ReservaDAO;
+import ar.edu.utn.frsf.sistemahotelero.dto.EstadoHabitacionesResponse;
+import ar.edu.utn.frsf.sistemahotelero.dto.EstadoHabitacionesResponse.*;
+import ar.edu.utn.frsf.sistemahotelero.model.Estadia;
+import ar.edu.utn.frsf.sistemahotelero.model.Habitacion;
+import ar.edu.utn.frsf.sistemahotelero.model.Reserva;
 import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.HabitacionId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class EstadoHabitacionesService {
-  
-    @Autowired
-    private HabitacionDAO habitacionDAO;
-    
-    @Autowired
-    private ReservaDAO reservaDAO;
-    
-    @Autowired
-    private EstadiaDAO estadiaDAO;
 
-  public EstadoHabitacionesService(HabitacionDAO h, ReservaDAO r, EstadiaDAO e) {
-    this.habitacionDAO = h; this.reservaDAO = r; this.estadiaDAO = e;
-  }
+    private final HabitacionDAO habitacionDAO;
+    private final ReservaDAO reservaDAO;
+    private final EstadiaDAO estadiaDAO;
 
-  @Transactional(readOnly = true)
-  public EstadoHabitacionesResponse obtener(LocalDate desde, LocalDate hasta) {
+    public enum EstadoCelda { DISPONIBLE, RESERVADA, OCUPADA, NO_DISPONIBLE }
 
-    // 1) columnas (habitaciones) ordenadas por tipo y número
-    List<Habitacion> habitaciones = habitacionDAO.findAllOrdenadas();
-    Map<HabitacionId, Habitacion> habPorId = habitaciones.stream()
-        .collect(Collectors.toMap(
-                      h -> new HabitacionId(h.getNroPiso(), h.getNroHabitacion()),
-                      h -> h));
-                
+    public EstadoHabitacionesService(HabitacionDAO habitacionDAO, ReservaDAO reservaDAO, EstadiaDAO estadiaDAO) {
+        this.habitacionDAO = habitacionDAO;
+        this.reservaDAO = reservaDAO;
+        this.estadiaDAO = estadiaDAO;
+    }
 
-    // 2) rango de días (inclusivo)
-    List<LocalDate> dias = new ArrayList<>();
-    for (LocalDate d = desde; !d.isAfter(hasta); d = d.plusDays(1)) dias.add(d);
+    @Transactional(readOnly = true)
+    public EstadoHabitacionesResponse obtener(LocalDate desde, LocalDate hasta) {
+        if (desde == null || hasta == null) {
+            throw new IllegalArgumentException("Las fechas 'desde' y 'hasta' son obligatorias.");
+        }
+        if (hasta.isBefore(desde)) {
+            throw new IllegalArgumentException("'hasta' no puede ser anterior a 'desde'.");
+        }
 
-    // 3) cargar eventos solapados (un solo hit a DB)
-    List<Reserva> reservas = reservaDAO.findSolapadas(desde, hasta);
-    List<Estadia> estadias = estadiaDAO.findSolapadas(desde, hasta);
+        // 1) Habitaciones ordenadas (si no existe findAllOrdenadas, cambiá por findAll())
+        List<Habitacion> habitaciones = habitacionDAO.findAllOrdenadas();
 
-    // 4) indexar por habitación para lookup rápido
-    Map<String, List<Reserva>> resPorHab = reservas.stream().collect(Collectors.groupingBy(r -> r.getHabitacion().getNroPiso()));
-    Map<String, List<Estadia>> estPorHab = estadias.stream().collect(Collectors.groupingBy(e -> e.getHabitacion().getNroHabitacion()));
+        // 2) Días inclusivo
+        List<LocalDate> dias = buildDiasInclusivo(desde, hasta);
 
-    // 5) grupos por tipo (para el front, como en tu imagen)
-    List<GrupoHabitaciones> grupos = habitaciones.stream()
-        .collect(Collectors.groupingBy(h -> h.getTipoDeHabitacion().name(), LinkedHashMap::new, Collectors.toList()))
-        .entrySet().stream()
-        .map(e -> new GrupoHabitaciones(
-            e.getKey(),
-            e.getValue().stream().map(h -> new HabitacionCol(new HabitacionId(h.getNroPiso(), 
-                    h.getNroHabitacion())
-                    h.getNroHabitacion())).toList()))
+        // 3) Cargar reservas/estadías por habitación (una consulta por habitación, no por celda)
+        Map<HabitacionId, List<Reserva>> reservasPorHab = new HashMap<>();
+        Map<HabitacionId, List<Estadia>> estadiasPorHab = new HashMap<>();
+
+        for (Habitacion h : habitaciones) {
+            HabitacionId id = h.getId(); // requiere @EmbeddedId en Habitacion
+            reservasPorHab.put(id, safeList(reservaDAO.buscarPorHabitacionYRangoFechas(h, desde, hasta)));
+            estadiasPorHab.put(id, safeList(estadiaDAO.buscarPorHabitacionYRangoFechas(h, desde, hasta)));
+        }
+
+        // 4) Grupos por tipo (para el front)
+        List<GrupoHabitaciones> grupos = buildGrupos(habitaciones);
+
+        // 5) Filas por día con celdas por habitación
+        List<FilaDia> filas = new ArrayList<>();
+        for (LocalDate dia : dias) {
+            List<Celda> celdas = new ArrayList<>(habitaciones.size());
+
+            for (Habitacion h : habitaciones) {
+                HabitacionId id = h.getId();
+                EstadoCelda estado = calcularEstadoCelda(
+                        h,
+                        dia,
+                        reservasPorHab.get(id),
+                        estadiasPorHab.get(id)
+                );
+
+                HabitacionKey key = new HabitacionKey(id.getNroPiso(), id.getNroHabitacion());
+                celdas.add(new Celda(key, estado.name()));
+            }
+
+            filas.add(new FilaDia(dia, celdas));
+        }
+
+        return new EstadoHabitacionesResponse(desde, hasta, dias, grupos, filas);
+    }
+
+    private List<GrupoHabitaciones> buildGrupos(List<Habitacion> habitaciones) {
+        // Preserva orden de entrada (si habitaciones viene ordenada ya, el grupo queda prolijo)
+        Map<String, List<Habitacion>> porTipo = habitaciones.stream()
+                .collect(Collectors.groupingBy(
+                        h -> h.getTipoDeHabitacion().name(),
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
+
+        List<GrupoHabitaciones> grupos = new ArrayList<>();
+        for (Map.Entry<String, List<Habitacion>> entry : porTipo.entrySet()) {
+            String tipo = entry.getKey();
+            List<HabitacionCol> cols = entry.getValue().stream()
+                    .map(h -> {
+                        HabitacionId id = h.getId();
+                        HabitacionKey key = new HabitacionKey(id.getNroPiso(), id.getNroHabitacion());
+                        String numero = id.getNroPiso() + "-" + id.getNroHabitacion();
+                        return new HabitacionCol(key, numero);
+                    })
                     .toList();
 
-    // 6) construir filas
-    List<FilaDia> filas = new ArrayList<>();
-    for (LocalDate dia : dias) {
-      List<Celda> celdas = new ArrayList<>(habitaciones.size());
-      for (Habitacion h : habitaciones) {
-        EstadoCelda estado = calcularEstadoCelda(h, dia, resPorHab.get(h.getId()), estPorHab.get(h.getId()));
-        celdas.add(new Celda(h.getId(), estado.name()));
-      }
-      filas.add(new FilaDia(dia, celdas));
+            grupos.add(new GrupoHabitaciones(tipo, cols));
+        }
+
+        return grupos;
     }
 
-    return new EstadoHabitacionesResponse(desde, hasta, dias, grupos, filas);
-  }
+    private EstadoCelda calcularEstadoCelda(Habitacion h, LocalDate dia,
+                                            List<Reserva> reservasHab,
+                                            List<Estadia> estadiasHab) {
 
-  private EstadoCelda calcularEstadoCelda(
-      Habitacion h,
-      LocalDate dia,
-      List<Reserva> reservasHab,
-      List<Estadia> estadiasHab
-  ) {
-    // 1) no disponible por estado de habitación
-    if (h.getEstado() == EstadoHabitacion.NO_DISPONIBLE) return EstadoCelda.NO_DISPONIBLE;
+        // 1) NO disponible por estado de habitación (sin depender del nombre exacto del enum)
+        if (h.getEstado() != null && h.getEstado().name().equalsIgnoreCase("NO_DISPONIBLE")) {
+            return EstadoCelda.NO_DISPONIBLE;
+        }
 
-    // 2) ocupada si hay estadía que cubre el día (inclusivo)
-    if (estadiasHab != null) {
-      boolean ocupado = estadiasHab.stream().anyMatch(e ->
-          !dia.isBefore(e.getFechaIngreso()) && !dia.isAfter(e.getFechaEgreso())
-      );
-      if (ocupado) return EstadoCelda.OCUPADA;
+        // 2) OCUPADA si hay estadía que cubre el día (inclusivo)
+        if (estadiasHab != null) {
+            boolean ocupada = estadiasHab.stream().anyMatch(e ->
+                    enRangoInclusivo(dia, e.getFechaIngreso(), e.getFechaEgreso())
+            );
+            if (ocupada) return EstadoCelda.OCUPADA;
+        }
+
+        // 3) RESERVADA si hay reserva que cubre el día (inclusivo)
+        if (reservasHab != null) {
+            boolean reservada = reservasHab.stream().anyMatch(r ->
+                    enRangoInclusivo(dia, r.getFechaInicio(), r.getFechaFin())
+            );
+            if (reservada) return EstadoCelda.RESERVADA;
+        }
+
+        return EstadoCelda.DISPONIBLE;
     }
 
-    // 3) reservada si hay reserva que cubre el día (inclusivo)  ✅ tu regla
-    if (reservasHab != null) {
-      boolean reservada = reservasHab.stream().anyMatch(r ->
-          !dia.isBefore(r.getFechaInicio()) && !dia.isAfter(r.getFechaFin())
-      );
-      if (reservada) return EstadoCelda.RESERVADA;
+    private static boolean enRangoInclusivo(LocalDate dia, LocalDate inicio, LocalDate fin) {
+        if (dia == null || inicio == null || fin == null) return false;
+        return !dia.isBefore(inicio) && !dia.isAfter(fin);
     }
 
-    return EstadoCelda.DISPONIBLE;
-  }
+    private static List<LocalDate> buildDiasInclusivo(LocalDate desde, LocalDate hasta) {
+        List<LocalDate> dias = new ArrayList<>();
+        for (LocalDate d = desde; !d.isAfter(hasta); d = d.plusDays(1)) {
+            dias.add(d);
+        }
+        return dias;
+    }
+
+    private static <T> List<T> safeList(List<T> list) {
+        return list == null ? List.of() : list;
+    }
 }

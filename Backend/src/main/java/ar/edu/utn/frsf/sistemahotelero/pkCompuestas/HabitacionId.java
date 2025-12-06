@@ -1,31 +1,33 @@
 package ar.edu.utn.frsf.sistemahotelero.pkCompuestas;
 
-import java.io.Serializable;
-import java.util.Objects;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 import lombok.*;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
+import java.io.Serializable;
+import java.util.Objects;
+
+@Embeddable
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 public class HabitacionId implements Serializable {
 
-    private Integer nroPiso;
-    private Integer nroHabitacion;
+  @Column(name = "nro_piso", nullable = false)
+  private Integer nroPiso;
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        HabitacionId that = (HabitacionId) obj;
-        return nroPiso.equals(that.nroPiso) && Objects.equals(nroHabitacion, that.nroHabitacion);
-    }
+  @Column(name = "nro_habitacion", nullable = false)
+  private Integer nroHabitacion;
 
-    /**
-     *
-     * @return
-     */
-    @Override
-    public int hashCode() {
-        return 31 * nroHabitacion.hashCode() + nroPiso.hashCode();
-    }
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof HabitacionId that)) return false;
+    return Objects.equals(nroPiso, that.nroPiso)
+        && Objects.equals(nroHabitacion, that.nroHabitacion);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(nroPiso, nroHabitacion);
+  }
 }
