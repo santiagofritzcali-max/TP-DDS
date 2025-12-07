@@ -1,14 +1,57 @@
+.appRoot {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #333;
+}
+
+.topBar {
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 10px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.topBarMenuLink {
+  text-decoration: none;
+  color: #444;
+  margin: 0 4px;
+}
+
+.topBarSeparator {
+  color: #ccc;
+  margin: 0 2px;
+}
+
+.btnSmallDark {
+  border-radius: 20px;
+  border: none;
+  padding: 6px 18px;
+  background-color: #333;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+}
 
 .page {
   max-width: 1100px;
-  margin: 300px auto 40px;
+  margin: 30px auto 40px;
   padding: 32px 40px 40px;
   background-color: #fff;
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
 }
 
 .h1 {
-  margin: 0 0 24px;
+  margin: 0;
+  margin-bottom: 24px;
   font-size: 26px;
   font-weight: 500;
 }
@@ -18,17 +61,98 @@
   border-radius: 2px;
   margin-bottom: 16px;
   font-size: 14px;
+}
+
+.alertSuccess {
+  background-color: #e7f6e7;
+  border: 1px solid #a3d7a3;
+  color: #256029;
+}
+
+.alertError {
   background-color: #fdecea;
   border: 1px solid #f5c2c0;
   color: #b02a37;
 }
 
-/* FORMULARIO */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(242,139,130,0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+
+.modalContentError {
+  background-color: #ffecec;
+  padding: 20px 24px;
+  border-radius: 6px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  font-size: 14px;
+  border: 2px solid #f28b82;
+  color: #5a1f1f;
+}
+
+
+.modalTitleError {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #b00020;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+
+.modalBodyError {
+  margin-bottom: 16px;
+  color: #5a1f1f;
+  font-size: 14px;
+}
+
+
+.modalButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: center;
+}
+
+.modalButtonBase {
+  min-width: 140px;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: none;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0;
+  cursor: pointer;
+}
+
+.modalButtonSecondary {
+  background-color: #e4e4e4;
+  color: #444;
+}
+
+.modalButtonPrimary {
+  background-color: #c62828;
+  color: #fff;
+}
+
 .formMainGrid {
   display: grid;
   grid-template-columns: 2fr 1.2fr;
   column-gap: 40px;
   row-gap: 30px;
+  align-items: start;
 }
 
 .formSection {
@@ -48,7 +172,7 @@
 
 .formGrid2 {
   display: grid;
-  grid-template-columns: repeat(2,minmax(0,1fr));
+  grid-template-columns: repeat(2, minmax(0,1fr));
   gap: 14px 24px;
 }
 
@@ -72,10 +196,22 @@
   background-color: #fff;
 }
 
+.fieldError {
+  margin-top: 3px;
+  font-size: 11px;
+  color: #d9534f;
+}
+
+.actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
 .btnPrimary {
   min-width: 120px;
   padding: 10px 18px;
-  margin-top: 18px;
   font-size: 14px;
   border-radius: 2px;
   border: none;
@@ -84,20 +220,49 @@
   cursor: pointer;
 }
 
-/* RESULTADOS */
+.btnPrimaryDanger {
+  background-color: #c62828;
+}
+
+.btnSecondary {
+  min-width: 120px;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 2px;
+  border: none;
+  background-color: #e0e0e0;
+  color: #444;
+  cursor: pointer;
+}
+
+.searchActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.logoImage {
+  height: 90px;
+  width: auto;
+}
+
 .resultsColumn {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  align-items: flex-start;
 }
 
 .userList {
   height: 190px;
   overflow-y: scroll;
+  margin-top: 0;
 }
 
 .userItem {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 15px;
@@ -108,18 +273,48 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
+}
+
+.userIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #ccc;
 }
 
 .userIconImage {
   width: 30px;
   height: 30px;
+  border-radius: 4px;
+  object-fit: cover;
+  display: block;
 }
 
 .userText {
+  flex: 1;
   font-size: 14px;
 }
 
 .userRadio {
   width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
 
+.acceptButton {
+  padding: 5px 15px;
+  background-color: #333;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.listActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0;
+  align-items: flex-start;
+  align-self: stretch;
+}

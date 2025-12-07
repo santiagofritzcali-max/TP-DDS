@@ -21,4 +21,5 @@ const ModalExito = ({ isOpen, onConfirm, nombreHuesped }) => {
   );
 };
 
+
 export default ModalExito;
