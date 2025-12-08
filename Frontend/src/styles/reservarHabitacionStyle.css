@@ -34,6 +34,7 @@
 .section-title {
   font-size: 20px;
   margin-bottom: 18px;
+  text-align: left !important;
 }
 
 /* Formulario fechas */
@@ -48,26 +49,24 @@
 .date-field {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;   /* ⬅ alinea label e input a la izquierda */
+  align-items: flex-start;
 }
 
 .date-field label {
   display: block;
   font-size: 13px;
   margin-bottom: 6px;
-  text-align: left;          /* ⬅ evita cualquier centrado heredado */
-  padding-left: 2px;         /* ⬅ ajusta fino para que coincida con el borde del input */
+  text-align: left;
+  padding-left: 2px;
 }
-
 
 .date-field input[type="date"] {
   padding: 4px 6px;
   border: 1px solid #b3b3b3;
   font-size: 13px;
   min-width: 145px;
-  border-radius: 6px;  
+  border-radius: 6px;
 }
-
 
 .required {
   color: #cc0000;
@@ -75,7 +74,6 @@
 
 /* ----------------------------- BOTONES ----------------------------- */
 
-/* Botón BUSCAR HABITACIONES */
 .primary-button {
   padding: 6px 16px;
   font-size: 13px;
@@ -97,7 +95,6 @@
   transform: translateY(0);
 }
 
-/* Botón SIGUIENTE  */
 .primary-button-strong {
   position: relative;
   padding: 10px 24px;
@@ -110,7 +107,6 @@
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
 }
-
 
 .primary-button-strong::before {
   content: '';
@@ -140,7 +136,6 @@
   scale: 1;
 }
 
-
 .primary-button:disabled,
 .primary-button-strong:disabled {
   opacity: 0.5;
@@ -152,12 +147,10 @@
   background-color: transparent !important;
 }
 
-
 .primary-button-strong:active::before {
-  scale: 1.8; 
+  scale: 1.8;
   opacity: 0.7;
 }
-
 
 /*Boton CANCELAR*/
 .secondary-button {
@@ -165,8 +158,8 @@
   position: relative;
   padding: 10px 24px;
   font-size: 14px;
-  color: rgb(120, 120, 120);             /* texto gris */
-  border: 2px solid rgb(120, 120, 120);   /* borde gris */
+  color: rgb(120, 120, 120);
+  border: 2px solid rgb(120, 120, 120);
   border-radius: 12px;
   background-color: transparent;
   font-weight: 600;
@@ -174,7 +167,6 @@
   overflow: hidden;
 }
 
-/* Capa que explota hacia afuera */
 .secondary-button::before {
   content: '';
   position: absolute;
@@ -185,55 +177,51 @@
   border-radius: inherit;
   scale: 0;
   z-index: -1;
-  background-color: rgb(120, 120, 120);   /* gris pastel */
+  background-color: rgb(120, 120, 120);
   transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
 }
 
-/* Hover: expansión */
 .secondary-button:hover::before {
   scale: 3;
 }
 
-/* Hover: texto + sombra */
 .secondary-button:hover:not(:disabled) {
-  color: #ffffff;                         /* texto blanco */
+  color: #ffffff;
   scale: 1.08;
   box-shadow: 0 0px 20px rgba(120, 120, 120, 0.4);
 }
 
-/* Active */
 .secondary-button:active:not(:disabled) {
   scale: 1;
 }
 
-/* Disabled */
 .secondary-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-
 /* Habitaciones - Leyenda y grilla */
 
 .rooms-grid-section {
-  margin-top: 18px;           /* separa un poco del formulario */
-  padding-top: 12px;          /* espacio entre la línea y "Habitaciones" */
-  border-top: 1px solid #d0d0d0;  /* LÍNEA GRIS como en el mockup */
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid #d0d0d0;
 }
 
 .section-subtitle {
   font-size: 16px;
   margin-bottom: 10px;
+  text-align: left !important;
 }
 
 .legend {
   display: flex;
-    justify-content: center;   /* CENTRA horizontalmente */
-    align-items: center;        /* Alinea verticalmente */
-    gap: 18px;
-    font-size: 13px;
-    margin-bottom: 14px;
-    margin-top: 8px;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  font-size: 13px;
+  margin-bottom: 14px;
+  margin-top: 8px;
 }
 
 .legend-item {
@@ -246,9 +234,8 @@
   width: 16px;
   height: 16px;
   border: 1px solid #555;
-  border-radius: 4px;  
+  border-radius: 4px;
 }
-
 
 /* Colores estados */
 
@@ -264,6 +251,12 @@
   background-color: #d6a05a;
 }
 
+/* ✅ ÚNICO “no disponible”: FueraServicio */
+.estado-fuera-servicio {
+  background-color: #c6635d;
+}
+
+/* compat: por si quedó algo viejo */
 .estado-no-disponible {
   background-color: #c6635d;
 }
@@ -302,7 +295,7 @@
   font-weight: normal;
 }
 
-/* Celdas de la tabla */
+/* Celdas */
 .cell {
   cursor: pointer;
   position: relative;
@@ -310,18 +303,7 @@
     transform 0.15s ease-out,
     box-shadow 0.15s ease-out,
     border-color 0.15s ease-out;
-  border-radius: 0; /* asegura forma cuadrada */
-}
-
-
-/* Selección visual para rango elegido */
-
-/* ===== Celdas base ===== */
-.cell {
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;  /* importante: para que el halo no se salga */
-  transition: border-color 0.2s ease;
+  border-radius: 0;
 }
 
 /* Halo base (apagado) */
@@ -332,62 +314,50 @@
   margin: auto;
   width: 0%;
   height: 0%;
-  background-color: rgba(128, 200, 153, 0.25); /* verde pastel suave */
+  background-color: rgba(128, 200, 153, 0.25);
   opacity: 0;
   transition: width 0.25s ease-out, height 0.25s ease-out, opacity 0.25s ease-out;
   z-index: 0;
 }
 
-/* ===== Selección de celdas ===== */
-
-/* Base: TODA celda seleccionada (una o parte de bloque) */
+/* Selección */
 .cell-seleccionada {
   position: relative;
   z-index: 1;
   border-style: solid;
-  border-width: 1px;             /* grosor interno */
-  border-color: #7fbfa4;         /* verde CLARO para líneas internas */
+  border-width: 1px;
+  border-color: #7fbfa4;
 }
 
-/* Halo expansivo cuando está seleccionada */
 .cell-seleccionada::before {
   width: 100%;
   height: 100%;
   opacity: 1;
 }
 
-/* ---- Caso 1: SOLO UNA celda seleccionada (no forma bloque) ---- */
 .cell-seleccionada:not(.range-block) {
-  border-width: 3px;             /* más grueso en los 4 lados */
-  border-color: #2e6f56;         /* verde OSCURO */
+  border-width: 3px;
+  border-color: #2e6f56;
 }
 
-/* ---- 2 o más celdas seleccionadas ---- */
-
 .cell-seleccionada.range-block {
-  /* laterales del rectángulo grande */
   border-left-width: 3px;
   border-right-width: 3px;
   border-left-color: #20815d;
   border-right-color: #20815d;
 }
 
-/* Primera celda del bloque: borde superior grueso y oscuro */
 .cell-seleccionada.range-start {
   border-top-width: 3px;
   border-top-color: #2e6f56;
 }
 
-/* Última celda del bloque: borde inferior grueso y oscuro */
 .cell-seleccionada.range-end {
   border-bottom-width: 3px;
   border-bottom-color: #2e6f56;
 }
 
-
-
 /* Mensaje sin habitaciones */
-
 .no-rooms-message {
   font-size: 13px;
   margin-top: 8px;
@@ -404,8 +374,6 @@
   justify-content: space-between;
 }
 
-
-/* LISTA DERECHA — sin borde, padding interno, texto alineado a izquierda */
 .selected-rooms-list {
   margin-top: 8px;
   border: none;
@@ -413,13 +381,10 @@
   padding: 0 10px;
   font-size: 12px;
   text-align: left;
-
-  /* --- SCROLL VERTICAL --- */
-  max-height: 360px;      /* ajustá el valor si querés más o menos alto */
-  overflow-y: auto;       /* muestra scroll solo cuando haga falta */
+  max-height: 360px;
+  overflow-y: auto;
 }
 
-/* Opcional: scrollbar un poco más fino (solo Chrome/Edge) */
 .selected-rooms-list::-webkit-scrollbar {
   width: 8px;
 }
@@ -429,29 +394,24 @@
   border-radius: 4px;
 }
 
-/* Item individual — también sin bordes */
 .selected-room-item {
-  padding: 12px 4px;              /* más aire */
+  padding: 12px 4px;
   margin-bottom: 12px;
-  border-bottom: 1px solid #e0e0e0; /* línea separadora suave */
+  border-bottom: 1px solid #e0e0e0;
 }
 
-/* Último item sin línea */
 .selected-room-item:last-child {
   border-bottom: none;
 }
 
-/* Título del tipo de habitación */
 .selected-room-type {
   font-weight: bold;
   margin-bottom: 4px;
 }
 
-/* Líneas de texto */
 .selected-room-line {
   margin: 2px 0;
 }
-
 
 .actions-row {
   display: flex;
@@ -460,20 +420,11 @@
   margin-top: 14px;
 }
 
-.selected-rooms-list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.selected-rooms-list::-webkit-scrollbar-thumb {
-  background-color: #b3b3b3;
-}
-
 .text-empty-right {
   font-size: 12px;
   color: #777;
 }
 
-/* Errores */
 .error-text {
   margin-top: 4px;
   font-size: 12px;
@@ -492,388 +443,19 @@
 }
 
 .grid-rounded-wrapper {
-    border-radius: 14px;             /* curva externa */
-    overflow: hidden;                /* recorta bordes internos */
-    border: 1px solid #000000;  /* borde más fino y suave */
-    border-radius: 14px;
-    overflow: hidden;       /* mismo borde que tu tabla actual */
-    margin-top: 10px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #000000;
+  margin-top: 10px;
 }
 
 .rooms-table {
-    border-collapse: separate;     /* permite redondear y suavizar */
-    border-spacing: 0;             /* elimina espacios entre celdas */
-}
-
-/* Título de "Habitaciones a Reservar" alineado a izquierda */
-.right-panel .section-subtitle {
-    text-align: left;
-}
-
-.section-title {
-    text-align: left !important;
-}
-
-.section-subtitle {
-    text-align: left !important;
-}
-
-/* Título principal del panel derecho */
-.right-panel .section-subtitle {
-    font-size: 20px !important;     /* mismo tamaño */
-    font-weight: bold !important;   /* mismo peso */
-    text-align: left !important;    /* alineación */
-    margin-bottom: 18px;            /* mismo espaciado que el panel izquierdo */
-    margin-left: 0;                 /* alinear con el texto inferior */
-}
-
-.right-panel > .section-subtitle {
-  margin-left: 0;
-  padding-left: 0;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .section-divider {
   border: none;
   border-top: 1px solid #d0d0d0;
   margin: 10px 0 20px 0;
-}
-
-/*------------------ CLASES PARA LA SEGUNDA PANTALLA ------------------*/
-.section-title-left {
-  text-align: left;
-}
-
-/* Panel derecho de la pantalla de datos */
-.form-panel {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Formulario de datos del cliente */
-.datos-reserva-form {
-  margin-top: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-/* Filas del formulario */
-.form-row label {
-  display: block;
-  font-size: 13px;
-  margin-bottom: 4px;
-}
-
-.form-row input,
-.telefono-row select {
-  border: 1px solid #b3b3b3;
-  padding: 6px 8px;
-  font-size: 13px;
-}
-
-/* Teléfono: combo + input en línea */
-.telefono-row {
-  display: flex;
-  gap: 8px;
-}
-
-/* Lista de habitaciones  */
-.selected-rooms-list-form {
-  max-height: 420px; /* ajustar según el alto que ves en el mockup */
-}
-
-.datos-main-layout {
-  max-width: 1150px;
-  margin: 16px auto 32px auto;
-  background-color: #ffffff;
-  border: 1px solid #d0d0d0;
-  display: grid;
-  grid-template-columns: 48% 40%;  /* dos columnas bastante equilibradas */
-  justify-content: center;         /* centra el conjunto en la página */
-}
-
-/* Columna izquierda: lista de habitaciones */
-.datos-left-panel {
-  padding: 24px 32px 24px 32px;
-  border-right: 1px solid #e0e0e0;
-}
-
-/* Columna derecha: formulario (asegurate de usar esta clase en el JSX) */
-.datos-right-panel {
-  padding: 40px 40px 32px 48px;   /* lo trae hacia la izquierda */
-}
-
-/* Opcional: título del formulario */
-.datos-form-title {
-  font-size: 24px;              /* mismo tamaño que 'Reserva de Habitación' */
-  margin-bottom: 24px;
-}
-
-/* El formulario no ocupa todo el ancho de la columna */
-.datos-form {
-  max-width: 420px;
-}
-
-/* ===== Scroll a la IZQUIERDA en la lista de habitaciones ===== */
-
-.selected-rooms-scroll-left {
-  max-height: 420px;     /* ajustá al alto que venías usando */
-  overflow-y: auto;      /* el scroll lo maneja este contenedor */
-  direction: rtl;        /* mueve la barra de scroll a la izquierda */
-}
-
-/* El contenido vuelve a orientación normal */
-.selected-rooms-scroll-left > .selected-rooms-list {
-  direction: ltr;
-}
-
-/* ===== Campos flotantes segunda pantalla (CU-04) ===== */
-
-.input-group {
-  position: relative;
-  margin-bottom: 18px;
-}
-
-/* input con borde redondeado */
-.input {
-  width: 100%;
-  border: 1.5px solid #9e9e9e;
-  background-color: #ffffff;   /* fondo blanco */
-  padding: 0.75rem 1rem;
-  font-size: 0.95rem;
-  color: #333333;              /* texto oscuro */
-  transition: border 150ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.user-label {
-  position: absolute;
-  left: 16px;
-  top: 0;
-  transform: translateY(1rem);
-  font-size: 0.9rem;
-  color: #777777;
-  pointer-events: none;
-  transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* estrellita roja reutilizando tu clase .required */
-.user-label .required {
-  color: #cc0000;
-}
-
-/* foco / valor presente */
-.input:focus,
-.input:valid {
-  outline: none;
-  border: 1.5px solid #1a73e8;     /* azul tipo mockup */
-}
-
-/* animación de la etiqueta */
-.input:focus + .user-label,
-.input:valid + .user-label {
-  transform: translateY(-50%) scale(0.8);
-  background-color: #ffffff;       /* se “corta” con el fondo blanco */
-  padding: 0 0.25em;
-  color: #1a73e8;
-}
-
-.datos-main-layout {
-  display: grid;
-  grid-template-columns: 1.1fr 1fr;   /* más espacio a la izquierda, form a la derecha */
-  gap: 0;
-  height: calc(100vh - 80px);         /* mismo alto que en la otra pantalla */
-}
-
-/* panel izquierdo ya existe; sólo aseguramos que el título matchee al derecho */
-.section-title-datos {
-  font-size: 2rem;          /* igual que "Reserva de Habitación" */
-  font-weight: 700;
-  margin: 0 0 24px 0;
-}
-
-/* panel derecho bien pegado a la izquierda de su columna */
-.datos-right-panel {
-  padding: 40px 64px 40px 40px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-/* mismo estilo de título que el de la izquierda */
-.datos-form-title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0 0 32px 0;
-}
-
-/* ===== Formulario (inputs más chicos, ~mitad de ancho) ===== */
-
-.datos-form {
-  width: 60%;               /* aprox. la mitad de su columna */
-  max-width: 480px;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.datos-form .input {
-  width: 100%;
-  border: 1.5px solid #7a7a7a;   /* gris oscuro */
-  background: none;
-  padding: 1rem;
-  font-size: 1rem;
-  color: #333;                  /* texto oscuro */
-  transition: border 150ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* color del label flotante */
-.datos-form .user-label {
-  position: absolute;
-  left: 15px;
-  color: #555;                  /* gris más oscuro */
-  pointer-events: none;
-  transform: translateY(1rem);
-  transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  background-color: #ffffff;
-  padding: 0 .2em;
-}
-
-/* borde al enfocar */
-.datos-form .input:focus,
-.datos-form .input:valid {
-  outline: none;
-  border: 1.5px solid #3a3a3a;  /* gris aún más oscuro */
-}
-
-/* label cuando sube */
-.datos-form .input:focus ~ .user-label,
-.datos-form .input:valid ~ .user-label {
-  transform: translateY(-50%) scale(0.8);
-  color: #000;                  /* negro */
-  background-color: #ffffff;
-  padding: 0 .2em;
-}
-
-
-
-
-
-/* ===== Número de teléfono: prefijo + número uno al lado del otro ===== */
-
-.phone-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
-.phone-label {
-  font-size: 0.95rem;
-  color: #555555;
-}
-
-.phone-row {
-  display: flex;
-  gap: 10px;
-}
-
-/* "combo" de prefijo */
-.phone-prefix {
-  border: 1px solid #9e9e9e;
-  padding: 0.6rem 0.75rem;
-  background-color: #ffffff;
-  min-width: 90px;
-  font-size: 0.95rem;
-}
-
-/* input de número */
-.phone-input {
-  flex: 1;
-  border: 1px solid #9e9e9e;
-  padding: 0.6rem 0.75rem;
-  font-size: 0.95rem;
-}
-
-/* botones un poco más separados del form y pegados a la derecha de su ancho */
-.datos-actions-row {
-  margin-top: 24px;
-  justify-content: flex-end;
-  width: 100%;
-}
-  datos-actions-row {
-  justify-content: flex-start; 
-  padding-left: 0.5rem;        /* opcional, para que no queden pegados al borde */
-}
-
-/*------------------- POP UPS -------------------*/
-
-.input-error {
-  border-color: #e53935 !important;  /* rojo */
-}
-
-.field-error-message {
-  margin-top: 4px;
-  font-size: 12px;
-  color: #e53935;
-}
-
-/* label flotante en rojo cuando hay error */
-.input-error + .user-label {
-  color: #e53935;
-}
-
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.25);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-}
-
-.modal-window {
-  width: 340px;
-  background-color: #ffffff;
-  border: 1px solid #555555;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-  font-size: 13px;
-}
-
-/* cabecera tipo “ventana” */
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
-  border-bottom: 1px solid #555555;
-}
-
-.modal-header-success {
-  background-color: #8bc34a;   /* verde pastel similar al mockup */
-  color: #000000;
-}
-
-.modal-title {
-  font-weight: bold;
-}
-
-/* botón X */
-.modal-close {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.modal-body {
-  padding: 18px 16px;
-  text-align: center;
-}
-
-.modal-footer {
-  padding: 10px 12px 12px 12px;
-  display: flex;
-  justify-content: center;
 }
