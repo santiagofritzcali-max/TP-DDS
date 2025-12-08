@@ -35,7 +35,12 @@ public class Reserva {
     @Column(name = "telefono", length = 30)
     private String telefono;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "habitacion_id", nullable = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumns({
+        @JoinColumn(name = "nro_piso", referencedColumnName = "nro_piso", nullable = false),
+        @JoinColumn(name = "nro_habitacion", referencedColumnName = "nro_habitacion", nullable = false)
+    })
     private Habitacion habitacion;
+
+
 }

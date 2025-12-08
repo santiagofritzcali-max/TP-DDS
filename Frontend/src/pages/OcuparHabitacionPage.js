@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/ocuparHabitacionStyle.css';
 import { ocuparHabitacion } from '../services/estadiaService';
@@ -8,12 +8,25 @@ const OcuparHabitacionPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Datos que vienen (o vendrán) desde CU05
+  // Lo que viene desde CU05 (asumimos formato "piso-habitacion", ej. "2-301")
   const {
     numeroHabitacion = '',
     fechaIngreso = '',
     fechaEgreso = '',
   } = location.state || {};
+
+  // Derivamos nroPiso y nroHabitacion (enteros) a partir del string "piso-hab"
+  const { nroPiso, nroHabitacion } = useMemo(() => {
+    if (typeof numeroHabitacion === 'string' && numeroHabitacion.includes('-')) {
+      const [pisoStr, habStr] = numeroHabitacion.split('-');
+      const piso = parseInt(pisoStr, 10);
+      const hab = parseInt(habStr, 10);
+      if (!isNaN(piso) && !isNaN(hab)) {
+        return { nroPiso: piso, nroHabitacion: hab };
+      }
+    }
+    return { nroPiso: null, nroHabitacion: null };
+  }, [numeroHabitacion]);
 
   // Form de búsqueda de huésped
   const [filtroNombre, setFiltroNombre] = useState('');
@@ -23,7 +36,8 @@ const OcuparHabitacionPage = () => {
 
   // Resultados / selección
   const [resultados, setResultados] = useState([]);
-  const [idsSeleccionados, setIdsSeleccionados] = useState([]);
+  // ahora guardamos objetos { tipoDoc, nroDoc }
+  const [huespedesSeleccionados, setHuespedesSeleccionados] = useState([]);
   const [ocuparIgualSiReservada, setOcuparIgualSiReservada] = useState(false);
 
   // Estado general
@@ -34,65 +48,84 @@ const OcuparHabitacionPage = () => {
 
   // --- BÚSQUEDA ---
   const handleBuscar = async (e) => {
-    e.preventDefault();
-    setError('');
-    setMensajeOk('');
-    setResultados([]);
-    setIdsSeleccionados([]);
+  e.preventDefault();
+  setError('');
+  setMensajeOk('');
+  setResultados([]);          // limpiamos solo los resultados que se ven
+  // NO limpiamos huespedesSeleccionados
 
-    setBuscando(true);
-    try {
-      const data = await buscarHuespedes(
-        {
-          nombre: filtroNombre,
-          apellido: filtroApellido,
-          tipoDoc: filtroTipoDoc,
-          nroDoc: filtroNroDoc,
-        },
-        1
-      );
-      setResultados(data);
+  setBuscando(true);
+  try {
+    const { status, data } = await buscarHuespedes(
+      {
+        nombre: filtroNombre,
+        apellido: filtroApellido,
+        tipoDoc: filtroTipoDoc,
+        nroDoc: filtroNroDoc,
+      },
+      1
+    );
 
-      if (data.length === 0) {
-        setError('No se encontraron huéspedes con esos datos.');
-      }
-    } catch (err) {
-      setError('Error al buscar huéspedes.');
-    } finally {
-      setBuscando(false);
+    if (status === 204 || !Array.isArray(data) || data.length === 0) {
+      setError('No se encontraron huéspedes con esos datos.');
+      setResultados([]);
+      return;
     }
-  };
 
+    setResultados(data);
+  } catch (err) {
+    setError('Error al buscar huéspedes.');
+  } finally {
+    setBuscando(false);
+  }
+};
+
+
+  // helpers para comparar tipoDoc+nroDoc
+  const esMismoHuesped = (a, b) =>
+    a.tipoDoc === b.tipoDoc && a.nroDoc === b.nroDoc;
 
   // --- SELECCIÓN DE HUESPEDES ---
-  const toggleSeleccionHuesped = (id) => {
-    setIdsSeleccionados((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+  const toggleSeleccionHuesped = (huesped) => {
+    const candidato = { tipoDoc: huesped.tipoDoc, nroDoc: huesped.nroDoc };
+
+    setHuespedesSeleccionados((prev) => {
+      const yaEsta = prev.some((h) => esMismoHuesped(h, candidato));
+      if (yaEsta) {
+        return prev.filter((h) => !esMismoHuesped(h, candidato));
+      }
+      return [...prev, candidato];
+    });
   };
+
+  const estaSeleccionado = (huesped) =>
+    huespedesSeleccionados.some((h) =>
+      esMismoHuesped(h, { tipoDoc: huesped.tipoDoc, nroDoc: huesped.nroDoc })
+    );
 
   // --- ACEPTAR (OCUPAR HABITACIÓN) ---
   const handleConfirmarOcupacion = async () => {
     setError('');
     setMensajeOk('');
 
-    if (!numeroHabitacion || !fechaIngreso || !fechaEgreso) {
+    if (!nroPiso || !nroHabitacion || !fechaIngreso || !fechaEgreso) {
       setError(
         'Faltan datos de habitación o fechas (deberían venir desde el CU05).'
       );
       return;
     }
 
-    if (idsSeleccionados.length === 0) {
+    if (huespedesSeleccionados.length === 0) {
       setError('Debe seleccionar al menos un huésped.');
       return;
     }
 
     const requestBody = {
-      numeroHabitacion: String(numeroHabitacion),
+      nroPiso,
+      nroHabitacion,
       fechaIngreso,   // "YYYY-MM-DD"
       fechaEgreso,    // "YYYY-MM-DD"
-      idsHuespedes: idsSeleccionados,
+      huespedes: huespedesSeleccionados, // [{tipoDoc, nroDoc}]
       ocuparIgualSiReservada,
     };
 
@@ -113,7 +146,6 @@ const OcuparHabitacionPage = () => {
   };
 
   // --- SEGUIR CARGANDO ---
-  // Deja guardados los idsSeleccionados y limpia la búsqueda/lista
   const handleSeguirCargando = () => {
     setResultados([]);
     setFiltroNombre('');
@@ -122,24 +154,23 @@ const OcuparHabitacionPage = () => {
     setFiltroNroDoc('');
     setError('');
     setMensajeOk('');
-    // idsSeleccionados se mantiene tal cual
+    // huespedesSeleccionados se mantiene
   };
 
   // --- CARGAR OTRA HABITACIÓN ---
-  // Vuelve al CU05, pasando los huéspedes seleccionados y datos actuales
   const handleCargarOtraHabitacion = () => {
     navigate('/cu05', {
       state: {
         numeroHabitacion,
         fechaIngreso,
         fechaEgreso,
-        idsHuespedesSeleccionados: idsSeleccionados,
+        huespedesSeleccionados, // ahora pasamos los objetos, no ids
       },
     });
   };
 
   const handleSalir = () => {
-    navigate('/'); // si no usás "Salir", podés borrar este handler
+    navigate('/');
   };
 
   return (
@@ -170,7 +201,7 @@ const OcuparHabitacionPage = () => {
           <form className="form-busqueda" onSubmit={handleBuscar}>
             <div className="form-row">
               <label>
-                Nombre <br/>
+                Nombre <br />
                 <input
                   type="text"
                   value={filtroNombre}
@@ -181,7 +212,7 @@ const OcuparHabitacionPage = () => {
 
             <div className="form-row">
               <label>
-                Apellido<br/>
+                Apellido<br />
                 <input
                   type="text"
                   value={filtroApellido}
@@ -232,7 +263,7 @@ const OcuparHabitacionPage = () => {
           </form>
         </section>
 
-        {/*Resultados de la busqueda */}
+        {/* Resultados de la búsqueda */}
         <section className="panel-right">
           <h2 className="panel-title">Resultados de búsqueda</h2>
 
@@ -256,7 +287,7 @@ const OcuparHabitacionPage = () => {
                   </tr>
                 ) : (
                   resultados.map((h) => (
-                    <tr key={h.id}>
+                    <tr key={`${h.tipoDoc}-${h.nroDoc}`}>
                       <td>{h.apellido}</td>
                       <td>{h.nombre}</td>
                       <td>{h.tipoDoc}</td>
@@ -264,8 +295,8 @@ const OcuparHabitacionPage = () => {
                       <td>
                         <input
                           type="checkbox"
-                          checked={idsSeleccionados.includes(h.id)}
-                          onChange={() => toggleSeleccionHuesped(h.id)}
+                          checked={estaSeleccionado(h)}
+                          onChange={() => toggleSeleccionHuesped(h)}
                         />
                       </td>
                     </tr>
@@ -298,14 +329,14 @@ const OcuparHabitacionPage = () => {
             </button>
           </div>
 
-          {/* Botones inferiores: seguir cargando / cargar otra habitación / salir */}
+          {/* Botones inferiores */}
           <div className="panel-footer-bottom">
             <div className="panel-footer-bottom-left">
               <button
                 type="button"
                 className="btn-secondary"
                 onClick={handleSeguirCargando}
-                disabled={idsSeleccionados.length === 0}
+                disabled={huespedesSeleccionados.length === 0}
               >
                 Seguir cargando
               </button>
@@ -313,7 +344,7 @@ const OcuparHabitacionPage = () => {
                 type="button"
                 className="btn-secondary"
                 onClick={handleCargarOtraHabitacion}
-                disabled={idsSeleccionados.length === 0}
+                disabled={huespedesSeleccionados.length === 0}
               >
                 Cargar otra habitación
               </button>

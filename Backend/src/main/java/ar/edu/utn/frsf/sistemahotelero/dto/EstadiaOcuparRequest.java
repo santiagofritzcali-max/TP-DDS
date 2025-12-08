@@ -1,6 +1,5 @@
 package ar.edu.utn.frsf.sistemahotelero.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
@@ -12,19 +11,22 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OcuparHabitacionRequest {
+public class EstadiaOcuparRequest {
 
-    @NotBlank
-    private String numeroHabitacion;
+    @NotNull(message = "El número de habitación es obligatorio")
+    private Integer nroHabitacion;
 
-    @NotNull
+    @NotNull(message = "El número de piso es obligatorio")
+    private Integer nroPiso;
+        
+    @NotNull(message = "La fecha de ingreso es obligatoria")
     private LocalDate fechaIngreso;
 
-    @NotNull
+    @NotNull(message = "La fecha de egreso es obligatoria")
     private LocalDate fechaEgreso;
 
     @Size(min = 1, message = "Debe seleccionar al menos un huésped")
-    private List<Long> idsHuespedes;
+    private List<HuespedIdDTO> huespedes;
 
     private boolean ocuparIgualSiReservada;
 }

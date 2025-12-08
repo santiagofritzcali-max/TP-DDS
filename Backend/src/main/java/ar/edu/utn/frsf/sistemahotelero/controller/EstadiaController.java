@@ -1,7 +1,7 @@
 package ar.edu.utn.frsf.sistemahotelero.controller;
 
-import ar.edu.utn.frsf.sistemahotelero.dto.OcuparHabitacionRequest;
-import ar.edu.utn.frsf.sistemahotelero.dto.OcuparHabitacionResponse;
+import ar.edu.utn.frsf.sistemahotelero.dto.EstadiaOcuparRequest;
+import ar.edu.utn.frsf.sistemahotelero.dto.EstadiaOcuparResponse;
 import ar.edu.utn.frsf.sistemahotelero.service.GestorReserva;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +17,10 @@ public class EstadiaController {
     private GestorReserva gestorReserva;
 
     @PostMapping("/ocupar")
-    public ResponseEntity<OcuparHabitacionResponse> ocuparHabitacion(
-            @Valid @RequestBody OcuparHabitacionRequest request) {
+    public ResponseEntity<EstadiaOcuparResponse> ocuparHabitacion(
+            @Valid @RequestBody EstadiaOcuparRequest request) {
 
-        OcuparHabitacionResponse response = gestorReserva.ocuparHabitacion(request);
+        EstadiaOcuparResponse response = gestorReserva.ocuparHabitacion(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

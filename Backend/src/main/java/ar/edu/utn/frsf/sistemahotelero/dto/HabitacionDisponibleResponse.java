@@ -1,6 +1,6 @@
 package ar.edu.utn.frsf.sistemahotelero.dto;
 import ar.edu.utn.frsf.sistemahotelero.enums.EstadoHabitacion;
-import ar.edu.utn.frsf.sistemahotelero.enums.TipoCama;
+import ar.edu.utn.frsf.sistemahotelero.enums.tipoCama;
 
 //DTO de una habitación disponible para mostrar en la grilla de la UI
 
@@ -12,7 +12,7 @@ public class HabitacionDisponibleResponse {
     private Double tarifaBase;
     private String descripcion;
     private Integer cantidadCamas;
-    private TipoCama tipoDeCama;
+    private tipoCama tipoDeCama;
 
     // Getters y setters
     public String getNumero() { return numero; }
@@ -33,6 +33,6 @@ public class HabitacionDisponibleResponse {
     public Integer getCantidadCamas() { return cantidadCamas; }
     public void setCantidadCamas(Integer cantidadCamas) { this.cantidadCamas = cantidadCamas; }
 
-    public TipoCama getTipoDeCama() { return tipoDeCama; }
-    public void setTipoDeCama(TipoCama tipoDeCama) { this.tipoDeCama = tipoDeCama; }
+    public tipoCama getTipoDeCama() { return tipoDeCama; }
+    public void setTipoDeCama(tipoCama tipoDeCama) { this.tipoDeCama = tipoDeCama; }
 }

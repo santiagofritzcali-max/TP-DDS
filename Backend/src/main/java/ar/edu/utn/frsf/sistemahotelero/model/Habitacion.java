@@ -8,7 +8,7 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "g17_habitacion") // usá el nombre real exacto de tu tabla
+@Table(name = "G17_habitacion") // usá el nombre real exacto de tu tabla
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 public class Habitacion {
@@ -22,7 +22,7 @@ public class Habitacion {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "tipoDeCama", nullable = false)
-  private TipoCama tipoDeCama;
+  private tipoCama tipoDeCama;
 
   @Column(name = "cantidadCamas", nullable = false)
   private Integer cantidadCamas;
