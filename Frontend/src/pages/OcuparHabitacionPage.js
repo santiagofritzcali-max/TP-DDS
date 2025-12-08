@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/ocuparHabitacionStyle.css';
 import { ocuparHabitacion } from '../services/estadiaService';
-import { buscarHuespedes } from '../services/huespedService'; 
+import { buscarHuespedes } from '../services/huespedService';
 
 const OcuparHabitacionPage = () => {
   const location = useLocation();
@@ -28,31 +28,33 @@ const OcuparHabitacionPage = () => {
     return { nroPiso: null, nroHabitacion: null };
   }, [numeroHabitacion]);
 
-  // Form de búsqueda de huésped
+
+  //estados
   const [filtroNombre, setFiltroNombre] = useState('');
   const [filtroApellido, setFiltroApellido] = useState('');
   const [filtroTipoDoc, setFiltroTipoDoc] = useState('DNI');
   const [filtroNroDoc, setFiltroNroDoc] = useState('');
 
-  // Resultados / selección
   const [resultados, setResultados] = useState([]);
-  // ahora guardamos objetos { tipoDoc, nroDoc }
+
   const [huespedesSeleccionados, setHuespedesSeleccionados] = useState([]);
   const [ocuparIgualSiReservada, setOcuparIgualSiReservada] = useState(false);
+  const [puedeBuscar, setPuedeBuscar] = useState(true);
+  const [mostrarAccionesPostAceptar, setMostrarAccionesPostAceptar] = useState(false);
 
-  // Estado general
   const [buscando, setBuscando] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
   const [mensajeOk, setMensajeOk] = useState('');
 
   // --- BÚSQUEDA ---
-  const handleBuscar = async (e) => {
+
+ const handleBuscar = async (e) => {
   e.preventDefault();
+
   setError('');
   setMensajeOk('');
-  setResultados([]);          // limpiamos solo los resultados que se ven
-  // NO limpiamos huespedesSeleccionados
+  setResultados([]);  // sólo limpio lo visible, NO los seleccionados
 
   setBuscando(true);
   try {
@@ -75,17 +77,20 @@ const OcuparHabitacionPage = () => {
     setResultados(data);
   } catch (err) {
     setError('Error al buscar huéspedes.');
+    setPuedeBuscar(true);
   } finally {
     setBuscando(false);
   }
 };
 
 
-  // helpers para comparar tipoDoc+nroDoc
+
+
+  //compara tipoDoc+nroDoc
   const esMismoHuesped = (a, b) =>
     a.tipoDoc === b.tipoDoc && a.nroDoc === b.nroDoc;
 
-  // --- SELECCIÓN DE HUESPEDES ---
+  //para la seleccion de los huespedes
   const toggleSeleccionHuesped = (huesped) => {
     const candidato = { tipoDoc: huesped.tipoDoc, nroDoc: huesped.nroDoc };
 
@@ -103,29 +108,28 @@ const OcuparHabitacionPage = () => {
       esMismoHuesped(h, { tipoDoc: huesped.tipoDoc, nroDoc: huesped.nroDoc })
     );
 
-  // --- ACEPTAR (OCUPAR HABITACIÓN) ---
+  //boton de aceptar la ocupacion
   const handleConfirmarOcupacion = async () => {
     setError('');
     setMensajeOk('');
 
     if (!nroPiso || !nroHabitacion || !fechaIngreso || !fechaEgreso) {
       setError(
-        'Faltan datos de habitación o fechas (deberían venir desde el CU05).'
+        'Faltan datos de habitación o fechas.'
       );
       return;
     }
 
     if (huespedesSeleccionados.length === 0) {
-      setError('Debe seleccionar al menos un huésped.');
       return;
     }
 
     const requestBody = {
       nroPiso,
       nroHabitacion,
-      fechaIngreso,   // "YYYY-MM-DD"
-      fechaEgreso,    // "YYYY-MM-DD"
-      huespedes: huespedesSeleccionados, // [{tipoDoc, nroDoc}]
+      fechaIngreso,
+      fechaEgreso,
+      huespedes: huespedesSeleccionados,
       ocuparIgualSiReservada,
     };
 
@@ -133,6 +137,8 @@ const OcuparHabitacionPage = () => {
     try {
       const resp = await ocuparHabitacion(requestBody);
       setMensajeOk(resp.mensaje || 'Habitación ocupada correctamente.');
+      setPuedeBuscar(false);
+      setMostrarAccionesPostAceptar(true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -140,12 +146,12 @@ const OcuparHabitacionPage = () => {
     }
   };
 
-  // --- CANCELAR (columna izquierda) ---
+  //manejador de cancelar de la pantalla izq
   const handleCancelar = () => {
-    navigate('/'); // o a donde quieras salir del CU15
+    navigate('/');
   };
 
-  // --- SEGUIR CARGANDO ---
+  //manejador para seguir canrgando
   const handleSeguirCargando = () => {
     setResultados([]);
     setFiltroNombre('');
@@ -154,10 +160,11 @@ const OcuparHabitacionPage = () => {
     setFiltroNroDoc('');
     setError('');
     setMensajeOk('');
-    // huespedesSeleccionados se mantiene
+    setPuedeBuscar(true);
+    setMostrarAccionesPostAceptar(false);
   };
 
-  // --- CARGAR OTRA HABITACIÓN ---
+  //manejador para cargar otra habitacion
   const handleCargarOtraHabitacion = () => {
     navigate('/cu05', {
       state: {
@@ -255,7 +262,7 @@ const OcuparHabitacionPage = () => {
               <button
                 type="submit"
                 className="btn-primary"
-                disabled={buscando}
+                disabled={buscando || !puedeBuscar}
               >
                 {buscando ? 'Buscando...' : 'Aceptar'}
               </button>
@@ -323,40 +330,40 @@ const OcuparHabitacionPage = () => {
               type="button"
               className="btn-primary"
               onClick={handleConfirmarOcupacion}
-              disabled={enviando}
+              disabled={enviando || mostrarAccionesPostAceptar}
             >
               {enviando ? 'Ocupando...' : 'Aceptar'}
             </button>
           </div>
 
           {/* Botones inferiores */}
-          <div className="panel-footer-bottom">
-            <div className="panel-footer-bottom-left">
+          {mostrarAccionesPostAceptar && (
+            <div className="panel-footer-bottom">
+              <div className="panel-footer-bottom-left">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={handleSeguirCargando}
+                >
+                  Seguir cargando
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={handleCargarOtraHabitacion}
+                >
+                  Cargar otra habitación
+                </button>
+              </div>
               <button
                 type="button"
                 className="btn-secondary"
-                onClick={handleSeguirCargando}
-                disabled={huespedesSeleccionados.length === 0}
+                onClick={handleSalir}
               >
-                Seguir cargando
-              </button>
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={handleCargarOtraHabitacion}
-                disabled={huespedesSeleccionados.length === 0}
-              >
-                Cargar otra habitación
+                Salir
               </button>
             </div>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={handleSalir}
-            >
-              Salir
-            </button>
-          </div>
+          )}
         </section>
       </div>
 
@@ -370,3 +377,4 @@ const OcuparHabitacionPage = () => {
 };
 
 export default OcuparHabitacionPage;
+
