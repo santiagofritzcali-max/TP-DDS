@@ -1,8 +1,8 @@
 // ar.edu.utn.frsf.sistemahotelero.service.GestorReserva.java
 package ar.edu.utn.frsf.sistemahotelero.service;
 
-import ar.edu.utn.frsf.sistemahotelero.dto.OcuparHabitacionRequest;
-import ar.edu.utn.frsf.sistemahotelero.dto.OcuparHabitacionResponse;
+import ar.edu.utn.frsf.sistemahotelero.dto.EstadiaOcuparRequest;
+import ar.edu.utn.frsf.sistemahotelero.dto.EstadiaOcuparResponse;
 import ar.edu.utn.frsf.sistemahotelero.model.Reserva;
 import java.time.LocalDate;
 import java.util.List;
@@ -18,6 +18,5 @@ public interface GestorReserva {
             String telefono
     );
 
-    OcuparHabitacionResponse ocuparHabitacion(OcuparHabitacionRequest request);
+    EstadiaOcuparResponse ocuparHabitacion(EstadiaOcuparRequest request);
 }
-

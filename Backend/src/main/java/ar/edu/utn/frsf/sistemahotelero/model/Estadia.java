@@ -1,8 +1,9 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
-import ar.edu.utn.frsf.sistemahotelero.enums.EstadoHabitacion;
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,7 +17,8 @@ public class Estadia {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    @Column(name = "id")
+    private String id; 
 
     @Column(name = "fecha_ingreso", nullable = false)
     private LocalDate fechaIngreso;
@@ -32,5 +34,15 @@ public class Estadia {
     @JoinColumn(name = "reserva_id")
     private Reserva reserva;
 
-    //DSP HAGO LO DE ASOCIAR LOS HUESPEDES
+    @ManyToMany
+    @JoinTable(
+        name = "G17_estadia_huesped",
+        joinColumns = @JoinColumn(name = "estadia_id", referencedColumnName = "id"),
+        inverseJoinColumns = {
+            @JoinColumn(name = "huesped_nro_doc", referencedColumnName = "nro_doc"),
+            @JoinColumn(name = "huesped_tipo_doc", referencedColumnName = "tipo_doc")
+        }
+    )
+    private List<Huesped> huespedes;
 }
+
