@@ -8,11 +8,15 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class OcuparHabitacionResponse {
+public class EstadiaOcuparResponse {
 
     private String estadiaId;
-    private String numeroHabitacion;
+    
+    private Integer nroPiso;
+    private Integer nroHabitacion; 
+    
     private LocalDate fechaIngreso;
     private LocalDate fechaEgreso;
+    
     private String mensaje;
 }

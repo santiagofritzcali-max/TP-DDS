@@ -22,7 +22,7 @@ public class Habitacion {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "tipoDeCama", nullable = false)
-  private TipoCama tipoDeCama;
+  private tipoCama tipoDeCama;
 
   @Column(name = "cantidadCamas", nullable = false)
   private Integer cantidadCamas;
