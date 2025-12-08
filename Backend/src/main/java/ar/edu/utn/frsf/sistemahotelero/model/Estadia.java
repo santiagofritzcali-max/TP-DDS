@@ -27,8 +27,12 @@ public class Estadia {
     private LocalDate fechaEgreso;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "habitacion_id", nullable = false)
+    @JoinColumns({
+      @JoinColumn(name="nro_piso", referencedColumnName="nro_piso"),
+      @JoinColumn(name="nro_habitacion", referencedColumnName="nro_habitacion")
+    })
     private Habitacion habitacion;
+
 
     @OneToOne(optional = true)
     @JoinColumn(name = "reserva_id")
