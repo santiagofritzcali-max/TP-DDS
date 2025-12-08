@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import '../styles/busquedaHuesped.css';
 import { buscarHuespedes } from '../services/huespedService';
 
@@ -17,97 +17,303 @@ const BusquedaHuespedPage = () => {
   const [huespedSeleccionado, setHuespedSeleccionado] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState('');
-  const [page, setPage] = useState(1);
+  const [mostrarModalSinResultados, setMostrarModalSinResultados] = useState(false);
+  const [mostrarModalSinSeleccion, setMostrarModalSinSeleccion] = useState(false);
+  const [page, setPage] = useState(1); 
+  const [loadingMore, setLoadingMore] = useState(false); 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
+
+
   const handleBuscar = async () => {
     setCargando(true);
     setMensaje('');
 
     try {
-      const data = await buscarHuespedes(form, 1);
-      setHuespedes(data);
-      setPage(1);
+      const { status, data } = await buscarHuespedes(form, 1);
+
+      if (status === 204 || (Array.isArray(data) && data.length === 0)) {
+        setMensaje('');
+        setHuespedes([]);
+        setHuespedSeleccionado(null);
+        setPage(1);
+        setMostrarModalSinResultados(true);
+        return;
+      }
+
+      setMostrarModalSinResultados(false);
+      setHuespedes(data || []);
       setHuespedSeleccionado(null);
-    } catch (e) {
+      setPage(1);
+    } catch (error) {
       setMensaje('Error al realizar la búsqueda.');
     } finally {
       setCargando(false);
     }
   };
 
-  return (
-    <div className="appRoot">
-      <main className="page">
-        <h1 className="h1">Buscar Huésped</h1>
+  const handleScroll = async (e) => {
+      const bottom = e.target.scrollHeight === e.target.scrollTop + e.target.clientHeight;
+      if (bottom && !loadingMore) {
+        setLoadingMore(true);
+        setPage((prevPage) => prevPage + 1);
 
-        {mensaje && <p className="alert">{mensaje}</p>}
+        // Cargar siguiente página de resultados
+        try {
+          const response = await fetch(
+            `http://localhost:8080/api/huespedes/busqueda?apellido=${form.apellido}&nombre=${form.nombre}&nroDoc=${form.nroDoc}&tipoDoc=${form.tipoDoc}&page=${page + 1}`
+          );
+          const data = await response.json();
+          setHuespedes((prevHuespedes) => [...prevHuespedes, ...data]);
+        } catch (error) {
+          setMensaje('Error al cargar más resultados.');
+        } finally {
+          setLoadingMore(false);
+        }
+      }
+    };
 
-        <form onSubmit={(e) => e.preventDefault()}>
-          <div className="formMainGrid">
-            <div>
-              <section className="formSection">
-                <div className="formSectionTitle">Buscar Huésped</div>
+    const handleAceptarSeleccion = () => {
+      if (huespedes.length > 0 && !huespedSeleccionado) {
+        setMostrarModalSinSeleccion(true);
+        return;
+      }
+      if (!huespedSeleccionado) return;
+      setMensaje(
+        `Huesped seleccionado: ${huespedSeleccionado.apellido} - ${huespedSeleccionado.nombre} - ${huespedSeleccionado.nroDoc} (${huespedSeleccionado.tipoDoc})`
+      );
+    };
 
-                <div className="formGrid2">
-                  <div className="formGroup">
-                    <label className="label">Apellido</label>
-                    <input name="apellido" value={form.apellido} onChange={handleChange} className="input" />
-                  </div>
+    const cerrarModalSinResultados = () => {
+      setMostrarModalSinResultados(false);
+    };
 
-                  <div className="formGroup">
-                    <label className="label">Nombre</label>
-                    <input name="nombre" value={form.nombre} onChange={handleChange} className="input" />
-                  </div>
+    const cerrarModalSinSeleccion = () => {
+      setMostrarModalSinSeleccion(false);
+    };
 
-                  <div className="formGroup">
-                    <label className="label">Tipo de Documento</label>
-                    <select name="tipoDoc" value={form.tipoDoc} onChange={handleChange} className="input">
-                      <option value="">Seleccionar</option>
-                      {TIPO_DOC_OPCIONES.map(op => <option key={op}>{op}</option>)}
-                    </select>
-                  </div>
+    const irAltaHuesped = () => {
+      const origen = huespedSeleccionado || form;
+      const params = new URLSearchParams();
 
-                  <div className="formGroup">
-                    <label className="label">Número de Documento</label>
-                    <input name="nroDoc" value={form.nroDoc} onChange={handleChange} className="input" />
-                  </div>
+      if (origen.nombre) params.append('nombre', origen.nombre);
+      if (origen.apellido) params.append('apellido', origen.apellido);
+      if (origen.nroDoc) params.append('nroDoc', origen.nroDoc);
+      if (origen.tipoDoc) params.append('tipoDoc', origen.tipoDoc);
+
+      const query = params.toString();
+      window.location.href = query ? `/cu09?${query}` : '/cu09';
+    };
+
+    const handleCancelar = () => {
+      window.location.reload();
+    };
+
+ return (
+  <div className="appRoot">
+
+    <main className="page">
+      <h1 className="h1">Buscar Huésped</h1>
+
+      {mensaje && <p className="alert">{mensaje}</p>}
+
+      <form onSubmit={(e) => e.preventDefault()}>
+        <div className="formMainGrid">
+          <div>
+            <section className="formSection">
+              <div className="formSectionTitle">Buscar Huésped</div>
+
+              <div className="formGrid2">
+                <div className="formGroup">
+                  <label className="label">Apellido</label>
+                  <input
+                    name="apellido"
+                    value={form.apellido}
+                    onChange={handleChange}
+                    className="input"
+                  />
                 </div>
-              </section>
 
-              <button className="btnPrimary" onClick={handleBuscar} disabled={cargando}>
+                <div className="formGroup">
+                  <label className="label">Nombre</label>
+                  <input
+                    name="nombre"
+                    value={form.nombre}
+                    onChange={handleChange}
+                    className="input"
+                  />
+                </div>
+
+                <div className="formGroup">
+                  <label className="label">Tipo de Documento</label>
+                  <select
+                    name="tipoDoc"
+                    value={form.tipoDoc}
+                    onChange={handleChange}
+                    className="input"
+                  >
+                    <option value="">Seleccionar tipo de documento</option>
+                    {TIPO_DOC_OPCIONES.map((op) => (
+                      <option key={op} value={op}>{op}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="formGroup">
+                  <label className="label">Número de Documento</label>
+                  <input
+                    name="nroDoc"
+                    value={form.nroDoc}
+                    onChange={handleChange}
+                    className="input"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <div className="searchActions">
+              <button
+                type="button"
+                className="btnSecondary"
+                onClick={handleCancelar}
+                disabled={cargando}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                className="btnPrimary"
+                onClick={handleBuscar}
+                disabled={cargando}
+              >
                 {cargando ? 'Buscando...' : 'Buscar'}
               </button>
             </div>
+          </div>
 
-            <div className="resultsColumn">
-              <div className="userList">
-                {huespedes.map(h => (
-                  <div key={h.nroDoc} className="userItem" onClick={() => setHuespedSeleccionado(h)}>
-                    <div className="userRowLeft">
-                      <img src="/data/logo-huesped.png" alt="Huésped" className="userIconImage" />
-                      <div className="userText">
-                        {h.apellido} - {h.nombre} - {h.nroDoc} ({h.tipoDoc})
+          <div className="resultsColumn">
+            <div className="userList" onScroll={handleScroll}>
+              <section className="formSection">
+                <div className="formSectionTitle">Resultados de Búsqueda</div>
+
+                {huespedes.length === 0 ? (
+                  <p>No se encontraron resultados.</p>
+                ) : (
+                  huespedes.map((huesped) => (
+                    <div
+                      key={huesped.nroDoc}
+                      className="userItem"
+                      onClick={() => setHuespedSeleccionado(huesped)}
+                    >
+                      <div className="userRowLeft">
+                        <img
+                          src="/data/logo-huesped.png"
+                          alt={`Huésped ${huesped.apellido}`}
+                          className="userIconImage"
+                        />
+                        <div className="userText">
+                          {`${huesped.apellido} - ${huesped.nombre} - ${huesped.nroDoc} (${huesped.tipoDoc})`}
+                        </div>
                       </div>
-                    </div>
-                    <input type="radio" checked={huespedSeleccionado?.nroDoc === h.nroDoc} readOnly className="userRadio" />
-                  </div>
-                ))}
-              </div>
 
-              <button className="btnPrimary" disabled={!huespedSeleccionado}>
+                      <input
+                        type="radio"
+                        name="huespedSeleccionado"
+                        checked={huespedSeleccionado?.nroDoc === huesped.nroDoc}
+                        onChange={() => setHuespedSeleccionado(huesped)}
+                        className="userRadio"
+                      />
+                    </div>
+                  ))
+                )}
+
+                {loadingMore && <p>Cargando más...</p>}
+              </section>
+            </div>
+
+            <div className="listActions">
+              <button
+                type="button"
+                className="btnPrimary"
+                onClick={handleAceptarSeleccion}
+                disabled={huespedes.length === 0}
+              >
                 Aceptar
               </button>
             </div>
           </div>
-        </form>
-      </main>
-    </div>
-  );
+        </div>
+      </form>
+    </main>
+
+    {mostrarModalSinResultados && (
+      <div className="modalOverlay">
+        <div className="modalContentError">
+          <div className="modalTitleError">
+            Huésped no encontrado
+          </div>
+
+          <div className="modalBodyError">
+            No se encontraron registros que coincidan con la búsqueda. Verifique los datos ingresados o registre un nuevo huésped.
+          </div>
+
+          <div className="modalButtons">
+            <button
+              className="modalButtonBase modalButtonSecondary"
+              onClick={cerrarModalSinResultados}
+            >
+              Cancelar
+            </button>
+
+            <button
+              className="modalButtonBase modalButtonPrimary"
+              onClick={irAltaHuesped}
+            >
+              Dar alta de huésped
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {mostrarModalSinSeleccion && (
+      <div className="modalOverlay">
+        <div className="modalContentError">
+          <div className="modalTitleError">
+            Huésped no seleccionado
+          </div>
+
+          <div className="modalBodyError">
+            Debe seleccionar un huésped para continuar.
+          </div>
+
+          <div className="modalButtons">
+            <button
+              className="modalButtonBase modalButtonSecondary"
+              onClick={cerrarModalSinSeleccion}
+            >
+              Cancelar
+            </button>
+
+            <button
+              className="modalButtonBase modalButtonPrimary"
+              onClick={irAltaHuesped}
+            >
+              Dar alta de huésped
+            </button>
+          </div>
+        </div>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+      </div>
+    )}
+  </div>
+);
+
+
 };
 
 export default BusquedaHuespedPage;

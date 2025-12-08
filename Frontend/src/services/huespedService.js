@@ -35,15 +35,14 @@ export async function buscarHuespedes(form, page = 1) {
     )}&tipoDoc=${encodeURIComponent(tipoDoc)}&page=${page}`
   );
 
-  if (resp.status === 204) {
-    // sin contenido, lista vacía
-    return [];
-  }
-
-  if (!resp.ok) {
+  if (!resp.ok && resp.status !== 204) {
     throw new Error('Error al realizar la búsqueda.');
   }
 
+  if (resp.status === 204) {
+    return { status: 204, data: [] };
+  }
+
   const data = await resp.json();
-  return data; // en la page usamos directamente el array
+  return { status: resp.status, data };
 }
