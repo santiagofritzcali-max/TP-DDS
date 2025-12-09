@@ -1,14 +1,14 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import java.util.Date;
 
 @Entity
-@DiscriminatorValue("Cheque")  // Diferenciamos este tipo de MedioPago
+@Table(name = "G17_cheque")
 public class Cheque extends MedioPago {
 
     @Column(name = "idCheque")

@@ -1,10 +1,10 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
-import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @Entity
-@DiscriminatorValue("TarjetaDebito") 
+@Table(name = "G17_tarjeta_debito")
 public class TarjetaDebito extends Tarjeta {
 
 }

@@ -1,9 +1,9 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
-import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @Entity
-@DiscriminatorValue("Efectivo")  
+@Table(name = "G17_efectivo")
 public class Efectivo extends MedioPago {
 }

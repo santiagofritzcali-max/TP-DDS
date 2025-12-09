@@ -1,8 +1,6 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,8 +20,7 @@ import lombok.ToString;
 
 @Entity
 @Table(name = "G17_medio_pago")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)  
-@DiscriminatorColumn(name = "tipo_medio_pago", discriminatorType = DiscriminatorType.STRING)  
+@Inheritance(strategy = InheritanceType.JOINED)
 @Getter
 @Setter
 @ToString(exclude = "pago")
