@@ -1,6 +1,6 @@
-// ar.edu.utn.frsf.sistemahotelero.controller.ReservaController.java
 package ar.edu.utn.frsf.sistemahotelero.controller;
 
+import ar.edu.utn.frsf.sistemahotelero.dto.ReservaHabitacionRequest;
 import ar.edu.utn.frsf.sistemahotelero.dto.ReservaMapper;
 import ar.edu.utn.frsf.sistemahotelero.dto.ReservaRequest;
 import ar.edu.utn.frsf.sistemahotelero.dto.ReservaResponse;
@@ -10,9 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.time.LocalDate;
 import java.util.List;
-import org.springframework.web.bind.annotation.CrossOrigin;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
@@ -23,77 +23,86 @@ public class ReservaController {
     private GestorReserva gestorReserva;
 
     @PostMapping
-    // Este método recibe un pedido de reserva en forma de ReservaRequest desde la UI
     public ResponseEntity<?> reservar(@RequestBody ReservaRequest request) {
 
         try {
-            // Pasos 17, 18, 19 y 20, validaciones de formato y consistencia del controlador 
+            // Validaciones de formato y consistencia
             validarReservaRequest(request);
 
-            // Si llega aca, todo esta validado
+            // Si llega acá, todo está validado
             List<Reserva> reservas = gestorReserva.reservarHabitaciones(
-                    request.getNumerosHabitacion(),
-                    request.getFechaInicio(),
-                    request.getFechaFin(),
+                    request.getReservas(),
                     request.getNombre().trim(),
                     request.getApellido().trim(),
                     request.getTelefono().trim()
             );
 
-            List<ReservaResponse> respuesta = reservas.stream().map(ReservaMapper::toResponse).toList();
+            List<ReservaResponse> respuesta = reservas.stream()
+                    .map(ReservaMapper::toResponse)
+                    .toList();
 
             return ResponseEntity.ok(respuesta);
-        } 
+        }
         catch (IllegalArgumentException | IllegalStateException e) {
             // Errores de validación (del controller o del servicio)
             return ResponseEntity.badRequest().body(e.getMessage());
-        } 
+        }
         catch (Exception e) {
-            // Cualquier otro error inesperado 
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ocurrió un error inesperado al procesar la reserva.");
+            // Cualquier otro error inesperado
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Ocurrió un error inesperado al procesar la reserva.");
         }
     }
 
-   //realizar validaciones de formato antes de pasar la request a gestor reserva
+    // ====================================================================
+    // Validación de la request
+    // ====================================================================
     private void validarReservaRequest(ReservaRequest request) {
 
         if (request == null) {
             throw new IllegalArgumentException("El pedido de reserva no puede ser nulo.");
         }
 
-        // Validar que haya habitaciones a reservar
-        if (request.getNumerosHabitacion() == null || request.getNumerosHabitacion().isEmpty()) {
+        // ---- Validar lista de reservas por habitación ----
+        if (request.getReservas() == null || request.getReservas().isEmpty()) {
             throw new IllegalArgumentException("Se debe seleccionar al menos una habitación.");
         }
 
-        // Ningún número de habitación vacío o nulo
-        for (String nro : request.getNumerosHabitacion()) {
-            if (nro == null || nro.isBlank()) {
-                throw new IllegalArgumentException("Existe una habitación seleccionada con número vacío o nulo.");
-            }
-            
-        }
-
-        // Validación de fechas
-        LocalDate inicio = request.getFechaInicio();
-        LocalDate fin = request.getFechaFin();
-
-        if (inicio == null || fin == null) {
-            throw new IllegalArgumentException("Las fechas de inicio y fin de la reserva son obligatorias.");
-        }
-
-        if (fin.isBefore(inicio)) {
-            throw new IllegalArgumentException("La fecha de fin no puede ser anterior a la fecha de inicio.");
-        }
-
-        // (opcional, pero muy razonable en reservas de hotel)
         LocalDate hoy = LocalDate.now();
-        // Para validar que no se quiera hacer una reserva en el pasado
-        if (fin.isBefore(hoy)) {
-            throw new IllegalArgumentException("No se pueden realizar reservas completamente en el pasado.");
+
+        for (ReservaHabitacionRequest rReq : request.getReservas()) {
+
+            if (rReq == null) {
+                throw new IllegalArgumentException("Existe una reserva nula en el pedido.");
+            }
+
+            String nro = rReq.getNumeroHabitacion();
+            if (nro == null || nro.isBlank()) {
+                throw new IllegalArgumentException(
+                        "Existe una habitación seleccionada con número vacío o nulo.");
+            }
+
+            LocalDate inicio = rReq.getFechaInicio();
+            LocalDate fin = rReq.getFechaFin();
+
+            if (inicio == null || fin == null) {
+                throw new IllegalArgumentException(
+                        "Las fechas de inicio y fin de cada reserva de habitación son obligatorias.");
+            }
+
+            if (fin.isBefore(inicio)) {
+                throw new IllegalArgumentException(
+                        "La fecha de fin no puede ser anterior a la fecha de inicio para la habitación " + nro + ".");
+            }
+
+            // (Opcional, pero razonable)
+            if (fin.isBefore(hoy)) {
+                throw new IllegalArgumentException(
+                        "No se pueden realizar reservas completamente en el pasado para la habitación " + nro + ".");
+            }
         }
 
-        // Validación de nombre
+        // ---- Validación de nombre ----
         String nombre = request.getNombre();
         if (nombre == null || nombre.isBlank()) {
             throw new IllegalArgumentException("El nombre es obligatorio.");
@@ -106,7 +115,7 @@ public class ReservaController {
             throw new IllegalArgumentException("El nombre solo puede contener letras y espacios.");
         }
 
-        // Validación de apellido
+        // ---- Validación de apellido ----
         String apellido = request.getApellido();
         if (apellido == null || apellido.isBlank()) {
             throw new IllegalArgumentException("El apellido es obligatorio.");
@@ -119,7 +128,7 @@ public class ReservaController {
             throw new IllegalArgumentException("El apellido solo puede contener letras y espacios.");
         }
 
-        // Validación de teléfono
+        // ---- Validación de teléfono ----
         String telefono = request.getTelefono();
         if (telefono == null || telefono.isBlank()) {
             throw new IllegalArgumentException("El teléfono es obligatorio.");
@@ -128,9 +137,9 @@ public class ReservaController {
         if (telefono.length() < 6 || telefono.length() > 20) {
             throw new IllegalArgumentException("El teléfono debe tener entre 6 y 20 caracteres.");
         }
-        // Permitimos dígitos, espacios, + y -
         if (!telefono.matches("^[0-9+\\-\\s]+$")) {
-            throw new IllegalArgumentException("El teléfono solo puede contener dígitos, espacios, '+' o '-'.");
+            throw new IllegalArgumentException(
+                    "El teléfono solo puede contener dígitos, espacios, '+' o '-'.");
         }
     }
 }

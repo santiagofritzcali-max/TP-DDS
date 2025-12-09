@@ -8,34 +8,44 @@ import java.util.List;
 
 public class ReservaRequest {
 
-    private List<String> numerosHabitacion;
-
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private LocalDate fechaInicio;
-
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    private LocalDate fechaFin;
+    // Una entrada por habitación + rango
+    private List<ReservaHabitacionRequest> reservas;
 
     private String nombre;
     private String apellido;
     private String telefono;
 
-    // Getters y setters
-    public List<String> getNumerosHabitacion() { return numerosHabitacion; }
-    public void setNumerosHabitacion(List<String> numerosHabitacion) { this.numerosHabitacion = numerosHabitacion; }
+    // ===== Getters / Setters =====
 
-    public LocalDate getFechaInicio() { return fechaInicio; }
-    public void setFechaInicio(LocalDate fechaInicio) { this.fechaInicio = fechaInicio; }
+    public List<ReservaHabitacionRequest> getReservas() {
+        return reservas;
+    }
 
-    public LocalDate getFechaFin() { return fechaFin; }
-    public void setFechaFin(LocalDate fechaFin) { this.fechaFin = fechaFin; }
+    public void setReservas(List<ReservaHabitacionRequest> reservas) {
+        this.reservas = reservas;
+    }
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getNombre() {
+        return nombre;
+    }
 
-    public String getApellido() { return apellido; }
-    public void setApellido(String apellido) { this.apellido = apellido; }
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 
-    public String getTelefono() { return telefono; }
-    public void setTelefono(String telefono) { this.telefono = telefono; }
+    public String getApellido() {
+        return apellido;
+    }
+
+    public void setApellido(String apellido) {
+        this.apellido = apellido;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
 }

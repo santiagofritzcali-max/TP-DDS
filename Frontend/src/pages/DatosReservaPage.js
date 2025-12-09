@@ -4,6 +4,19 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/reservarHabitacionStyle.css";
 import { confirmarReserva } from "../services/reservaService";
 
+
+const ROOM_TYPES_BY_NUMBER = {
+  "101": "Individual Estándar",
+  "102": "Individual Estándar",
+  "201": "Doble Estándar",
+  "203": "Doble Estándar",
+  "301": "Doble Superior",
+  "302": "Doble Superior",
+  "404": "Superior Family",
+  "500": "Suite",
+};
+
+
 const toIsoFromDMY = (dmy) => {
   if (!dmy) return "";
   const [dd, mm, yyyy] = dmy.split("/");
@@ -118,35 +131,23 @@ const DatosReservaPage = () => {
     try {
       setEnviando(true);
 
-      
-
       const telefonoCompleto = `${form.prefijo} ${form.telefono}`;
 
-      // convertir fechas de las habitaciones a ISO
-      const ingresosIso = habitaciones.map((h) => toIsoFromDMY(h.fechaIngreso));
-      const egresosIso = habitaciones.map((h) => toIsoFromDMY(h.fechaEgreso));
-
-      // mínimo ingreso y máximo egreso
-      const fechaInicioReal = ingresosIso.reduce(
-        (min, f) => (!min || f < min ? f : min),
-        null
-      );
-      const fechaFinReal = egresosIso.reduce(
-        (max, f) => (!max || f > max ? f : max),
-        null
-      );
+      // ---- NUEVO: armamos la lista de reservas por habitación ----
+      const reservasPayload = habitaciones.map((h) => ({
+        numeroHabitacion: h.nro,                         // "1-301"
+        fechaInicio: toIsoFromDMY(h.fechaIngreso),       // "2026-01-01"
+        fechaFin: toIsoFromDMY(h.fechaEgreso),           // "2026-01-01"
+      }));
 
       const payload = {
-        numerosHabitacion: habitaciones.map((h) => h.nro), // "piso-hab"
-        fechaInicio: fechaInicioReal,
-        fechaFin: fechaFinReal,
+        reservas: reservasPayload,
         nombre: form.nombre.trim(),
         apellido: form.apellido.trim(),
         telefono: telefonoCompleto.trim(),
       };
 
       console.log("Payload reserva:", payload);
-
 
       await confirmarReserva(payload);
 
@@ -162,6 +163,7 @@ const DatosReservaPage = () => {
       setEnviando(false);
     }
   };
+
 
   const handleCerrarModalExito = () => {
     setShowSuccessModal(false);
@@ -183,22 +185,32 @@ const DatosReservaPage = () => {
                 No hay habitaciones seleccionadas.
               </p>
             ) : (
-              habitaciones.map((item, idx) => (
-                <div
-                  className="selected-room-item"
-                  key={`${item.fechaIngreso}-${item.nro}-${idx}`}
-                >
-                  <div className="selected-room-type">
-                    Tipo de habitación: {item.tipo || ""}
+              habitaciones.map((item, idx) => {
+                const nroCompleto = String(item.nro); // "1-201"
+                const nroSimple = nroCompleto.includes("-")
+                  ? nroCompleto.split("-")[1]        // "201"
+                  : nroCompleto;
+
+                const tipoHab =
+                  ROOM_TYPES_BY_NUMBER[nroSimple] || `Habitación ${nroCompleto}`;
+
+                return (
+                  <div
+                    className="selected-room-item"
+                    key={`${item.fechaIngreso}-${item.nro}-${idx}`}
+                  >
+                    <div className="selected-room-type">
+                      Tipo de habitación: {tipoHab}
+                    </div>
+                    <div className="selected-room-line">
+                      Ingreso: {item.fechaIngreso}, 13:00 hs
+                    </div>
+                    <div className="selected-room-line">
+                      Egreso: {item.fechaEgreso}, 8 hs
+                    </div>
                   </div>
-                  <div className="selected-room-line">
-                    Ingreso: {item.fechaIngreso}, 13:00 hs
-                  </div>
-                  <div className="selected-room-line">
-                    Egreso: {item.fechaEgreso}, 8 hs
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </section>
