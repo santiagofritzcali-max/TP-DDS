@@ -1,23 +1,18 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
-import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.ChequeId;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import java.util.Date;
 
 @Entity
 @DiscriminatorValue("Cheque")  // Diferenciamos este tipo de MedioPago
-@IdClass(ChequeId.class)  // Usamos MedioPagoId para la clave primaria compuesta
 public class Cheque extends MedioPago {
 
-    @Id
-    @ManyToOne
-    @JoinColumn(name = "idPago", referencedColumnName = "idPago", insertable = false, updatable = false)
-    private Pago pago;  // Relación con Pago (parte de la clave primaria compuesta)
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idCheque")
-    private Long nroCheque;  // Parte de la clave primaria compuesta
+    private Long nroCheque;
 
     private String nombrePropietario;
 

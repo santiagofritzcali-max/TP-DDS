@@ -1,39 +1,36 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
 import ar.edu.utn.frsf.sistemahotelero.enums.TipoDocumento;
-import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.HuespedId;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
+import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.OneToOne;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @DiscriminatorValue("Fisica")
-@Data
-@AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = false)
-@IdClass(HuespedId.class)
+@Getter
+@Setter
+@ToString(exclude = "huesped")
 public class PersonaFisica extends ResponsableDePago {
     
-    @Id
-    private String nroDoc; 
+    @Column(name = "nro_doc")
+    private String nroDoc;
 
-    @Id
     @Enumerated(EnumType.STRING)
-    private TipoDocumento tipoDoc;  
+    @Column(name = "tipo_doc")
+    private TipoDocumento tipoDoc;
     
     @OneToOne(optional = true)
-     @JoinColumns({
+    @JoinColumns({
         @JoinColumn(name = "nro_doc", referencedColumnName = "nro_doc", insertable = false, updatable = false),
         @JoinColumn(name = "tipo_doc", referencedColumnName = "tipo_doc", insertable = false, updatable = false)
     })

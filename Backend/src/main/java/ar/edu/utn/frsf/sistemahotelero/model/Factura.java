@@ -1,17 +1,33 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
 import ar.edu.utn.frsf.sistemahotelero.enums.TipoFact;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import java.math.BigDecimal;
 import java.util.Date;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name="G17_factura")
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
+@ToString(exclude = {"responsableDePago", "estadia", "pago", "notaCredito"})
 public class Factura {
     
     @Id
@@ -20,10 +36,12 @@ public class Factura {
     
     private int numero;
     
+    @Temporal(TemporalType.TIMESTAMP)
     private Date fechaEmision;
     
-    private double total;
+    private BigDecimal total;
     
+    @Enumerated(EnumType.STRING)
     private TipoFact tipo;
     
     @ManyToOne
@@ -39,6 +57,6 @@ public class Factura {
     private Pago pago;
     
     @ManyToOne(optional = true)
-    @JoinColumn(name = "nota_credito_id", referencedColumnName = "idFactura")  
+    @JoinColumn(name = "nota_credito_id", referencedColumnName = "idNotaCredito")  
     private NotaCredito notaCredito;  
 }

@@ -1,21 +1,36 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
-@Data
+@Table(name = "G17_pago")
+@Getter
+@Setter
+@ToString(exclude = {"factura", "mediosDePago"})
 public class Pago {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long idPago;
     
+    @Temporal(TemporalType.TIMESTAMP)
     private Date fecha;
     
-    private double monto;
+    private BigDecimal monto;
     
     @OneToOne(mappedBy = "pago")
     private Factura factura;  

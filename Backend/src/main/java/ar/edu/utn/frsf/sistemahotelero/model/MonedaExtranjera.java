@@ -1,22 +1,17 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
-import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.MonedaExtranjeraId;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import java.math.BigDecimal;
 
 @Entity
 @DiscriminatorValue("MonedaExtranjera")  
-@IdClass(MonedaExtranjeraId.class)  
 public class MonedaExtranjera extends MedioPago {
 
-    @Id
-    @ManyToOne
-    @JoinColumn(name = "idPago", referencedColumnName = "idPago", insertable = false, updatable = false)
-    private Pago pago;  
-
-    @Id
     @Column(name = "tipoMoneda") 
     private String tipoMoneda;  
 
-    private double cotizacion;
+    private BigDecimal cotizacion;
 
 }

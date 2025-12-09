@@ -1,23 +1,25 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @DiscriminatorValue("Juridica")
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(callSuper = false)
+@Getter
+@Setter
+@ToString(exclude = "direccion")
 public class PersonaJuridica extends ResponsableDePago {
     
-    @Id
+    @Column(unique = true, nullable = false)
     private String cuit;
     
     private String razonSocial;
