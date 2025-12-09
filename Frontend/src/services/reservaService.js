@@ -1,5 +1,4 @@
 // src/services/reservaService.js
-import axios from "axios";
 
 // Base del backend (podés setear REACT_APP_API_URL en .env)
 const API_ROOT = "http://localhost:8080";
@@ -8,12 +7,14 @@ const API_ROOT = "http://localhost:8080";
 const HABITACIONES_API = `${API_ROOT}/api/habitaciones`;
 const RESERVAS_API = `${API_ROOT}/api/reservas`;
 
+// ⚠️ Importante: el controller está en /api/habitaciones/estado
+const HAB_ESTADO_API = `${API_ROOT}/api/habitaciones/estado`;
+
 // Piso fijo (según tu regla: consultas sobre un único piso)
 export const PISO_FIJO = 1;
 
-// Orden fijo de columnas (coincide con tu UI actual)
+// Orden fijo de columnas (por si se usa el helper toGridEstadoHabitaciones)
 const ROOMS_ORDER = ["101", "201", "301", "404", "500"];
-const HAB_ESTADO_API = `${API_ROOT}/habitaciones/estado`;
 
 /**
  * "yyyy-mm-dd" (input date) -> "dd/MM/yyyy" (back)
@@ -73,10 +74,10 @@ function extraerNroHabitacion(celda) {
 
 /**
  * Back -> front:
- * - "Disponible" -> "disponible"
- * - "Reservada"  -> "reservada"
- * - "Ocupada"    -> "ocupada"
- * - "FueraServicio" -> "fuera-servicio"
+ * - "Disponible"     -> "disponible"
+ * - "Reservada"      -> "reservada"
+ * - "Ocupada"        -> "ocupada"
+ * - "FueraServicio"  -> "fuera-servicio"
  */
 function normalizarEstado(estadoRaw) {
   const raw = (estadoRaw ?? "").toString().trim();
@@ -91,21 +92,30 @@ function normalizarEstado(estadoRaw) {
   return "fuera-servicio";
 }
 
-//Formato de fecha compatible con el backend
+//Formato de fecha para mostrar en la UI (desde yyyy-MM-dd)
 const formatDateDMY = (isoDate) => {
+  if (!isoDate) return "";
   const [y, m, d] = isoDate.split("-");
   return `${d}/${m}/${y}`;
 };
 
 const mapEstado = (estadoEnum) => {
   switch (estadoEnum) {
-    case "Reservada": return "reservada";
-    case "Ocupada": return "ocupada";
-    case "Disponible": return "disponible";
-    case "FueraServicio": return "no-disponible";
-    default: return "no-disponible";
- }
-}
+    case "Reservada":
+      return "reservada";
+    case "Ocupada":
+      return "ocupada";
+    case "Disponible":
+      return "disponible";
+    case "FueraServicio":
+      // en tu CSS lo manejás como "no-disponible"
+      return "no-disponible";
+    default:
+      return "no-disponible";
+  }
+};
+
+// Helper opcional para mapear otra forma de respuesta
 function toGridEstadoHabitaciones(data) {
   const filas = Array.isArray(data?.filas) ? data.filas : [];
 
@@ -131,47 +141,105 @@ function toGridEstadoHabitaciones(data) {
   });
 }
 
+/**
+ * Helpers genéricos de fetch
+ */
+
+async function getJson(url, params = {}) {
+  const u = new URL(url);
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      u.searchParams.append(key, value);
+    }
+  });
+
+  const resp = await fetch(u.toString(), {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => "");
+    throw new Error(
+      `Error GET ${u.toString()}: ${resp.status} ${resp.statusText} ${text}`
+    );
+  }
+
+  return resp.json();
+}
+
+async function postJson(url, body) {
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => "");
+    throw new Error(
+      `Error POST ${url}: ${resp.status} ${resp.statusText} ${text}`
+    );
+  }
+
+  return resp.json();
+}
+
 // ---------------------------------------------------------------------------
-// Consulta de disponibilidad (real)
+// Consulta de disponibilidad (real) – CU-04 incluye CU-05
 // ---------------------------------------------------------------------------
 export const buscarDisponibilidad = async (fechaDesdeIso, fechaHastaIso) => {
   const params = { desde: fechaDesdeIso, hasta: fechaHastaIso };
 
-  const { data } = await axios.get(HAB_ESTADO_API, { params });
+  // Llamada al backend con fetch
+  const data = await getJson(HAB_ESTADO_API, params);
   // data: { grupos, filas, dias, desde, hasta }
 
-  // Orden de columnas según los grupos (tipoHabitacion) 21:08
-  const columnas = data.grupos.flatMap((g) =>
-  g.habitaciones.map((h) => ({
-    nro: `${h.id.nroPiso}-${h.id.nroHabitacion}`,
-    tipo: g.tipoHabitacion, // <-- agregar esta línea
-  }))
-);
+  // Orden de columnas según los grupos (tipoHabitacion)
+  const columnas = (data.grupos ?? []).flatMap((g) =>
+    (g.habitaciones ?? []).map((h) => ({
+      nro: `${h.id.nroPiso}-${h.id.nroHabitacion}`,
+      tipo: g.tipoHabitacion,
+    }))
+  );
 
   // Armar grilla con fechas y habitaciones en el mismo orden de columnas
-  const grid = data.filas.map((fila) => {
+  const grid = (data.filas ?? []).map((fila) => {
     const fecha = formatDateDMY(fila.dia); // fila.dia viene en yyyy-MM-dd
     const habitaciones = columnas.map((col) => {
-      const celda = fila.celdas.find(
+      const [pisoStr, habStr] = col.nro.split("-");
+      const piso = parseInt(pisoStr, 10);
+      const hab = parseInt(habStr, 10);
+
+      const celda = (fila.celdas ?? []).find(
         (c) =>
-          c.habitacionId.nroPiso === parseInt(col.nro.split("-")[0], 10) &&
-          c.habitacionId.nroHabitacion === parseInt(col.nro.split("-")[1], 10)
+          c.habitacionId?.nroPiso === piso &&
+          c.habitacionId?.nroHabitacion === hab
       );
+
       return {
         nro: col.nro,
         estado: mapEstado(celda?.estado),
       };
     });
+
     return { fecha, habitaciones };
   });
 
-  return { grid, columnas};
+  return { grid, columnas };
 };
 
 // ---------------------------------------------------------------------------
-// Confirmar reserva (lo dejo igual; ajustalo cuando tengas el endpoint real)
+// Confirmar reserva – CU-04 (pasos 21–32)
 // ---------------------------------------------------------------------------
 export const confirmarReserva = async (payload) => {
-const { data } = await axios.post(RESERVAS_API, payload);
+  // POST con fetch
+  const data = await postJson(RESERVAS_API, payload);
   return data;
 };

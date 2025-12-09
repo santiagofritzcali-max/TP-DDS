@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+// src/pages/ReservarHabitacionPage.js
+import React, { useState, useMemo } from "react";
 import "../styles/reservarHabitacionStyle.css";
 import { buscarDisponibilidad } from "../services/reservaService";
 import { validarRangoFechas } from "../validators/validarReservaHabitacion";
 import { useNavigate } from "react-router-dom";
+import PopupHabitacionNoDisponible from "../components/PopupHabitacionNoDisponible"; // 👈 NUEVO
 
-// Mapeo nro habitación
+// Mapeo nro habitación (para mostrar tipo en el panel derecho)
 const ROOM_TYPES_BY_NUMBER = {
   "101": "Individual Estándar",
   "102": "Individual Estándar",
@@ -13,72 +15,83 @@ const ROOM_TYPES_BY_NUMBER = {
   "301": "Doble Superior",
   "302": "Doble Superior",
   "404": "Superior Family",
-  "500": "Suite"
+  "500": "Suite",
 };
 
-// Grilla inicial (solo placeholder visual)
-const INITIAL_GRID = [
-  {
-    fecha: "28/04",
-    habitaciones: [
-      { nro: "101", estado: "disponible" },
-      { nro: "201", estado: "reservada" },
-      { nro: "301", estado: "ocupada" },
-      { nro: "404", estado: "fuera-servicio" },
-      { nro: "500", estado: "ocupada" }
-    ]
-  },
-  {
-    fecha: "29/04",
-    habitaciones: [
-      { nro: "101", estado: "disponible" },
-      { nro: "201", estado: "disponible" },
-      { nro: "301", estado: "reservada" },
-      { nro: "404", estado: "ocupada" },
-      { nro: "500", estado: "fuera-servicio" }
-    ]
-  },
-  {
-    fecha: "30/04",
-    habitaciones: [
-      { nro: "101", estado: "ocupada" },
-      { nro: "201", estado: "reservada" },
-      { nro: "301", estado: "disponible" },
-      { nro: "404", estado: "ocupada" },
-      { nro: "500", estado: "fuera-servicio" }
-    ]
-  },
-  {
-    fecha: "01/05",
-    habitaciones: [
-      { nro: "101", estado: "disponible" },
-      { nro: "201", estado: "disponible" },
-      { nro: "301", estado: "disponible" },
-      { nro: "404", estado: "reservada" },
-      { nro: "500", estado: "ocupada" }
-    ]
-  },
-  {
-    fecha: "02/05",
-    habitaciones: [
-      { nro: "101", estado: "reservada" },
-      { nro: "201", estado: "disponible" },
-      { nro: "301", estado: "ocupada" },
-      { nro: "404", estado: "ocupada" },
-      { nro: "500", estado: "fuera-servicio" }
-    ]
-  }
-];
+// Igual que en CU05: pasa del enum del back a texto legible
+const prettyTipoHabitacion = (raw) => {
+  const t = String(raw || "").toUpperCase();
+  const map = {
+    INDIVIDUAL_ESTANDAR: "Individual Estándar",
+    DOBLE_ESTANDAR: "Doble Estándar",
+    DOBLE_SUPERIOR: "Doble Superior",
+    SUPERIOR_FAMILY: "Superior Family",
+    SUITE: "Suite",
+  };
+  return map[t] || raw;
+};
+
+// parsear "dd/MM/yyyy" a Date
+const parseDdMmYyyy = (s) => {
+  if (!s) return null;
+  const [dd, mm, yyyy] = s.split("/");
+  return new Date(
+    Number(yyyy),
+    Number(mm) - 1,
+    Number(dd),
+    0,
+    0,
+    0,
+    0
+  );
+};
+
+// formatear Date otra vez a "dd/MM/yyyy"
+const formatDateFromObj = (date) => {
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yyyy = String(date.getFullYear());
+  return `${dd}/${mm}/${yyyy}`;
+};
 
 const ReservarHabitacionPage = () => {
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
-  const [grid, setGrid] = useState([]);
-  const [columnas, setColumnas] = useState([]);
+  const [grid, setGrid] = useState([]); // [{fecha, habitaciones:[{nro, estado}]}]
+  const [columnas, setColumnas] = useState([]); // [{nro:"1-101", tipo:"INDIVIDUAL_ESTANDAR"}, ...]
   const [selectedCells, setSelectedCells] = useState([]); // {fecha, nro}
   const [mensajeSinHabitaciones, setMensajeSinHabitaciones] = useState("");
   const [errorFechas, setErrorFechas] = useState("");
 
+  // 👇 NUEVO: estado para popup
+  const [showNoDispPopup, setShowNoDispPopup] = useState(false);
+  const [rangoNoDisp, setRangoNoDisp] = useState(null);
+
+  const navigate = useNavigate();
+
+  // Agrupamos columnas por tipo de habitación (para header doble como CU05)
+  const gruposColumnas = useMemo(() => {
+    if (!Array.isArray(columnas) || columnas.length === 0) return [];
+
+    const map = new Map(); // tipo -> [cols]
+
+    columnas.forEach((col) => {
+      const tipo = col.tipo || "Tipo";
+      if (!map.has(tipo)) {
+        map.set(tipo, []);
+      }
+      map.get(tipo).push(col);
+    });
+
+    return Array.from(map.entries()).map(([tipo, cols]) => ({
+      tipo,
+      cols,
+    }));
+  }, [columnas]);
+
+  // -------------------------------------------------------------------
+  // BUSCAR DISPONIBILIDAD
+  // -------------------------------------------------------------------
   const handleBuscar = async (e) => {
     e.preventDefault();
     setErrorFechas("");
@@ -91,10 +104,13 @@ const ReservarHabitacionPage = () => {
     }
 
     try {
-      const { grid: nuevaGrid, columnas: nuevasCols } = await buscarDisponibilidad(fechaDesde, fechaHasta);
+      const { grid: nuevaGrid, columnas: nuevasCols } =
+        await buscarDisponibilidad(fechaDesde, fechaHasta);
+
       setGrid(nuevaGrid);
       setColumnas(nuevasCols);
       setSelectedCells([]);
+
       setMensajeSinHabitaciones(
         nuevaGrid.length === 0
           ? "No hay habitaciones disponibles para el rango seleccionado."
@@ -102,13 +118,18 @@ const ReservarHabitacionPage = () => {
       );
     } catch (err) {
       console.error(err);
-      setMensajeSinHabitaciones("Ocurrió un error al buscar la disponibilidad.");
+      setMensajeSinHabitaciones(
+        "Ocurrió un error al buscar la disponibilidad."
+      );
     }
   };
 
-  const toggleCell = (fecha, nro, estado) => {
-    if (estado !== "disponible") return;
+  // -------------------------------------------------------------------
+  // Helpers de selección / estado
+  // -------------------------------------------------------------------
 
+  // 👉 NUEVO: ahora permitimos seleccionar cualquier estado
+  const toggleCell = (fecha, nro /*, estado */) => {
     const key = `${fecha}-${nro}`;
     const yaSeleccionada = selectedCells.some(
       (c) => `${c.fecha}-${c.nro}` === key
@@ -124,37 +145,168 @@ const ReservarHabitacionPage = () => {
   };
 
   const handleCancelar = () => {
-    setSelectedCells([]);
+    // 7.A.2 El CU termina 
+    navigate(-1);
   };
 
-  const navigate = useNavigate();
-  const handleSiguiente = () => {
-    if (habitacionesOrdenadas.length === 0) return;
 
+  const estaSeleccionada = (fecha, nro) =>
+    selectedCells.some((c) => c.fecha === fecha && c.nro === nro);
+
+
+  const getEstadoCelda = (fecha, nro) => {
+    const fila = grid.find((f) => f.fecha === fecha);
+    if (!fila) return null;
+    const celda = (fila.habitaciones || []).find((h) => h.nro === nro);
+    return celda?.estado ?? null; // "disponible", "reservada", "ocupada", "fuera-servicio", etc.
+  };
+
+  // -------------------------------------------------------------------
+  // ORDENAMIENTO BÁSICO POR FECHA Y HABITACIÓN (celdas individuales)
+  // -------------------------------------------------------------------
+  const habitacionesOrdenadas = useMemo(() => {
+    return [...selectedCells].sort((a, b) => {
+      const ka = `${a.fecha}-${a.nro}`;
+      const kb = `${b.fecha}-${b.nro}`;
+      return ka.localeCompare(kb);
+    });
+  }, [selectedCells]);
+
+  // -------------------------------------------------------------------
+  // AGRUPAR POR HABITACIÓN + RANGOS CONSECUTIVOS DE FECHAS
+  // Resultado: [{ nro, fechaIngreso, fechaEgreso }]
+  // -------------------------------------------------------------------
+  const reservasAgrupadas = useMemo(() => {
+    if (habitacionesOrdenadas.length === 0) return [];
+
+    const porHabitacion = new Map(); // nro -> [fechas]
+    habitacionesOrdenadas.forEach((c) => {
+      const nro = String(c.nro);
+      const fecha = c.fecha;
+      if (!porHabitacion.has(nro)) porHabitacion.set(nro, []);
+      porHabitacion.get(nro).push(fecha);
+    });
+
+    const resultado = [];
+
+    porHabitacion.forEach((fechas, nro) => {
+      const ordenadas = [...new Set(fechas)].sort((f1, f2) => {
+        const d1 = parseDdMmYyyy(f1);
+        const d2 = parseDdMmYyyy(f2);
+        return d1 - d2;
+      });
+
+      if (ordenadas.length === 0) return;
+
+      let inicio = ordenadas[0];
+      let prevDate = parseDdMmYyyy(ordenadas[0]);
+
+      for (let i = 1; i < ordenadas.length; i++) {
+        const actual = ordenadas[i];
+        const dActual = parseDdMmYyyy(actual);
+        const diffDias = (dActual - prevDate) / (1000 * 60 * 60 * 24);
+
+        if (diffDias === 1) {
+          prevDate = dActual;
+        } else {
+          resultado.push({
+            nro,
+            fechaIngreso: inicio,
+            fechaEgreso: formatDateFromObj(prevDate),
+          });
+          inicio = actual;
+          prevDate = dActual;
+        }
+      }
+
+      resultado.push({
+        nro,
+        fechaIngreso: inicio,
+        fechaEgreso: formatDateFromObj(prevDate),
+      });
+    });
+
+    return resultado.sort((a, b) => {
+      if (a.nro === b.nro) {
+        const da = parseDdMmYyyy(a.fechaIngreso);
+        const db = parseDdMmYyyy(b.fechaIngreso);
+        return da - db;
+      }
+      return a.nro.localeCompare(b.nro);
+    });
+  }, [habitacionesOrdenadas]);
+
+  // -------------------------------------------------------------------
+  // Construir rango no disponible (para el popup)
+  // -------------------------------------------------------------------
+  const calcularRangoNoDisponible = () => {
+    const fechasNoDisp = [];
+
+    selectedCells.forEach(({ fecha, nro }) => {
+      const estado = getEstadoCelda(fecha, nro);
+      if (estado && estado !== "disponible") {
+        fechasNoDisp.push(fecha);
+      }
+    });
+
+    if (fechasNoDisp.length === 0) return null;
+
+    // Fechas únicas ordenadas
+    const ordenadas = [...new Set(fechasNoDisp)].sort((f1, f2) => {
+      const d1 = parseDdMmYyyy(f1);
+      const d2 = parseDdMmYyyy(f2);
+      return d1 - d2;
+    });
+
+    return {
+      desde: ordenadas[0],
+      hasta: ordenadas[ordenadas.length - 1],
+      cantidad: ordenadas.length, // 👈 cantidad de fechas no disponibles
+    };
+  };
+
+  // -------------------------------------------------------------------
+  // SIGUIENTE -> segunda pantalla CU04
+  // -------------------------------------------------------------------
+  const handleSiguiente = () => {
+    if (reservasAgrupadas.length === 0) return;
+
+    // 1) verificar si hay alguna celda no disponible
+    const hayNoDisponible = selectedCells.some(({ fecha, nro }) => {
+      const estado = getEstadoCelda(fecha, nro);
+      return estado && estado !== "disponible";
+    });
+
+    if (hayNoDisponible) {
+      const rango = calcularRangoNoDisponible();
+      setRangoNoDisp(rango);
+      setShowNoDispPopup(true);
+      return; // NO navega a la siguiente pantalla
+    }
+
+    // 2) si todo es disponible, seguimos normal
     navigate("/datos-reserva", {
       state: {
         fechaDesde,
         fechaHasta,
-        habitaciones: habitacionesOrdenadas.map((h) => ({
-          fecha: h.fecha,
-          nro: h.nro,
-          tipo: columnas.find((c) => c.nro === h.nro)?.tipo || `Habitación ${h.nro}`,
-          fechaIngreso: h.fecha,
-          fechaEgreso: h.fecha,
+        habitaciones: reservasAgrupadas.map((r) => ({
+          nro: String(r.nro),
+          fechaIngreso: r.fechaIngreso,
+          fechaEgreso: r.fechaEgreso,
         })),
       },
     });
   };
 
-  const estaSeleccionada = (fecha, nro) =>
-    selectedCells.some((c) => c.fecha === fecha && c.nro === nro);
+  // 👈 NUEVO: cerrar popup -> limpiar selección
+  const handleCloseNoDispPopup = () => {
+    setShowNoDispPopup(false);
+    setSelectedCells([]); // limpia grilla y panel derecho
+  };
 
-  const habitacionesOrdenadas = [...selectedCells].sort((a, b) => {
-    const ka = `${a.fecha}-${a.nro}`;
-    const kb = `${b.fecha}-${b.nro}`;
-    return ka.localeCompare(kb);
-  });
-
+  // -------------------------------------------------------------------
+  // RENDER
+  // -------------------------------------------------------------------
   return (
     <div className="reserva-page">
       <main className="main-layout">
@@ -223,20 +375,29 @@ const ReservarHabitacionPage = () => {
             <div className="grid-rounded-wrapper">
               <table className="rooms-table">
                 <thead>
+                  {/* Encabezado igual a CU05 */}
                   <tr>
-                    <th className="col-dia">Días de</th>
-                    {columnas.length > 0
-                      ? columnas.map((col) => (
-                        <th key={col.nro}>{col.tipo || col.nro}</th>
+                    <th className="col-dia" rowSpan={2}>
+                      Días de
+                    </th>
+
+                    {gruposColumnas.length > 0 ? (
+                      gruposColumnas.map((g) => (
+                        <th key={g.tipo} colSpan={g.cols.length}>
+                          {prettyTipoHabitacion(g.tipo)}
+                        </th>
                       ))
-                      : (
-                        <>
-                          <th>Individual Estándar</th>
-                          <th>Doble Estándar</th>
-                          <th>Doble Superior</th>
-                          <th>Superior Family</th>
-                          <th>Suite</th>
-                        </>
+                    ) : (
+                      <th colSpan={5}></th>
+                    )}
+                  </tr>
+
+                  <tr>
+                    {gruposColumnas.length > 0 &&
+                      gruposColumnas.flatMap((g) =>
+                        g.cols.map((col) => (
+                          <th key={col.nro}>{col.nro}</th>
+                        ))
                       )}
                   </tr>
                 </thead>
@@ -247,7 +408,10 @@ const ReservarHabitacionPage = () => {
                       <td className="dia-label">{fila.fecha}</td>
 
                       {fila.habitaciones.map((hab, index) => {
-                        const seleccion = estaSeleccionada(fila.fecha, hab.nro);
+                        const seleccion = estaSeleccionada(
+                          fila.fecha,
+                          hab.nro
+                        );
 
                         const seleccionArriba =
                           rowIndex > 0 &&
@@ -287,7 +451,9 @@ const ReservarHabitacionPage = () => {
                           <td
                             key={`${fila.fecha}-${index}`}
                             className={clases}
-                            onClick={() => toggleCell(fila.fecha, hab.nro, hab.estado)}
+                            onClick={() =>
+                              toggleCell(fila.fecha, hab.nro, hab.estado)
+                            }
                             data-room={hab.nro}
                           ></td>
                         );
@@ -310,16 +476,33 @@ const ReservarHabitacionPage = () => {
             <h2 className="section-subtitle">Habitaciones a Reservar</h2>
 
             <div className="selected-rooms-list">
-              {habitacionesOrdenadas.length === 0 ? (
-                <p className="text-empty-right">No hay habitaciones seleccionadas.</p>
+              {reservasAgrupadas.length === 0 ? (
+                <p className="text-empty-right">
+                  No hay habitaciones seleccionadas.
+                </p>
               ) : (
-                habitacionesOrdenadas.map((item, idx) => {
-                  const tipo = ROOM_TYPES_BY_NUMBER[item.nro] || `Habitación ${item.nro}`;
+                reservasAgrupadas.map((item, idx) => {
+                  const nroCompleto = String(item.nro); // "1-201"
+                  const nroSimple = nroCompleto.includes("-")
+                    ? nroCompleto.split("-")[1]
+                    : nroCompleto;
+
+                  const tipo =
+                    ROOM_TYPES_BY_NUMBER[nroSimple] ||
+                    `Habitación ${nroCompleto}`;
+
                   return (
                     <div className="selected-room-item" key={idx}>
-                      <div className="selected-room-type">Tipo de habitación: {tipo}</div>
-                      <div className="selected-room-line">Ingreso: {item.fecha}, 13:00 hs</div>
-                      <div className="selected-room-line">Egreso: {item.fecha}, 8 hs</div>
+                      <div className="selected-room-type">
+                        Habitación: {nroCompleto}
+                      </div>
+                      <div className="selected-room-line">Tipo: {tipo}</div>
+                      <div className="selected-room-line">
+                        Ingreso: {item.fechaIngreso}, 12:00 hs
+                      </div>
+                      <div className="selected-room-line">
+                        Egreso: {item.fechaEgreso}, 10:00 hs
+                      </div>
                     </div>
                   );
                 })
@@ -335,13 +518,21 @@ const ReservarHabitacionPage = () => {
             <button
               className="primary-button primary-button-strong"
               onClick={handleSiguiente}
-              disabled={habitacionesOrdenadas.length === 0}
+              disabled={reservasAgrupadas.length === 0}
             >
               Siguiente
             </button>
           </div>
         </aside>
       </main>
+
+      {/* POPUP DE HABITACIÓN NO DISPONIBLE */}
+      {showNoDispPopup && (
+        <PopupHabitacionNoDisponible
+          rango={rangoNoDisp}   // 👈 le pasamos {desde, hasta, cantidad}
+          onClose={handleCloseNoDispPopup}
+        />
+      )}
     </div>
   );
 };

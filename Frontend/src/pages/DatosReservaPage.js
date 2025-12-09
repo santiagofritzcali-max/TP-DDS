@@ -44,6 +44,7 @@ const DatosReservaPage = () => {
   };
 
   const handleCancelar = () => {
+    // Termina el CU y vuelve al menú principal
     navigate("/");
   };
 
@@ -139,49 +140,47 @@ const DatosReservaPage = () => {
 
   const handleCerrarModalExito = () => {
     setShowSuccessModal(false);
-    navigate("/"); // volver a la pantalla principal
+    // El CU termina: volvemos al menú principal
+    navigate("/");
   };
 
   return (
     <div className="reserva-page">
-      <main className="datos-main-layout">
-        {/* IZQUIERDA – listado de habitaciones (scroll a la izquierda) */}
-        <section className="datos-left-panel">
-          <h2 className="section-title-datos">Habitaciones seleccionadas</h2>
+      {/* Usamos el MISMO layout que en la primera pantalla */}
+      <main className="main-layout">
+        {/* IZQUIERDA – listado de habitaciones (scroll) */}
+        <section className="left-panel">
+          <h2 className="section-title">Habitaciones seleccionadas</h2>
 
-          <div className="selected-rooms-scroll-left">
-            <div className="selected-rooms-list">
-              {(!habitaciones || habitaciones.length === 0) ? (
-                <p className="text-empty-right">
-                  No hay habitaciones seleccionadas.
-                </p>
-              ) : (
-                habitaciones.map((item, idx) => (
-                  <div
-                    className="selected-room-item"
-                    key={`${item.fecha}-${item.nro}-${idx}`}
-                  >
-                    <div className="selected-room-type">
-                      Tipo de habitación: {item.tipo}
-                    </div>
-                    <div className="selected-room-line">
-                      Ingreso: {item.fechaIngreso}, 13:00 hs
-                    </div>
-                    <div className="selected-room-line">
-                      Egreso: {item.fechaEgreso}, 8 hs
-                    </div>
+          <div className="selected-rooms-list">
+            {!habitaciones || habitaciones.length === 0 ? (
+              <p className="text-empty-right">
+                No hay habitaciones seleccionadas.
+              </p>
+            ) : (
+              habitaciones.map((item, idx) => (
+                <div
+                  className="selected-room-item"
+                  key={`${item.fechaIngreso}-${item.nro}-${idx}`}
+                >
+                  <div className="selected-room-type">
+                    Tipo de habitación: {item.tipo || ""}
                   </div>
-                ))
-              )}
-            </div>
+                  <div className="selected-room-line">
+                    Ingreso: {item.fechaIngreso}, 13:00 hs
+                  </div>
+                  <div className="selected-room-line">
+                    Egreso: {item.fechaEgreso}, 8 hs
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </section>
 
         {/* DERECHA – formulario de datos del huésped */}
-        <section className="datos-right-panel">
-          <h2 className="section-title-datos datos-form-title">
-            Reserva a nombre de
-          </h2>
+        <section className="right-panel">
+          <h2 className="section-subtitle">Reserva a nombre de</h2>
 
           <form
             className="datos-form"
@@ -265,7 +264,7 @@ const DatosReservaPage = () => {
               )}
             </div>
 
-            <div className="actions-row datos-actions-row">
+            <div className="actions-row">
               <button
                 type="button"
                 className="secondary-button"
@@ -291,24 +290,15 @@ const DatosReservaPage = () => {
 
       {/* -------- POP-UP DE RESERVA EXITOSA -------- */}
       {showSuccessModal && (
-        <div className="modal-backdrop">
-          <div className="modal-window modal-success">
-            <div className="modal-header modal-header-success">
-              <span className="modal-title">CONFIRMACIÓN 4</span>
-              <button
-                type="button"
-                className="modal-close"
-                onClick={handleCerrarModalExito}
-              >
-                ✕
-              </button>
-            </div>
+        <div className="popup-overlay">
+          <div className="popup-card">
+            <h3 className="popup-title">Reserva exitosa</h3>
 
-            <div className="modal-body">
-              <p>La reserva ha sido registrada con éxito.</p>
-            </div>
+            <p className="popup-message">
+              La reserva se registró correctamente.
+            </p>
 
-            <div className="modal-footer">
+            <div className="popup-actions">
               <button
                 type="button"
                 className="primary-button primary-button-strong"

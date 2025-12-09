@@ -364,7 +364,7 @@
   color: #bb0000;
 }
 
-/* COLUMNA DERECHA */
+/* COLUMNA DERECHA (primera pantalla) */
 
 .right-panel {
   flex: 1;
@@ -458,4 +458,204 @@
   border: none;
   border-top: 1px solid #d0d0d0;
   margin: 10px 0 20px 0;
+}
+
+/* ====== 2da pantalla – layout derecha ====== */
+
+.datos-main-layout {
+  max-width: 1150px;
+  margin: 16px auto 32px auto;
+  background-color: #ffffff;
+  border: 1px solid #d0d0d0;
+  display: flex;
+  min-height: 520px;
+}
+
+/* Izquierda (lista habitaciones) */
+.datos-left-panel {
+  flex: 2;
+  border-right: 1px solid #d0d0d0;
+  padding: 20px 24px;
+}
+
+/* Derecha (formulario) – BLOQUE NORMAL, no flex */
+.datos-right-panel {
+  flex: 1;
+  padding: 20px 24px;
+  display: block;            /* 👈 clave para que todo quede arriba */
+}
+
+/* Título de la 2ª pantalla */
+.section-title-datos {
+  font-size: 18px;
+  margin: 0 0 10px 0;
+}
+
+/* h2 "Reserva a nombre de" */
+.datos-form-title {
+  margin: 0 0 10px 0;
+  padding: 0;
+}
+
+/* Form justo debajo del título */
+.datos-form {
+  width: 100%;
+  margin-top: 0;             /* pegado al título */
+  padding-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;                 /* separación entre campos */
+}
+
+/* ==== inputs flotantes Nombre / Apellido ==== */
+
+.input-group {
+  position: relative;
+  width: 100%;
+}
+
+.input {
+  width: 100%;
+  border: solid 1.5px #9e9e9e;
+  border-radius: 0;                 /* bordes cuadrados */
+  background: #ffffff;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.9rem;
+  color: #333333;
+  transition: border 150ms cubic-bezier(0.4,0,0.2,1);
+}
+
+.user-label {
+  position: absolute;
+  left: 10px;
+  color: #777777;
+  pointer-events: none;
+  transform: translateY(0.75rem);
+  font-size: 0.8rem;
+  transition: 150ms cubic-bezier(0.4,0,0.2,1);
+}
+
+/* foco: borde gris/negro, NO azul */
+.input:focus,
+.input:valid {
+  outline: none;
+  border: 1.5px solid #333333;
+}
+
+/* animación del label */
+.input:focus ~ .user-label,
+.input:valid ~ .user-label {
+  transform: translateY(-60%) scale(0.85);
+  background-color: #ffffff;
+  padding: 0 .2em;
+  color: #333333;
+}
+
+/* mensajes de error */
+.field-error-message {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #bb0000;
+}
+
+.input-error {
+  border-color: #bb0000 !important;
+}
+
+/* ====== Teléfono con mismo estilo de cuadro ====== */
+
+.phone-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* etiqueta arriba */
+.phone-label {
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+/* contenedor del select + input */
+.phone-row {
+  display: flex;
+  align-items: stretch;
+}
+
+/* prefijo y número en un solo bloque rectangular */
+.phone-prefix {
+  border: 1.5px solid #9e9e9e;
+  border-radius: 0;
+  border-right: none;
+  padding: 0.35rem 0.4rem;
+  font-size: 0.85rem;
+  background-color: #ffffff;
+  outline: none;
+}
+
+.phone-input {
+  flex: 1;
+  border: 1.5px solid #9e9e9e;
+  border-radius: 0;
+  padding: 0.35rem 0.4rem;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+/* foco gris/negro */
+.phone-prefix:focus,
+.phone-input:focus {
+  border-color: #333333;
+}
+
+.phone-prefix:focus {
+  border-right: none;
+}
+
+.phone-input:focus {
+  border-left-width: 1px;
+}
+
+/* error en teléfono */
+.phone-input.input-error {
+  border-color: #bb0000 !important;
+}
+
+
+/* ===== POPUP HABITACIÓN NO DISPONIBLE ===== */
+
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.popup-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 24px 28px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  text-align: left;
+  border: 1px solid #d0d0d0;
+}
+
+.popup-title {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+}
+
+.popup-message {
+  margin: 0 0 20px 0;
+  font-size: 14px;
+  color: #444444;
+}
+
+.popup-actions {
+  display: flex;
+  justify-content: flex-end;
 }
