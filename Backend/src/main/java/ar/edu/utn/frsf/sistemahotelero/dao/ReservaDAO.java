@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ReservaDAO extends CrudRepository<Reserva, String> {
+public interface ReservaDAO extends CrudRepository<Reserva, Long> {
 
     @Query("""
             SELECT r

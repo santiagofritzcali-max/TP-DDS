@@ -1,12 +1,15 @@
 package ar.edu.utn.frsf.sistemahotelero.dto;
 
+import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.HabitacionId;
 import java.time.LocalDate;
-//DTO para devolver información de una reserva creada
+import lombok.Data;
+
+@Data
 
 public class ReservaResponse {
 
-    private String idReserva;
-    private String numeroHabitacion;
+    private Long idReserva;
+    private HabitacionId habitacionId;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
     private String nombre;
@@ -14,8 +17,9 @@ public class ReservaResponse {
     private String telefono;
 
     // Getters y setters
-    public String getIdReserva() { return idReserva; }
-    public void setIdReserva(String idReserva) { this.idReserva = idReserva; }
+    /*
+    public Long getIdReserva() { return idReserva; }
+    public void setIdReserva(Long idReserva) { this.idReserva = idReserva; }
 
     public String getNumeroHabitacion() { return numeroHabitacion; }
     public void setNumeroHabitacion(String numeroHabitacion) { this.numeroHabitacion = numeroHabitacion; }
@@ -34,4 +38,5 @@ public class ReservaResponse {
 
     public String getTelefono() { return telefono; }
     public void setTelefono(String telefono) { this.telefono = telefono; }
+*/
 }

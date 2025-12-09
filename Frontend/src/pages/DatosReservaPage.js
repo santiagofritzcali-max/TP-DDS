@@ -114,15 +114,15 @@ const DatosReservaPage = () => {
       const telefonoCompleto = `${form.prefijo} ${form.telefono}`;
 
       const payload = {
-  numerosHabitacion: habitaciones.map((h) => h.nro), // "piso-hab"
-  fechaInicio: fechaDesde, // yyyy-MM-dd
-  fechaFin: fechaHasta,    // yyyy-MM-dd
-  nombre: form.nombre.trim(),
-  apellido: form.apellido.trim(),
-  telefono: telefonoCompleto.trim(),
-};
+        numerosHabitacion: habitaciones.map((h) => h.nro), // "piso-hab"
+        fechaInicio: fechaDesde, // yyyy-MM-dd
+        fechaFin: fechaHasta,    // yyyy-MM-dd
+        nombre: form.nombre.trim(),
+        apellido: form.apellido.trim(),
+        telefono: telefonoCompleto.trim(),
+      };
 
-await confirmarReserva(payload);
+      await confirmarReserva(payload);
 
       // limpiamos errores de campos
       setFieldErrors({ nombre: "", apellido: "", telefono: "" });

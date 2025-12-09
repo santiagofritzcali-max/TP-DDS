@@ -9,7 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 public class EstadiaResponse {
 
-    private String id;
+    private Long id;
 
     private LocalDate fechaIngreso;
 
