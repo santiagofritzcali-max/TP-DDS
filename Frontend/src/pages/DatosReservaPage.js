@@ -4,6 +4,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/reservarHabitacionStyle.css";
 import { confirmarReserva } from "../services/reservaService";
 
+const toIsoFromDMY = (dmy) => {
+  if (!dmy) return "";
+  const [dd, mm, yyyy] = dmy.split("/");
+  return `${yyyy}-${mm}-${dd}`; // "2026-01-03"
+};
+
 const DatosReservaPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -112,16 +118,35 @@ const DatosReservaPage = () => {
     try {
       setEnviando(true);
 
+      
+
       const telefonoCompleto = `${form.prefijo} ${form.telefono}`;
+
+      // convertir fechas de las habitaciones a ISO
+      const ingresosIso = habitaciones.map((h) => toIsoFromDMY(h.fechaIngreso));
+      const egresosIso = habitaciones.map((h) => toIsoFromDMY(h.fechaEgreso));
+
+      // mínimo ingreso y máximo egreso
+      const fechaInicioReal = ingresosIso.reduce(
+        (min, f) => (!min || f < min ? f : min),
+        null
+      );
+      const fechaFinReal = egresosIso.reduce(
+        (max, f) => (!max || f > max ? f : max),
+        null
+      );
 
       const payload = {
         numerosHabitacion: habitaciones.map((h) => h.nro), // "piso-hab"
-        fechaInicio: fechaDesde, // yyyy-MM-dd
-        fechaFin: fechaHasta,    // yyyy-MM-dd
+        fechaInicio: fechaInicioReal,
+        fechaFin: fechaFinReal,
         nombre: form.nombre.trim(),
         apellido: form.apellido.trim(),
         telefono: telefonoCompleto.trim(),
       };
+
+      console.log("Payload reserva:", payload);
+
 
       await confirmarReserva(payload);
 
