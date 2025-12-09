@@ -62,7 +62,6 @@ export const buscarDisponibilidad = async (fechaDesdeIso, fechaHastaIso) => {
 
 
 // Confirmar reserva, pasos 21–32 del digrama de secuencia del CU-04
-
 export const confirmarReserva = async (payload) => {
   const { data } = await axios.post(RESERVAS_API, payload);
   return data;
