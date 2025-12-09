@@ -1,6 +1,29 @@
 import React, { useMemo, useState } from "react";
-import "../styles/reservarHabitacionStyle.css";  
+import { useLocation, useNavigate } from "react-router-dom"; // NUEVO
+import "../styles/reservarHabitacionStyle.css";
 import { obtenerEstadoHabitaciones } from "../services/estadoHabitacionService";
+
+// --- Modal simple (popup) --- // NUEVO
+const PopupModal = ({ open, title, children, actions, onClose }) => {
+  if (!open) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-box">
+        {title && <h2 className="modal-title">{title}</h2>}
+        <div className="modal-body">{children}</div>
+        <div className="modal-actions">
+          {actions}
+          {!actions && (
+            <button className="btn-primary" onClick={onClose}>
+              Cerrar
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // --- Helpers ---
 const formatDia = (isoDate) => {
@@ -24,7 +47,7 @@ const prettyTipoHabitacion = (raw) => {
 };
 
 const keyToString = (k) => {
-  // Soporta: Long/string, o objeto {nroPiso, nroHabitacion} (por si tu DTO es compuesto)
+  // Soporta: Long/string, o objeto {nroPiso, nroHabitacion}
   if (k && typeof k === "object") {
     const piso = k.nroPiso ?? k.piso;
     const nro = k.nroHabitacion ?? k.nro ?? k.numero;
@@ -36,7 +59,6 @@ const keyToString = (k) => {
 const estadoToSlug = (estadoRaw) => {
   const s = String(estadoRaw || "").toLowerCase();
 
-  // contemplamos variantes viejas/nuevas
   if (s.includes("fuera") || s.includes("no_disponible") || s.includes("no-disponible")) {
     return "fuera-servicio";
   }
@@ -48,6 +70,17 @@ const estadoToSlug = (estadoRaw) => {
 };
 
 const EstadoHabitacionPage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Puede venir de varias formas:
+  // - state.desdeCU15 === true  (si navegamos así)
+  // - state.modo === 'desdeCU15' (como lo hace HomePage ahora)
+  const modo = location.state?.modo || null;
+  const desdeCU15 =
+  location.state?.desdeCU15 === true || modo === "desdeCU15";
+
+
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
 
@@ -56,10 +89,20 @@ const EstadoHabitacionPage = () => {
   const [mensaje, setMensaje] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // NUEVO: selección de habitación + días (solo cuando viene desde CU15)
+  const [seleccion, setSeleccion] = useState(null);
+  // seleccion = { habitacionId, habitacionLabel, dias: [ "YYYY-MM-DD", ... ] }
+
+  // NUEVO: estado para popup
+  const [popup, setPopup] = useState({ open: false, type: null, data: null });
+
+  const cerrarPopup = () => setPopup({ open: false, type: null, data: null });
+
   const handleBuscar = async (e) => {
     e.preventDefault();
     setErrorFechas("");
     setMensaje("");
+    setSeleccion(null); // NUEVO: limpiar selección al buscar de nuevo
 
     if (!fechaDesde || !fechaHasta) {
       setErrorFechas("Las fechas 'Desde' y 'Hasta' son obligatorias.");
@@ -98,18 +141,13 @@ const EstadoHabitacionPage = () => {
     const gruposRaw = Array.isArray(gridData.grupos) ? gridData.grupos : [];
     const filasRaw = Array.isArray(gridData.filas) ? gridData.filas : [];
 
-    // grupos: [{ tipoHabitacion, habitaciones:[{id, numero}]}] :contentReference[oaicite:3]{index=3}
     const grupos = gruposRaw.map((g) => {
       const tipo = g.tipoHabitacion ?? g.tipo ?? g.tipoDeHabitacion ?? "Tipo";
       const habitaciones = Array.isArray(g.habitaciones) ? g.habitaciones : [];
 
       const cols = habitaciones.map((h) => {
-        // DTO original: { id, numero } :contentReference[oaicite:4]{index=4}
         const id = h.id ?? h.habitacionId ?? h.key ?? h;
         const numero = h.numero ?? h.nro ?? h.label ?? String(id);
-
-        // si viene "1-101" y vos querés ver solo "101", descomentá:
-        // const display = String(numero).includes("-") ? String(numero).split("-")[1] : String(numero);
         const display = String(numero);
 
         return { id: keyToString(id), display };
@@ -120,24 +158,24 @@ const EstadoHabitacionPage = () => {
 
     const columnOrder = grupos.flatMap((g) => g.cols);
 
-    // Mapa de celdas por fila (por id)
     const rows = filasRaw.map((f) => {
       const diaIso = f.dia ?? f.fecha ?? f.day;
       const celdas = Array.isArray(f.celdas) ? f.celdas : [];
 
-      const mapEstadoPorId = new Map(
-        celdas.map((c) => {
-          const id = c.habitacionId ?? c.id ?? c.key ?? c;
-          return [keyToString(id), c.estado];
-        })
-      );
-
       const cells = columnOrder.map((col) => {
-        const estado = mapEstadoPorId.get(col.id);
+        // Buscamos la celda del backend correspondiente a esta columna
+        const celdaRaw = celdas.find((c) => {
+          const id = c.habitacionId ?? c.id ?? c.key ?? c;
+          return keyToString(id) === col.id;
+        });
+
+        const estado = celdaRaw?.estado;
         const slug = estadoToSlug(estado);
+
         return {
           slug,
           title: `Hab ${col.display} - ${estado ?? "Sin estado"}`,
+          raw: celdaRaw || null, // <-- guardamos la celda completa
         };
       });
 
@@ -147,12 +185,288 @@ const EstadoHabitacionPage = () => {
     return { grupos, columnOrder, rows };
   }, [gridData]);
 
+  // NUEVO: helper para saber si una celda está seleccionada
+  const estaSeleccionada = (habitacionId, diaIso) => {
+    if (!seleccion) return false;
+    if (seleccion.habitacionId !== habitacionId) return false;
+    return seleccion.dias.includes(diaIso);
+  };
+
+  // NUEVO: click en celda (solo si viene desde CU15)
+  const handleCellClick = (diaIso, habitacionId, habitacionLabel) => {
+    if (!desdeCU15) return;
+    if (!diaIso || !habitacionId) return;
+
+    setSeleccion((prev) => {
+      // si es la primera selección o cambia de habitación -> reseteamos a esa sola celda
+      if (!prev || prev.habitacionId !== habitacionId) {
+        return {
+          habitacionId,
+          habitacionLabel,
+          dias: [diaIso],
+        };
+      }
+
+      // misma habitación: agregamos / quitamos día
+      const yaEsta = prev.dias.includes(diaIso);
+      if (yaEsta) {
+        const nuevas = prev.dias.filter((d) => d !== diaIso);
+        if (nuevas.length === 0) {
+          return null;
+        }
+        nuevas.sort();
+        return { ...prev, dias: nuevas };
+      } else {
+        const nuevas = [...prev.dias, diaIso].sort();
+        return { ...prev, dias: nuevas };
+      }
+    });
+  };
+
+  // NUEVO: rango seleccionado (min / max fecha)
+  const rangoSeleccionado = useMemo(() => {
+    if (!seleccion || !seleccion.dias || seleccion.dias.length === 0) return null;
+    const ordenadas = [...seleccion.dias].sort();
+    return { desde: ordenadas[0], hasta: ordenadas[ordenadas.length - 1] };
+  }, [seleccion]);
+
+  // NUEVO: manejar "Continuar con ocupación (CU-15)"
+  const handleContinuarCU15 = () => {
+    if (!desdeCU15 || !normalized || !seleccion || !rangoSeleccionado) return;
+
+    const habitacionIndex = normalized.columnOrder.findIndex(
+      (c) => c.id === seleccion.habitacionId
+    );
+    if (habitacionIndex === -1) return;
+
+    const estadosEnRango = seleccion.dias.map((diaIso) => {
+      const row = normalized.rows.find((r) => r.diaIso === diaIso);
+      const cell = row?.cells?.[habitacionIndex];
+      return {
+        diaIso,
+        slug: cell?.slug ?? "desconocido",
+      };
+    });
+
+    if (estadosEnRango.length === 0) {
+      // Caso borde, casi imposible si ya pudo seleccionar
+      setPopup({
+        open: true,
+        type: "sin-habitaciones",
+        data: { rango: rangoSeleccionado },
+      });
+      return;
+    }
+
+    const hayOcupadaOServicio = estadosEnRango.some(
+      (c) => c.slug === "ocupada" || c.slug === "fuera-servicio"
+    );
+    if (hayOcupadaOServicio) {
+      // Caso 2: ocupada / fuera de servicio
+      setPopup({
+        open: true,
+        type: "bloqueo-ocupada",
+        data: { rango: rangoSeleccionado },
+      });
+      return;
+    }
+
+    const hayReservada = estadosEnRango.some((c) => c.slug === "reservada");
+    if (hayReservada) {
+      // Caso 3: reservada -> mostrar popup con opciones
+      setPopup({
+        open: true,
+        type: "reservada-conflicto",
+        data: { rango: rangoSeleccionado },
+      });
+      return;
+    }
+
+    // Caso 4: todas disponibles -> seguir sin conflicto
+
+    navigate("/cu15", {
+      state: {
+        desdeCU15: true,
+        numeroHabitacion: seleccion.habitacionId,
+        fechaIngreso: rangoSeleccionado.desde,
+        fechaEgreso: rangoSeleccionado.hasta,
+        ocupaSobreReserva: false,
+      },
+    });
+
+  };
+
+  // NUEVO: contenido del popup según tipo
+  let popupTitle = "";
+  let popupBody = null;
+  let popupActions = null;
+
+  if (popup.open) {
+    const rango = popup.data?.rango;
+    const rangoTexto =
+      rango ? `${formatDia(rango.desde)} al ${formatDia(rango.hasta)}` : "";
+
+    switch (popup.type) {
+      case "bloqueo-ocupada":
+        popupTitle = "Rango no válido";
+        popupBody = (
+          <p>
+            En el rango seleccionado ({rangoTexto}) hay días donde la habitación
+            está <strong>ocupada</strong> o <strong>fuera de servicio</strong>.
+            Por favor seleccione otro rango de fechas.
+          </p>
+        );
+        popupActions = (
+          <button className="btn-primary" onClick={cerrarPopup}>
+            Aceptar
+          </button>
+        );
+        break;
+
+      case "reservada-conflicto": {
+        const rango = popup.data?.rango;
+        const rangoTexto =
+          rango ? `${formatDia(rango.desde)} al ${formatDia(rango.hasta)}` : "";
+
+        // Armamos el detalle de las reservas en ese rango
+        let reservasDetalle = [];
+        if (normalized && seleccion && rango) {
+          const habIndex = normalized.columnOrder.findIndex(
+            (c) => c.id === seleccion.habitacionId
+          );
+
+          if (habIndex !== -1) {
+            reservasDetalle = normalized.rows
+              .filter((r) => r.diaIso >= rango.desde && r.diaIso <= rango.hasta)
+              .map((r) => {
+                const cell = r.cells[habIndex];
+                if (!cell || cell.slug !== "reservada" || !cell.raw) return null;
+
+                const raw = cell.raw;
+
+                // 🔽 Acá adaptás los nombres de campos a tu DTO 🔽
+                const apellido =
+                  raw.apellidoHuesped ??
+                  raw.apellidoTitular ??
+                  raw.huespedPrincipal?.apellido ??
+                  "";
+                const nombre =
+                  raw.nombreHuesped ??
+                  raw.nombreTitular ??
+                  raw.huespedPrincipal?.nombre ??
+                  "";
+                const docTipo =
+                  raw.tipoDoc ??
+                  raw.huespedPrincipal?.tipoDoc ??
+                  "";
+                const docNro =
+                  raw.nroDoc ??
+                  raw.huespedPrincipal?.nroDoc ??
+                  "";
+
+                const descripcion =
+                  apellido || nombre
+                    ? `${apellido}, ${nombre} (${docTipo} ${docNro})`
+                    : "Huésped asociado no informado (ajustar campos según DTO)";
+
+                return {
+                  diaIso: r.diaIso,
+                  descripcion,
+                };
+              })
+              .filter(Boolean);
+          }
+        }
+
+        popupTitle = "Habitación reservada";
+        popupBody = (
+          <>
+            <p>
+              En el rango seleccionado ({rangoTexto}) hay días donde la
+              habitación está <strong>reservada</strong>.
+            </p>
+
+            {reservasDetalle.length > 0 && (
+              <>
+                <p>Detalle de reservas en el rango:</p>
+                <ul>
+                  {reservasDetalle.map((r) => (
+                    <li key={r.diaIso}>
+                      Día {formatDia(r.diaIso)} - {r.descripcion}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            <p>
+              ¿Desea <strong>ocupar igualmente</strong> la habitación en esas
+              fechas o prefiere volver a la grilla?
+            </p>
+          </>
+        );
+        popupActions = (
+          <>
+            <button className="btn-secondary" onClick={cerrarPopup}>
+              Volver
+            </button>
+            <button
+              className="btn-primary"
+              onClick={() => {
+                cerrarPopup();
+                navigate("/cu15", {
+                  state: {
+                    desdeCU15: true,
+                    numeroHabitacion: seleccion?.habitacionId,
+                    fechaIngreso: rango?.desde,
+                    fechaEgreso: rango?.hasta,
+                    ocupaSobreReserva: true,
+                  },
+                });
+              }}
+            >
+              Ocupar igualmente
+            </button>
+          </>
+        );
+  break;
+}
+
+
+      case "sin-habitaciones":
+        popupTitle = "Sin habitaciones válidas";
+        popupBody = (
+          <p>
+            No se encontraron habitaciones válidas para el rango seleccionado.
+          </p>
+        );
+        popupActions = (
+          <button className="btn-primary" onClick={cerrarPopup}>
+            Aceptar
+          </button>
+        );
+        break;
+
+      default:
+        popupTitle = "Mensaje";
+        popupBody = <p>Ocurrió una condición no manejada.</p>;
+        popupActions = (
+          <button className="btn-primary" onClick={cerrarPopup}>
+            Cerrar
+          </button>
+        );
+        break;
+    }
+  }
+
   return (
     <div className="reserva-page">
       <main className="main-layout">
         <section className="left-panel">
           <section className="reservation-search">
-            <h1 className="section-title">Estado de Habitaciones (CU-05)</h1>
+            <h1 className="section-title">
+              Estado de Habitaciones (CU-05{desdeCU15 ? " / CU-15" : ""})
+            </h1>
 
             <form className="date-form" onSubmit={handleBuscar}>
               <div className="date-field">
@@ -237,13 +551,37 @@ const EstadoHabitacionPage = () => {
                   {normalized?.rows?.map((r) => (
                     <tr key={r.diaIso || r.diaLabel}>
                       <td className="dia-label">{r.diaLabel}</td>
-                      {r.cells.map((cell, idx) => (
-                        <td
-                          key={`${r.diaIso}-${idx}`}
-                          className={`cell cell-readonly estado-${cell.slug}`}
-                          title={cell.title}
-                        />
-                      ))}
+                      {r.cells.map((cell, idx) => {
+                        const col = normalized.columnOrder[idx];
+                        const habId = col.id;
+                        const selected = estaSeleccionada(habId, r.diaIso);
+
+                        const baseClass = `cell estado-${cell.slug} ${
+                          desdeCU15 ? "cell-selectable" : "cell-readonly"
+                        }`;
+
+                        const className = selected
+                          ? `${baseClass} cell-selected`
+                          : baseClass;
+
+                        return (
+                          <td
+                            key={`${r.diaIso}-${idx}`}
+                            className={className}
+                            title={cell.title}
+                            onClick={
+                              desdeCU15
+                                ? () =>
+                                    handleCellClick(
+                                      r.diaIso,
+                                      habId,
+                                      col.display
+                                    )
+                                : undefined
+                            }
+                          />
+                        );
+                      })}
                     </tr>
                   ))}
                 </tbody>
@@ -251,9 +589,33 @@ const EstadoHabitacionPage = () => {
             </div>
 
             {mensaje && <p className="no-rooms-message">{mensaje}</p>}
+
+            {/* NUEVO: panel de selección sólo cuando viene desde CU15 */}
+            {desdeCU15 && (
+              <div className="seleccion-cu15-panel">
+                <button
+                  type="button"
+                  className="primary-button"
+                  disabled={!rangoSeleccionado}
+                  onClick={handleContinuarCU15}
+                >
+                  Continuar ocupación
+                </button>
+              </div>
+            )}
           </section>
         </section>
       </main>
+
+      {/* NUEVO: popup para conflictos / mensajes del CU15 */}
+      <PopupModal
+        open={popup.open}
+        title={popupTitle}
+        onClose={cerrarPopup}
+        actions={popupActions}
+      >
+        {popupBody}
+      </PopupModal>
     </div>
   );
 };

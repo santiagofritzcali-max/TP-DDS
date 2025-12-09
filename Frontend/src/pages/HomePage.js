@@ -29,7 +29,7 @@ const HomePage = () => {
 
         <button
           className="home-cu-btn"
-          onClick={() => navigate("/cu05")}
+          onClick={() => navigate('/cu05', { state: { modo: 'soloConsulta' } })}
         >
           Ejecutar CU 05
         </button>
@@ -43,7 +43,7 @@ const HomePage = () => {
 
         <button
           className="home-cu-btn"
-          onClick={() => navigate("/cu15")}
+          onClick={() => navigate('/cu05', { state: { modo: 'desdeCU15' } })}
         >
           Ejecutar CU 15
         </button>

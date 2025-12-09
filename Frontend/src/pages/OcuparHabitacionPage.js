@@ -13,6 +13,7 @@ const OcuparHabitacionPage = () => {
     numeroHabitacion = '',
     fechaIngreso = '',
     fechaEgreso = '',
+    ocupaSobreReserva = false, // por si viene desde el popup de "ocupar igualmente"
   } = location.state || {};
 
   // Derivamos nroPiso y nroHabitacion (enteros) a partir del string "piso-hab"
@@ -28,19 +29,21 @@ const OcuparHabitacionPage = () => {
     return { nroPiso: null, nroHabitacion: null };
   }, [numeroHabitacion]);
 
-
-  //estados
+  // --- estados ---
   const [filtroNombre, setFiltroNombre] = useState('');
   const [filtroApellido, setFiltroApellido] = useState('');
   const [filtroTipoDoc, setFiltroTipoDoc] = useState('DNI');
   const [filtroNroDoc, setFiltroNroDoc] = useState('');
 
   const [resultados, setResultados] = useState([]);
-
   const [huespedesSeleccionados, setHuespedesSeleccionados] = useState([]);
-  const [ocuparIgualSiReservada, setOcuparIgualSiReservada] = useState(false);
+
+  const [ocuparIgualSiReservada, setOcuparIgualSiReservada] =
+    useState(ocupaSobreReserva);
+
   const [puedeBuscar, setPuedeBuscar] = useState(true);
-  const [mostrarAccionesPostAceptar, setMostrarAccionesPostAceptar] = useState(false);
+  const [mostrarAccionesPostAceptar, setMostrarAccionesPostAceptar] =
+    useState(false);
 
   const [buscando, setBuscando] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -49,48 +52,46 @@ const OcuparHabitacionPage = () => {
 
   // --- BÚSQUEDA ---
 
- const handleBuscar = async (e) => {
-  e.preventDefault();
+  const handleBuscar = async (e) => {
+    e.preventDefault();
 
-  setError('');
-  setMensajeOk('');
-  setResultados([]);  // sólo limpio lo visible, NO los seleccionados
+    setError('');
+    setMensajeOk('');
+    setResultados([]);
 
-  setBuscando(true);
-  try {
-    const { status, data } = await buscarHuespedes(
-      {
-        nombre: filtroNombre,
-        apellido: filtroApellido,
-        tipoDoc: filtroTipoDoc,
-        nroDoc: filtroNroDoc,
-      },
-      1
-    );
+    setBuscando(true);
+    try {
+      const { status, data } = await buscarHuespedes(
+        {
+          nombre: filtroNombre,
+          apellido: filtroApellido,
+          tipoDoc: filtroTipoDoc,
+          nroDoc: filtroNroDoc,
+        },
+        1
+      );
 
-    if (status === 204 || !Array.isArray(data) || data.length === 0) {
-      setError('No se encontraron huéspedes con esos datos.');
-      setResultados([]);
-      return;
+      if (status === 204 || !Array.isArray(data) || data.length === 0) {
+        setError('No se encontraron huéspedes con esos datos.');
+        setResultados([]);
+        return;
+      }
+
+      setResultados(data);
+    } catch (err) {
+      console.error(err);
+      setError('Error al buscar huéspedes.');
+      setPuedeBuscar(true);
+    } finally {
+      setBuscando(false);
     }
+  };
 
-    setResultados(data);
-  } catch (err) {
-    setError('Error al buscar huéspedes.');
-    setPuedeBuscar(true);
-  } finally {
-    setBuscando(false);
-  }
-};
-
-
-
-
-  //compara tipoDoc+nroDoc
+  // compara tipoDoc+nroDoc
   const esMismoHuesped = (a, b) =>
     a.tipoDoc === b.tipoDoc && a.nroDoc === b.nroDoc;
 
-  //para la seleccion de los huespedes
+  // para la selección de los huéspedes
   const toggleSeleccionHuesped = (huesped) => {
     const candidato = { tipoDoc: huesped.tipoDoc, nroDoc: huesped.nroDoc };
 
@@ -108,51 +109,47 @@ const OcuparHabitacionPage = () => {
       esMismoHuesped(h, { tipoDoc: huesped.tipoDoc, nroDoc: huesped.nroDoc })
     );
 
-  //boton de aceptar la ocupacion
-  const handleConfirmarOcupacion = async () => {
+  // --- ACEPTAR (NO crea la estadía todavía) ---
+
+  const handleAceptarSeleccion = () => {
     setError('');
     setMensajeOk('');
 
     if (!nroPiso || !nroHabitacion || !fechaIngreso || !fechaEgreso) {
-      setError(
-        'Faltan datos de habitación o fechas.'
-      );
+      setError('Faltan datos de habitación o fechas.');
       return;
     }
 
     if (huespedesSeleccionados.length === 0) {
+      setError('Debe seleccionar al menos un huésped antes de continuar.');
       return;
     }
 
-    const requestBody = {
-      nroPiso,
-      nroHabitacion,
-      fechaIngreso,
-      fechaEgreso,
-      huespedes: huespedesSeleccionados,
-      ocuparIgualSiReservada,
-    };
-
-    setEnviando(true);
-    try {
-      const resp = await ocuparHabitacion(requestBody);
-      setMensajeOk(resp.mensaje || 'Habitación ocupada correctamente.');
-      setPuedeBuscar(false);
-      setMostrarAccionesPostAceptar(true);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setEnviando(false);
-    }
+    // Solo mostramos los 3 botones de abajo
+    setMostrarAccionesPostAceptar(true);
   };
 
-  //manejador de cancelar de la pantalla izq
+  // --- construir body para ocuparHabitacion ---
+
+  const buildRequestBody = () => ({
+    nroPiso,
+    nroHabitacion,
+    fechaIngreso,
+    fechaEgreso,
+    huespedes: huespedesSeleccionados,
+    ocuparIgualSiReservada,
+  });
+
+  // --- manejador de cancelar de la pantalla izq ---
+
   const handleCancelar = () => {
     navigate('/');
   };
 
-  //manejador para seguir canrgando
+  // --- manejador para seguir cargando (NO crea estadía) ---
+
   const handleSeguirCargando = () => {
+    // No se crea estadía, solo reseteamos criterios y resultados
     setResultados([]);
     setFiltroNombre('');
     setFiltroApellido('');
@@ -160,24 +157,59 @@ const OcuparHabitacionPage = () => {
     setFiltroNroDoc('');
     setError('');
     setMensajeOk('');
-    setPuedeBuscar(true);
     setMostrarAccionesPostAceptar(false);
+    setPuedeBuscar(true);
+    // Importante: NO tocamos huespedesSeleccionados
   };
 
-  //manejador para cargar otra habitacion
-  const handleCargarOtraHabitacion = () => {
-    navigate('/cu05', {
-      state: {
-        numeroHabitacion,
-        fechaIngreso,
-        fechaEgreso,
-        huespedesSeleccionados, // ahora pasamos los objetos, no ids
-      },
-    });
+  // --- manejador para cargar otra habitación (CREA estadía + vuelve al CU05) ---
+
+  const handleCargarOtraHabitacion = async () => {
+    setError('');
+    setMensajeOk('');
+    setEnviando(true);
+
+    try {
+      const requestBody = buildRequestBody();
+      const resp = await ocuparHabitacion(requestBody);
+
+      setMensajeOk(resp.mensaje || 'Habitación ocupada correctamente.');
+
+      // Luego de crear la estadía, volvemos a ejecutar el CU05 dentro del CU15
+      navigate('/cu05', {
+        state: {
+          modo: 'desdeCU15',
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Error al ocupar la habitación.');
+    } finally {
+      setEnviando(false);
+    }
   };
 
-  const handleSalir = () => {
-    navigate('/');
+  // --- manejador para salir (CREA estadía + vuelve al home) ---
+
+  const handleSalir = async () => {
+    setError('');
+    setMensajeOk('');
+    setEnviando(true);
+
+    try {
+      const requestBody = buildRequestBody();
+      const resp = await ocuparHabitacion(requestBody);
+
+      setMensajeOk(resp.mensaje || 'Habitación ocupada correctamente.');
+
+      // Volvemos al inicio de la app
+      navigate('/');
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Error al ocupar la habitación.');
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -219,7 +251,8 @@ const OcuparHabitacionPage = () => {
 
             <div className="form-row">
               <label>
-                Apellido<br />
+                Apellido
+                <br />
                 <input
                   type="text"
                   value={filtroApellido}
@@ -319,24 +352,25 @@ const OcuparHabitacionPage = () => {
               <input
                 type="checkbox"
                 checked={ocuparIgualSiReservada}
+                disabled={ocupaSobreReserva} // si vino marcado desde CU05 por conflicto de reserva
                 onChange={(e) =>
                   setOcuparIgualSiReservada(e.target.checked)
                 }
               />
-              Ocupar igual si está reservada
+            Ocupar igual si está reservada
             </label>
 
             <button
               type="button"
               className="btn-primary"
-              onClick={handleConfirmarOcupacion}
+              onClick={handleAceptarSeleccion}
               disabled={enviando || mostrarAccionesPostAceptar}
             >
-              {enviando ? 'Ocupando...' : 'Aceptar'}
+              Aceptar
             </button>
           </div>
 
-          {/* Botones inferiores */}
+          {/* Botones inferiores: sólo visibles después de Aceptar */}
           {mostrarAccionesPostAceptar && (
             <div className="panel-footer-bottom">
               <div className="panel-footer-bottom-left">
@@ -351,16 +385,18 @@ const OcuparHabitacionPage = () => {
                   type="button"
                   className="btn-secondary"
                   onClick={handleCargarOtraHabitacion}
+                  disabled={enviando}
                 >
-                  Cargar otra habitación
+                  {enviando ? 'Guardando...' : 'Cargar otra habitación'}
                 </button>
               </div>
               <button
                 type="button"
                 className="btn-secondary"
                 onClick={handleSalir}
+                disabled={enviando}
               >
-                Salir
+                {enviando ? 'Guardando...' : 'Salir'}
               </button>
             </div>
           )}
@@ -377,4 +413,3 @@ const OcuparHabitacionPage = () => {
 };
 
 export default OcuparHabitacionPage;
-
