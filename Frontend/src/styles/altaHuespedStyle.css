@@ -116,27 +116,29 @@
   background-color: #e7f3ff;
   border: 2px solid #007bff;
   color: #0056b3;
-  padding: 20px 24px;
-  border-radius: 6px;
-  max-width: 420px;
-  width: 90%;
+  padding: 22px 26px;
+  border-radius: 8px;
+  max-width: 560px;
+  min-width: 420px;
+  width: auto;
+  display: inline-block;
   box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .modalTitleSuccess {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   color: #007bff;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
 .modalBodySuccess {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   color: #333;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .modalButtonsSuccess {
@@ -333,4 +335,5 @@
   gap: 8px;
   align-items: center;
 }
+
 

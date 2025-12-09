@@ -888,6 +888,36 @@
   font-size: 14px;
 }
 
+/* Popup selección exitosa (CU-05/CU-15) con estilo dedicado */
+.modalSuccessCu05 {
+  background-color: #e7f3ff;
+  border: 2px solid #007bff;
+  color: #0056b3;
+  padding: 22px 26px;
+  border-radius: 8px;
+  max-width: 700px;
+  min-width: 520px;
+  width: auto;
+  display: inline-block;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  font-size: 15px;
+}
+
+.modalTitleSuccessCu05 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #007bff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modalBodySuccessCu05 {
+  margin-bottom: 10px;
+  color: #333333;
+  font-size: 15px;
+}
+
 .modalButtons {
   display: flex;
   justify-content: flex-end;

@@ -346,20 +346,9 @@ const OcuparHabitacionPage = () => {
             </table>
           </div>
 
-          {/* Checkbox + Aceptar (derecha) */}
+          {/* Aceptar (derecha) */}
           <div className="panel-footer-right">
-            <label className="checkbox-inline">
-              <input
-                type="checkbox"
-                checked={ocuparIgualSiReservada}
-                disabled={ocupaSobreReserva} // si vino marcado desde CU05 por conflicto de reserva
-                onChange={(e) =>
-                  setOcuparIgualSiReservada(e.target.checked)
-                }
-              />
-            Ocupar igual si está reservada
-            </label>
-
+            <div />
             <button
               type="button"
               className="btn-primary"
@@ -369,7 +358,6 @@ const OcuparHabitacionPage = () => {
               Aceptar
             </button>
           </div>
-
           {/* Botones inferiores: sólo visibles después de Aceptar */}
           {mostrarAccionesPostAceptar && (
             <div className="panel-footer-bottom">

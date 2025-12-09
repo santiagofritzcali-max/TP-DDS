@@ -749,9 +749,9 @@ const EstadoHabitacionPage = () => {
 
       {seleccionExitosa.open && (
         <div className="modalOverlay">
-          <div className="modalSuccess">
-            <div className="modalTitleSuccess">SELECCION EXITOSA</div>
-            <div className="modalBodySuccess">
+          <div className="modalSuccessCu05">
+            <div className="modalTitleSuccessCu05">SELECCION EXITOSA</div>
+            <div className="modalBodySuccessCu05">
               <p>PRESIONE CUALQUIER TECLA Y CONTINUA...</p>
             </div>
           </div>
