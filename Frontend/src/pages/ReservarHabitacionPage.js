@@ -104,7 +104,8 @@ const INITIAL_GRID = [
 const ReservarHabitacionPage = () => {
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
-  const [grid, setGrid] = useState(INITIAL_GRID);
+  const [grid, setGrid] = useState([]);
+  const [columnas, setColumnas] = useState([]);
   const [selectedCells, setSelectedCells] = useState([]); // {fecha, nro}
   const [mensajeSinHabitaciones, setMensajeSinHabitaciones] = useState("");
   const [errorFechas, setErrorFechas] = useState("");
@@ -121,15 +122,16 @@ const ReservarHabitacionPage = () => {
 
     try {
       // llamada al backend (por ahora mock interno en reservaService)
-      const nuevaGrid = await buscarDisponibilidad(fechaDesde, fechaHasta);
+      const { grid: nuevaGrid, columnas: nuevasCols } = await buscarDisponibilidad(fechaDesde, fechaHasta);
+setGrid(nuevaGrid);
+setColumnas(nuevasCols);
+setSelectedCells([]);
+setMensajeSinHabitaciones(
+  nuevaGrid.length === 0
+    ? "No hay habitaciones disponibles para el rango seleccionado."
+    : ""
+);
 
-      setGrid(nuevaGrid);
-      setSelectedCells([]);
-      setMensajeSinHabitaciones(
-        nuevaGrid.length === 0
-          ? "No hay habitaciones disponibles para el rango seleccionado."
-          : ""
-      );
     } catch (err) {
       console.error(err);
       setMensajeSinHabitaciones("Ocurrió un error al buscar la disponibilidad.");
@@ -169,7 +171,7 @@ const ReservarHabitacionPage = () => {
       habitaciones: habitacionesOrdenadas.map((h) => ({
         fecha: h.fecha,
         nro: h.nro,
-        tipo: ROOM_TYPES_BY_NUMBER[h.nro] || `Habitación ${h.nro}`,
+        tipo: columnas.find((c) => c.nro === item.nro)?.tipo || `Habitación ${item.nro}`,
         // placeholder de ingreso/egreso 
         fechaIngreso: h.fecha,
         fechaEgreso: h.fecha,
@@ -258,15 +260,24 @@ const ReservarHabitacionPage = () => {
             <div className="grid-rounded-wrapper">
               <table className="rooms-table">
                 <thead>
-                  <tr>
-                    <th className="col-dia">Días de</th>
-                    <th>Individual Estándar</th>
-                    <th>Doble Estándar</th>
-                    <th>Doble Superior</th>
-                    <th>Superior Family</th>
-                    <th>Suite</th>
-                  </tr>
-                </thead>
+  <tr>
+    <th className="col-dia">Días de</th>
+    {columnas.length > 0
+      ? columnas.map((col) => (
+          <th key={col.nro}>{col.tipo || col.nro}</th>
+        ))
+      : (
+        <>
+          <th>Individual Estándar</th>
+          <th>Doble Estándar</th>
+          <th>Doble Superior</th>
+          <th>Superior Family</th>
+          <th>Suite</th>
+        </>
+      )}
+  </tr>
+</thead>
+
                 <tbody>
                   {grid.map((fila, rowIndex) => (
                     <tr key={fila.fecha}>
