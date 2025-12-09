@@ -2,6 +2,8 @@ import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom"; // NUEVO
 import "../styles/reservarHabitacionStyle.css";
 import { obtenerEstadoHabitaciones } from "../services/estadoHabitacionService";
+import FechaInvalidaPopup from "./components/FechaInvalidaPopup";
+
 
 // --- Modal simple (popup) --- // NUEVO
 const PopupModal = ({ open, title, children, actions, onClose }) => {
@@ -78,7 +80,7 @@ const EstadoHabitacionPage = () => {
   // - state.modo === 'desdeCU15' (como lo hace HomePage ahora)
   const modo = location.state?.modo || null;
   const desdeCU15 =
-  location.state?.desdeCU15 === true || modo === "desdeCU15";
+    location.state?.desdeCU15 === true || modo === "desdeCU15";
 
 
   const [fechaDesde, setFechaDesde] = useState("");
@@ -96,6 +98,21 @@ const EstadoHabitacionPage = () => {
   // NUEVO: estado para popup
   const [popup, setPopup] = useState({ open: false, type: null, data: null });
 
+  // NUEVO: popup para fechas inválidas
+  const [fechaPopup, setFechaPopup] = useState({ open: false, message: "" });
+
+  const abrirFechaPopup = (msg) => {
+    setErrorFechas(msg); // mantenés el texto rojo como antes
+    setFechaPopup({ open: true, message: msg });
+  };
+
+  const cerrarFechaPopup = () => setFechaPopup({ open: false, message: "" });
+
+  // NUEVO: cancelar a pantalla principal
+  const handleCancelar = () => {
+    navigate("/"); // ajustá si tu "principal" es otra ruta
+  };
+
   const cerrarPopup = () => setPopup({ open: false, type: null, data: null });
 
   const handleBuscar = async (e) => {
@@ -105,13 +122,14 @@ const EstadoHabitacionPage = () => {
     setSeleccion(null); // NUEVO: limpiar selección al buscar de nuevo
 
     if (!fechaDesde || !fechaHasta) {
-      setErrorFechas("Las fechas 'Desde' y 'Hasta' son obligatorias.");
+      abrirFechaPopup("Las fechas 'Desde' y 'Hasta' son obligatorias.");
       return;
     }
     if (fechaHasta < fechaDesde) {
-      setErrorFechas("'Hasta' no puede ser anterior a 'Desde'.");
+      abrirFechaPopup("'Hasta' no puede ser anterior a 'Desde'.");
       return;
     }
+
 
     try {
       setLoading(true);
@@ -429,8 +447,8 @@ const EstadoHabitacionPage = () => {
             </button>
           </>
         );
-  break;
-}
+        break;
+      }
 
 
       case "sin-habitaciones":
@@ -461,6 +479,11 @@ const EstadoHabitacionPage = () => {
 
   return (
     <div className="reserva-page">
+      <FechaInvalidaPopup
+        open={fechaPopup.open}
+        message={fechaPopup.message}
+        onClose={cerrarFechaPopup}
+      />
       <main className="main-layout">
         <section className="left-panel">
           <section className="reservation-search">
@@ -497,6 +520,13 @@ const EstadoHabitacionPage = () => {
 
               <button type="submit" className="primary-button" disabled={loading}>
                 {loading ? "Buscando..." : "Buscar estado"}
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={handleCancelar}
+              >
+                Cancelar
               </button>
             </form>
 
@@ -556,9 +586,8 @@ const EstadoHabitacionPage = () => {
                         const habId = col.id;
                         const selected = estaSeleccionada(habId, r.diaIso);
 
-                        const baseClass = `cell estado-${cell.slug} ${
-                          desdeCU15 ? "cell-selectable" : "cell-readonly"
-                        }`;
+                        const baseClass = `cell estado-${cell.slug} ${desdeCU15 ? "cell-selectable" : "cell-readonly"
+                          }`;
 
                         const className = selected
                           ? `${baseClass} cell-selected`
@@ -572,11 +601,11 @@ const EstadoHabitacionPage = () => {
                             onClick={
                               desdeCU15
                                 ? () =>
-                                    handleCellClick(
-                                      r.diaIso,
-                                      habId,
-                                      col.display
-                                    )
+                                  handleCellClick(
+                                    r.diaIso,
+                                    habId,
+                                    col.display
+                                  )
                                 : undefined
                             }
                           />
