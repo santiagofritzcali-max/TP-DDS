@@ -1,31 +1,22 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
+import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.MonedaExtranjeraId;
+import jakarta.persistence.*;
+
+@Entity
+@DiscriminatorValue("MonedaExtranjera")  
+@IdClass(MonedaExtranjeraId.class)  
 public class MonedaExtranjera extends MedioPago {
-    private double monto;
-    private String tipoMoneda;
-    private Double cotizacion;
 
-    public double getMonto() {
-        return monto;
-    }
+    @Id
+    @ManyToOne
+    @JoinColumn(name = "idPago", referencedColumnName = "idPago", insertable = false, updatable = false)
+    private Pago pago;  
 
-    public void setMonto(double monto) {
-        this.monto = monto;
-    }
+    @Id
+    @Column(name = "tipoMoneda") 
+    private String tipoMoneda;  
 
-    public String getTipoMoneda() {
-        return tipoMoneda;
-    }
+    private double cotizacion;
 
-    public void setTipoMoneda(String tipoMoneda) {
-        this.tipoMoneda = tipoMoneda;
-    }
-
-    public Double getCotizacion() {
-        return cotizacion;
-    }
-
-    public void setCotizacion(Double cotizacion) {
-        this.cotizacion = cotizacion;
-    }
 }

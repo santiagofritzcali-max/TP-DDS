@@ -48,5 +48,8 @@ public class Estadia {
         }
     )
     private List<Huesped> huespedes;
+    
+    @OneToMany
+    private List<Factura> facturas;
 }
 

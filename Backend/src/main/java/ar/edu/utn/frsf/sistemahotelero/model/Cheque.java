@@ -1,51 +1,31 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
+import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.ChequeId;
+import jakarta.persistence.*;
 import java.util.Date;
 
+@Entity
+@DiscriminatorValue("Cheque")  // Diferenciamos este tipo de MedioPago
+@IdClass(ChequeId.class)  // Usamos MedioPagoId para la clave primaria compuesta
 public class Cheque extends MedioPago {
+
+    @Id
+    @ManyToOne
+    @JoinColumn(name = "idPago", referencedColumnName = "idPago", insertable = false, updatable = false)
+    private Pago pago;  // Relación con Pago (parte de la clave primaria compuesta)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idCheque")
+    private Long nroCheque;  // Parte de la clave primaria compuesta
+
     private String nombrePropietario;
-    private String nroCheque;
+
     private String banco;
+    
     private String plazo;
+    
     private Date fechaCobro;
 
-    public String getNombrePropietario() {
-        return nombrePropietario;
-    }
-
-    public void setNombrePropietario(String nombrePropietario) {
-        this.nombrePropietario = nombrePropietario;
-    }
-
-    public String getNroCheque() {
-        return nroCheque;
-    }
-
-    public void setNroCheque(String nroCheque) {
-        this.nroCheque = nroCheque;
-    }
-
-    public String getBanco() {
-        return banco;
-    }
-
-    public void setBanco(String banco) {
-        this.banco = banco;
-    }
-
-    public String getPlazo() {
-        return plazo;
-    }
-
-    public void setPlazo(String plazo) {
-        this.plazo = plazo;
-    }
-
-    public Date getFechaCobro() {
-        return fechaCobro;
-    }
-
-    public void setFechaCobro(Date fechaCobro) {
-        this.fechaCobro = fechaCobro;
-    }
+    // Getters y Setters
 }
