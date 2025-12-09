@@ -67,6 +67,7 @@ const ReservarHabitacionPage = () => {
   const [showNoDispPopup, setShowNoDispPopup] = useState(false);
   const [rangoNoDisp, setRangoNoDisp] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showSinDisponibilidadPopup, setShowSinDisponibilidadPopup] = useState(false);
 
   const navigate = useNavigate();
 
@@ -117,6 +118,7 @@ const ReservarHabitacionPage = () => {
           ? "No hay habitaciones disponibles para el rango seleccionado."
           : ""
       );
+      setShowSinDisponibilidadPopup(nuevaGrid.length === 0);
     } catch (err) {
       console.error(err);
       setMensajeSinHabitaciones(
@@ -309,6 +311,9 @@ const ReservarHabitacionPage = () => {
   const handleCloseNoDispPopup = () => {
     setShowNoDispPopup(false);
     setSelectedCells([]); // limpia grilla y panel derecho
+  };
+  const handleCloseSinDisponibilidad = () => {
+    setShowSinDisponibilidadPopup(false);
   };
 
   // -------------------------------------------------------------------
@@ -541,6 +546,26 @@ const ReservarHabitacionPage = () => {
         />
       )}
 
+      {showSinDisponibilidadPopup && (
+        <div className="modalOverlayReservaError">
+          <div className="modalContentErrorReserva">
+            <div className="modalTitleErrorReserva">Error de reserva</div>
+            <div className="modalBodyErrorReserva">
+              No hay habitaciones disponibles para las fechas seleccionadas.
+            </div>
+            <div className="modalButtonsErrorReserva">
+              <button
+                className="modalButtonBase modalButtonPrimary"
+                onClick={handleCloseSinDisponibilidad}
+                type="button"
+              >
+                Salir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showCancelModal && (
         <div className="modalOverlay">
           <div className="modalContent modalCancel">
@@ -573,4 +598,6 @@ const ReservarHabitacionPage = () => {
 };
 
 export default ReservarHabitacionPage;
+
+
 

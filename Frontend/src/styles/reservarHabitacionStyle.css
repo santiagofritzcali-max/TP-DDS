@@ -980,3 +980,47 @@
   gap: 8px;
   align-items: center;
 }
+
+/* Popup de error de disponibilidad (estilo rojo) */
+.modalOverlayReservaError {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(242,139,130,0.28);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContentErrorReserva {
+  background-color: #ffecec;
+  padding: 20px 24px;
+  border-radius: 6px;
+  max-width: 460px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  font-size: 14px;
+  border: 2px solid #f28b82;
+  color: #5a1f1f;
+  text-align: center;
+}
+
+.modalTitleErrorReserva {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #b00020;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modalBodyErrorReserva {
+  margin-bottom: 16px;
+  color: #5a1f1f;
+  font-size: 14px;
+}
+
+.modalButtonsErrorReserva {
+  display: flex;
+  justify-content: center;
+}
