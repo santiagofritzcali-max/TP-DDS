@@ -6,8 +6,7 @@ const API_ROOT = "http://localhost:8080";
 // Endpoints
 const HABITACIONES_API = `${API_ROOT}/api/habitaciones`;
 const RESERVAS_API = `${API_ROOT}/api/reservas`;
-
-// ⚠️ Importante: el controller está en /api/habitaciones/estado
+// Importante: el controller está en /api/habitaciones/estado
 const HAB_ESTADO_API = `${API_ROOT}/api/habitaciones/estado`;
 
 // Piso fijo (según tu regla: consultas sobre un único piso)
@@ -88,7 +87,6 @@ function normalizarEstado(estadoRaw) {
   if (compact.includes("ocup")) return "ocupada";
   if (compact.includes("dispon")) return "disponible";
 
-  // Si viene algo raro, lo tratamos como no seleccionable
   return "fuera-servicio";
 }
 
@@ -108,7 +106,6 @@ const mapEstado = (estadoEnum) => {
     case "Disponible":
       return "disponible";
     case "FueraServicio":
-      // en tu CSS lo manejás como "no-disponible"
       return "no-disponible";
     default:
       return "no-disponible";
@@ -191,15 +188,70 @@ async function postJson(url, body) {
   return resp.json();
 }
 
+const addOneDayIso = (iso) => {
+  if (!iso) return iso;
+  const [y, m, d] = iso.split("-");
+  const date = new Date(Number(y), Number(m) - 1, Number(d));
+  if (Number.isNaN(date.getTime())) return iso;
+  date.setDate(date.getDate() + 1);
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${mm}-${dd}`;
+};
+
+const subOneDayIso = (iso) => {
+  if (!iso) return iso;
+  const [y, m, d] = iso.split("-");
+  const date = new Date(Number(y), Number(m) - 1, Number(d));
+  if (Number.isNaN(date.getTime())) return iso;
+  date.setDate(date.getDate() - 1);
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${mm}-${dd}`;
+};
+
+const toIso = (valor, fallbackYear) => {
+  if (!valor) return null;
+  const s = String(valor);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+    const [d, m, y] = s.split("/");
+    return `${y}-${m}-${d}`;
+  }
+  if (/^\d{2}\/\d{2}$/.test(s) && fallbackYear) {
+    const [d, m] = s.split("/");
+    return `${fallbackYear}-${m}-${d}`;
+  }
+  return null;
+};
+
 // ---------------------------------------------------------------------------
-// Consulta de disponibilidad (real) – CU-04 incluye CU-05
+// Consulta de disponibilidad (real) - CU-04 incluye CU-05
 // ---------------------------------------------------------------------------
 export const buscarDisponibilidad = async (fechaDesdeIso, fechaHastaIso) => {
-  const params = { desde: fechaDesdeIso, hasta: fechaHastaIso };
+  // Enviamos desde-1 / hasta+1 para compensar backend exclusivo y luego filtramos
+  const params = {
+    desde: subOneDayIso(fechaDesdeIso),
+    hasta: addOneDayIso(fechaHastaIso),
+  };
 
   // Llamada al backend con fetch
   const data = await getJson(HAB_ESTADO_API, params);
   // data: { grupos, filas, dias, desde, hasta }
+
+  // Filtramos filas para mostrar solo entre desde/hasta inclusive
+  if (Array.isArray(data.filas) && (fechaDesdeIso || fechaHastaIso)) {
+    const limiteDesde = fechaDesdeIso || null;
+    const limiteHasta = fechaHastaIso || null;
+    data.filas = data.filas.filter((fila) => {
+      const dia = fila.dia ?? fila.fecha ?? fila.day;
+      const iso = toIso(dia, fechaHastaIso ? fechaHastaIso.split("-")[0] : null);
+      if (!iso) return false;
+      const okDesde = limiteDesde ? iso >= limiteDesde : true;
+      const okHasta = limiteHasta ? iso <= limiteHasta : true;
+      return okDesde && okHasta;
+    });
+  }
 
   // Orden de columnas según los grupos (tipoHabitacion)
   const columnas = (data.grupos ?? []).flatMap((g) =>
@@ -211,7 +263,7 @@ export const buscarDisponibilidad = async (fechaDesdeIso, fechaHastaIso) => {
 
   // Armar grilla con fechas y habitaciones en el mismo orden de columnas
   const grid = (data.filas ?? []).map((fila) => {
-    const fecha = formatDateDMY(fila.dia); // fila.dia viene en yyyy-MM-dd
+    const fecha = formatDateDMY(fila.dia || fila.fecha || fila.day);
     const habitaciones = columnas.map((col) => {
       const [pisoStr, habStr] = col.nro.split("-");
       const piso = parseInt(pisoStr, 10);
@@ -236,10 +288,9 @@ export const buscarDisponibilidad = async (fechaDesdeIso, fechaHastaIso) => {
 };
 
 // ---------------------------------------------------------------------------
-// Confirmar reserva – CU-04 (pasos 21–32)
+// Confirmar reserva - CU-04 (pasos 21-32)
 // ---------------------------------------------------------------------------
 export const confirmarReserva = async (payload) => {
-  // POST con fetch
   const data = await postJson(RESERVAS_API, payload);
   return data;
 };

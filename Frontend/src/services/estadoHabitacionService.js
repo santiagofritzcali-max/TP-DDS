@@ -24,7 +24,7 @@ const subOneDayIso = (iso) => {
 };
 
 export const obtenerEstadoHabitaciones = async (fechaDesdeIso, fechaHastaIso) => {
-  // Ajuste: ensanchamos el rango al backend (desde-1, hasta+1) y luego filtramos en front.
+  // Ajuste: enviamos hasta +1 día (backend trata fecha final como exclusiva) y luego filtramos en front.
   const params = new URLSearchParams({
     desde: subOneDayIso(fechaDesdeIso),
     hasta: addOneDayIso(fechaHastaIso),
@@ -46,38 +46,33 @@ export const obtenerEstadoHabitaciones = async (fechaDesdeIso, fechaHastaIso) =>
 
   const data = await response.json();
 
-  // Filtramos filas para no mostrar la fila extra del día hasta+1
-  if (Array.isArray(data.filas) && fechaHastaIso) {
-    const parseFecha = (valor) => {
+  // Filtramos filas para mostrar solo entre desde/hasta inclusive, comparando por ISO.
+  if (Array.isArray(data.filas) && (fechaHastaIso || fechaDesdeIso)) {
+    const toIso = (valor) => {
       if (!valor) return null;
       const s = String(valor);
-      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-        const [y, m, d] = s.split("-");
-        return new Date(Number(y), Number(m) - 1, Number(d));
-      }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
         const [d, m, y] = s.split("/");
-        return new Date(Number(y), Number(m) - 1, Number(d));
+        return `${y}-${m}-${d}`;
       }
-      if (/^\d{2}\/\d{2}$/.test(s)) {
+      if (/^\d{2}\/\d{2}$/.test(s) && fechaHastaIso) {
         const [d, m] = s.split("/");
-        // Asumimos mismo año que fechaHastaIso
         const [yHasta] = fechaHastaIso.split("-");
-        return new Date(Number(yHasta), Number(m) - 1, Number(d));
+        return `${yHasta}-${m}-${d}`;
       }
       return null;
     };
 
-    const limiteHasta = parseFecha(fechaHastaIso);
-    const limiteDesde = fechaDesdeIso ? parseFecha(fechaDesdeIso) : null;
+    const limiteHasta = fechaHastaIso || null;
+    const limiteDesde = fechaDesdeIso || null;
 
     data.filas = data.filas.filter((fila) => {
-      const diaIso = fila.dia || fila.fecha || fila.day;
-      if (!diaIso) return false;
-      const d = parseFecha(diaIso);
-      if (!d) return true;
-      const dentroHasta = d <= limiteHasta;
-      const dentroDesde = limiteDesde ? d >= limiteDesde : true;
+      const dia = fila.dia || fila.fecha || fila.day;
+      const iso = toIso(dia);
+      if (!iso) return false;
+      const dentroDesde = limiteDesde ? iso >= limiteDesde : true;
+      const dentroHasta = limiteHasta ? iso <= limiteHasta : true;
       return dentroDesde && dentroHasta;
     });
   }
