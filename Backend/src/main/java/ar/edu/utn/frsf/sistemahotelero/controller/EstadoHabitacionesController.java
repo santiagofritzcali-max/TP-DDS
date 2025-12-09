@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.time.LocalDate;
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000") 
 @RestController
 @RequestMapping("/api/habitaciones")
 public class EstadoHabitacionesController {
