@@ -22,8 +22,8 @@ public class EstadoHabitacionesController {
 
   @GetMapping("/estado")
   public ResponseEntity<?> obtenerEstado(
-      @RequestParam @NotNull @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate desde,
-      @RequestParam @NotNull @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate hasta
+      @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+      @RequestParam @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta
   ) {
     if (desde.isAfter(hasta)) {
       return ResponseEntity.badRequest().body(

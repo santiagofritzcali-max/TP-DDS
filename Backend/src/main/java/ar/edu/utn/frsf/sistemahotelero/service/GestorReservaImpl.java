@@ -94,8 +94,7 @@ public class GestorReservaImpl implements GestorReserva {
             reservasCreadas.add(guardada);
 
             //Se tiene que eliminar de la lista de disponibles, que se obtiene del CU del lauti
-            // actualizar estado de la habitación a RESERVADA
-            gestorHabitacion.actualizarEstado(nro, EstadoHabitacion.Reservada);
+            
         }
 
         return reservasCreadas;

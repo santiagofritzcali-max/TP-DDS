@@ -7,7 +7,9 @@ import HomePage from "./pages/HomePage";
 import BusquedaHuespedPage from "./pages/BusquedaHuespedPage";
 import AltaHuespedPage from "./pages/AltaHuespedPage";
 import ReservarHabitacionPage from "./pages/ReservarHabitacionPage";
+import EstadoHabitacionesPage from "./pages/EstadoHabitacionPage";
 import DatosReservaPage from "./pages/DatosReservaPage";
+
 import OcuparHabitacionPage from "./pages/OcuparHabitacionPage";
 
 import "./App.css";
@@ -28,6 +30,8 @@ function App() {
             <Route path="/cu04" element={<ReservarHabitacionPage />} />
 
             <Route path="/datos-reserva" element={<DatosReservaPage />} />
+
+            <Route path="/cu05" element={<EstadoHabitacionesPage />} />
 
             <Route path="/cu09" element={<AltaHuespedPage />} />
 

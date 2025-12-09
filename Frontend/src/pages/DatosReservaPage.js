@@ -114,15 +114,12 @@ const DatosReservaPage = () => {
       const telefonoCompleto = `${form.prefijo} ${form.telefono}`;
 
       const payload = {
-        fechaDesde,
-        fechaHasta,
+        numerosHabitacion: habitaciones.map((h) => h.nro), // "piso-hab"
+        fechaInicio: fechaDesde, // yyyy-MM-dd
+        fechaFin: fechaHasta,    // yyyy-MM-dd
         nombre: form.nombre.trim(),
         apellido: form.apellido.trim(),
-        telefonoCompleto,
-        habitaciones: habitaciones.map((h) => ({
-          fecha: h.fecha,
-          nro: h.nro,
-        })),
+        telefono: telefonoCompleto.trim(),
       };
 
       await confirmarReserva(payload);

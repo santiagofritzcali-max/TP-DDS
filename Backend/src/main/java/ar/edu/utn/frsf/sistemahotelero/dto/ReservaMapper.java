@@ -8,9 +8,9 @@ public class ReservaMapper {
         ReservaResponse dto = new ReservaResponse();
 
         dto.setIdReserva(reserva.getId());
-        dto.setNumeroHabitacion(
-            reserva.getHabitacion() != null && reserva.getHabitacion().getId() != null
-                ? reserva.getHabitacion().getId().toString()
+        dto.setHabitacionId(
+            reserva.getHabitacion() != null
+                ? reserva.getHabitacion().getId()
                 : null
         );
         dto.setFechaInicio(reserva.getFechaInicio());

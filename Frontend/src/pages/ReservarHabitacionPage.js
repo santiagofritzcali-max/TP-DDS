@@ -73,7 +73,8 @@ const INITIAL_GRID = [
 const ReservarHabitacionPage = () => {
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
-  const [grid, setGrid] = useState(INITIAL_GRID);
+  const [grid, setGrid] = useState([]);
+  const [columnas, setColumnas] = useState([]);
   const [selectedCells, setSelectedCells] = useState([]); // {fecha, nro}
   const [mensajeSinHabitaciones, setMensajeSinHabitaciones] = useState("");
   const [errorFechas, setErrorFechas] = useState("");
@@ -90,17 +91,13 @@ const ReservarHabitacionPage = () => {
     }
 
     try {
-      const nuevaGrid = await buscarDisponibilidad(fechaDesde, fechaHasta);
-
+      const { grid: nuevaGrid, columnas: nuevasCols } = await buscarDisponibilidad(fechaDesde, fechaHasta);
       setGrid(nuevaGrid);
+      setColumnas(nuevasCols);
       setSelectedCells([]);
-
-      const sinFilas = !Array.isArray(nuevaGrid) || nuevaGrid.length === 0;
-      const sinHabitaciones = !sinFilas && (!nuevaGrid[0]?.habitaciones || nuevaGrid[0].habitaciones.length === 0);
-
       setMensajeSinHabitaciones(
-        sinFilas || sinHabitaciones
-          ? "No hay habitaciones para mostrar en el rango seleccionado."
+        nuevaGrid.length === 0
+          ? "No hay habitaciones disponibles para el rango seleccionado."
           : ""
       );
     } catch (err) {
@@ -141,7 +138,7 @@ const ReservarHabitacionPage = () => {
         habitaciones: habitacionesOrdenadas.map((h) => ({
           fecha: h.fecha,
           nro: h.nro,
-          tipo: ROOM_TYPES_BY_NUMBER[h.nro] || `Habitación ${h.nro}`,
+          tipo: columnas.find((c) => c.nro === h.nro)?.tipo || `Habitación ${h.nro}`,
           fechaIngreso: h.fecha,
           fechaEgreso: h.fecha,
         })),
@@ -228,11 +225,19 @@ const ReservarHabitacionPage = () => {
                 <thead>
                   <tr>
                     <th className="col-dia">Días de</th>
-                    <th>Individual Estándar</th>
-                    <th>Doble Estándar</th>
-                    <th>Doble Superior</th>
-                    <th>Superior Family</th>
-                    <th>Suite</th>
+                    {columnas.length > 0
+                      ? columnas.map((col) => (
+                        <th key={col.nro}>{col.tipo || col.nro}</th>
+                      ))
+                      : (
+                        <>
+                          <th>Individual Estándar</th>
+                          <th>Doble Estándar</th>
+                          <th>Doble Superior</th>
+                          <th>Superior Family</th>
+                          <th>Suite</th>
+                        </>
+                      )}
                   </tr>
                 </thead>
 
