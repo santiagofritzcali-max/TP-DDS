@@ -1,9 +1,8 @@
-// src/pages/DatosReservaPage.js
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/reservarHabitacionStyle.css";
 import { confirmarReserva } from "../services/reservaService";
-
+import PopupCancelarReserva from "../components/PopupCancelarReserva";
 
 const ROOM_TYPES_BY_NUMBER = {
   "101": "Individual Estándar",
@@ -16,18 +15,17 @@ const ROOM_TYPES_BY_NUMBER = {
   "500": "Suite",
 };
 
-
 const toIsoFromDMY = (dmy) => {
   if (!dmy) return "";
   const [dd, mm, yyyy] = dmy.split("/");
-  return `${yyyy}-${mm}-${dd}`; // "2026-01-03"
+  return `${yyyy}-${mm}-${dd}`; 
 };
 
 const DatosReservaPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Si se llegó sin state, evitamos que explote
+  
   const state = location.state || {};
   const {
     fechaDesde = "",
@@ -55,8 +53,6 @@ const DatosReservaPage = () => {
   // pop-up de éxito
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // ----------------- handlers básicos -----------------
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -68,7 +64,6 @@ const DatosReservaPage = () => {
   };
 
   // ----------------- validación por campo -----------------
-
   const validarFormulario = () => {
     const soloLetras = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/;
     const soloNumeros = /^[0-9]+$/;
@@ -114,15 +109,12 @@ const DatosReservaPage = () => {
   };
 
   // ----------------- confirmar reserva -----------------
-
   const handleConfirmar = async () => {
     setError("");
 
-    // validación por campo
     const esFormValido = validarFormulario();
     if (!esFormValido) return;
 
-    // validar que haya habitaciones
     if (!habitaciones || habitaciones.length === 0) {
       setError("No hay habitaciones seleccionadas para confirmar.");
       return;
@@ -133,11 +125,10 @@ const DatosReservaPage = () => {
 
       const telefonoCompleto = `${form.prefijo} ${form.telefono}`;
 
-      // ---- NUEVO: armamos la lista de reservas por habitación ----
       const reservasPayload = habitaciones.map((h) => ({
-        numeroHabitacion: h.nro,                         // "1-301"
-        fechaInicio: toIsoFromDMY(h.fechaIngreso),       // "2026-01-01"
-        fechaFin: toIsoFromDMY(h.fechaEgreso),           // "2026-01-01"
+        numeroHabitacion: h.nro,
+        fechaInicio: toIsoFromDMY(h.fechaIngreso),
+        fechaFin: toIsoFromDMY(h.fechaEgreso),
       }));
 
       const payload = {
@@ -151,10 +142,8 @@ const DatosReservaPage = () => {
 
       await confirmarReserva(payload);
 
-      // limpiamos errores de campos
       setFieldErrors({ nombre: "", apellido: "", telefono: "" });
 
-      // mostramos pop-up de éxito
       setShowSuccessModal(true);
     } catch (err) {
       console.error(err);
@@ -164,19 +153,17 @@ const DatosReservaPage = () => {
     }
   };
 
-
   const handleCerrarModalExito = () => {
     setShowSuccessModal(false);
-    // El CU termina: volvemos al menú principal
     navigate("/");
   };
 
   return (
     <div className="reserva-page">
-      {/* Usamos el MISMO layout que en la primera pantalla */}
-      <main className="main-layout">
-        {/* IZQUIERDA – listado de habitaciones (scroll) */}
-        <section className="left-panel">
+      {}
+      <main className="datos-main-layout">
+        {}
+        <section className="datos-left-panel">
           <h2 className="section-title">Habitaciones seleccionadas</h2>
 
           <div className="selected-rooms-list">
@@ -186,9 +173,9 @@ const DatosReservaPage = () => {
               </p>
             ) : (
               habitaciones.map((item, idx) => {
-                const nroCompleto = String(item.nro); // "1-201"
+                const nroCompleto = String(item.nro);
                 const nroSimple = nroCompleto.includes("-")
-                  ? nroCompleto.split("-")[1]        // "201"
+                  ? nroCompleto.split("-")[1]
                   : nroCompleto;
 
                 const tipoHab =
@@ -203,10 +190,10 @@ const DatosReservaPage = () => {
                       Tipo de habitación: {tipoHab}
                     </div>
                     <div className="selected-room-line">
-                      Ingreso: {item.fechaIngreso}, 13:00 hs
+                      Ingreso: {item.fechaIngreso}, 12:00 hs
                     </div>
                     <div className="selected-room-line">
-                      Egreso: {item.fechaEgreso}, 8 hs
+                      Egreso: {item.fechaEgreso}, 10:00 hs
                     </div>
                   </div>
                 );
@@ -215,8 +202,8 @@ const DatosReservaPage = () => {
           </div>
         </section>
 
-        {/* DERECHA – formulario de datos del huésped */}
-        <section className="right-panel">
+        {}
+        <section className="datos-right-panel">
           <h2 className="section-subtitle">Reserva a nombre de</h2>
 
           <form
@@ -251,7 +238,9 @@ const DatosReservaPage = () => {
                 id="apellido"
                 name="apellido"
                 type="text"
-                className={`input ${fieldErrors.apellido ? "input-error" : ""}`}
+                className={`input ${
+                  fieldErrors.apellido ? "input-error" : ""
+                }`}
                 value={form.apellido}
                 onChange={handleChange}
                 required
@@ -264,7 +253,7 @@ const DatosReservaPage = () => {
               )}
             </div>
 
-            {/* Teléfono: prefijo + número */}
+            {/* Teléfono */}
             <div className="phone-group">
               <label className="phone-label" htmlFor="telefono">
                 Número Teléfono <span className="required">*</span>
@@ -280,7 +269,6 @@ const DatosReservaPage = () => {
                 >
                   <option value="+54 9">+54 9</option>
                   <option value="+54">+54</option>
-                  {/* más prefijos si se desea */}
                 </select>
 
                 <input
@@ -325,7 +313,7 @@ const DatosReservaPage = () => {
         </section>
       </main>
 
-      {/* -------- POP-UP DE RESERVA EXITOSA -------- */}
+      {/* -------- POP-UP RESERVA EXITOSA -------- */}
       {showSuccessModal && (
         <div className="popup-overlay">
           <div className="popup-card">
