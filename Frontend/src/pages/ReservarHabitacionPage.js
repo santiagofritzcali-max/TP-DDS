@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import "../styles/reservaHabitacionStyle.css";
-import { buscarDisponibilidad } from "../services/reservaService"; 
+import "../styles/reservarHabitacionStyle.css";
+import { buscarDisponibilidad } from "../services/reservaService";
 import { validarRangoFechas } from "../validators/validarReservaHabitacion";
+import { useNavigate } from "react-router-dom";
 
-// Mapeo nro habitación → tipo
+// Mapeo nro habitación
 const ROOM_TYPES_BY_NUMBER = {
   "101": "Individual Estándar",
   "102": "Individual Estándar",
@@ -15,7 +16,7 @@ const ROOM_TYPES_BY_NUMBER = {
   "500": "Suite"
 };
 
-// Grilla inicial (mock similar al mockup)
+// Grilla inicial (solo placeholder visual)
 const INITIAL_GRID = [
   {
     fecha: "28/04",
@@ -23,7 +24,7 @@ const INITIAL_GRID = [
       { nro: "101", estado: "disponible" },
       { nro: "201", estado: "reservada" },
       { nro: "301", estado: "ocupada" },
-      { nro: "404", estado: "no-disponible" },
+      { nro: "404", estado: "fuera-servicio" },
       { nro: "500", estado: "ocupada" }
     ]
   },
@@ -34,7 +35,7 @@ const INITIAL_GRID = [
       { nro: "201", estado: "disponible" },
       { nro: "301", estado: "reservada" },
       { nro: "404", estado: "ocupada" },
-      { nro: "500", estado: "no-disponible" }
+      { nro: "500", estado: "fuera-servicio" }
     ]
   },
   {
@@ -44,7 +45,7 @@ const INITIAL_GRID = [
       { nro: "201", estado: "reservada" },
       { nro: "301", estado: "disponible" },
       { nro: "404", estado: "ocupada" },
-      { nro: "500", estado: "no-disponible" }
+      { nro: "500", estado: "fuera-servicio" }
     ]
   },
   {
@@ -64,42 +65,12 @@ const INITIAL_GRID = [
       { nro: "201", estado: "disponible" },
       { nro: "301", estado: "ocupada" },
       { nro: "404", estado: "ocupada" },
-      { nro: "500", estado: "no-disponible" }
-    ]
-  },
-  {
-    fecha: "03/05",
-    habitaciones: [
-      { nro: "101", estado: "disponible" },
-      { nro: "201", estado: "disponible" },
-      { nro: "301", estado: "reservada" },
-      { nro: "404", estado: "ocupada" },
-      { nro: "500", estado: "no-disponible" }
-    ]
-  },
-  {
-    fecha: "04/05",
-    habitaciones: [
-      { nro: "101", estado: "disponible" },
-      { nro: "201", estado: "disponible" },
-      { nro: "301", estado: "disponible" },
-      { nro: "404", estado: "reservada" },
-      { nro: "500", estado: "ocupada" }
-    ]
-  },
-  {
-    fecha: "05/05",
-    habitaciones: [
-      { nro: "101", estado: "disponible" },
-      { nro: "201", estado: "disponible" },
-      { nro: "301", estado: "disponible" },
-      { nro: "404", estado: "disponible" },
-      { nro: "500", estado: "ocupada" }
+      { nro: "500", estado: "fuera-servicio" }
     ]
   }
 ];
 
-const ReservaHabitacionPage = () => {
+const ReservarHabitacionPage = () => {
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
   const [grid, setGrid] = useState(INITIAL_GRID);
@@ -110,6 +81,7 @@ const ReservaHabitacionPage = () => {
   const handleBuscar = async (e) => {
     e.preventDefault();
     setErrorFechas("");
+    setMensajeSinHabitaciones("");
 
     const error = validarRangoFechas(fechaDesde, fechaHasta);
     if (error) {
@@ -118,13 +90,18 @@ const ReservaHabitacionPage = () => {
     }
 
     try {
-      // llamada al backend (por ahora mock interno en reservaService)
       const nuevaGrid = await buscarDisponibilidad(fechaDesde, fechaHasta);
 
       setGrid(nuevaGrid);
       setSelectedCells([]);
+
+      const sinFilas = !Array.isArray(nuevaGrid) || nuevaGrid.length === 0;
+      const sinHabitaciones = !sinFilas && (!nuevaGrid[0]?.habitaciones || nuevaGrid[0].habitaciones.length === 0);
+
       setMensajeSinHabitaciones(
-        nuevaGrid.length === 0 ? "No hay habitaciones disponibles para el rango seleccionado." : ""
+        sinFilas || sinHabitaciones
+          ? "No hay habitaciones para mostrar en el rango seleccionado."
+          : ""
       );
     } catch (err) {
       console.error(err);
@@ -136,10 +113,14 @@ const ReservaHabitacionPage = () => {
     if (estado !== "disponible") return;
 
     const key = `${fecha}-${nro}`;
-    const yaSeleccionada = selectedCells.some((c) => `${c.fecha}-${c.nro}` === key);
+    const yaSeleccionada = selectedCells.some(
+      (c) => `${c.fecha}-${c.nro}` === key
+    );
 
     if (yaSeleccionada) {
-      setSelectedCells(selectedCells.filter((c) => `${c.fecha}-${c.nro}` !== key));
+      setSelectedCells(
+        selectedCells.filter((c) => `${c.fecha}-${c.nro}` !== key)
+      );
     } else {
       setSelectedCells([...selectedCells, { fecha, nro }]);
     }
@@ -149,10 +130,23 @@ const ReservaHabitacionPage = () => {
     setSelectedCells([]);
   };
 
+  const navigate = useNavigate();
   const handleSiguiente = () => {
-    // Aquí se integraría con el siguiente paso del CU-04 (por ej. navegación a AltaHuespedPage)
-    console.log("Habitaciones seleccionadas:", selectedCells);
-    alert("Aquí se debería continuar con el siguiente paso del CU-04 (datos del huésped).");
+    if (habitacionesOrdenadas.length === 0) return;
+
+    navigate("/datos-reserva", {
+      state: {
+        fechaDesde,
+        fechaHasta,
+        habitaciones: habitacionesOrdenadas.map((h) => ({
+          fecha: h.fecha,
+          nro: h.nro,
+          tipo: ROOM_TYPES_BY_NUMBER[h.nro] || `Habitación ${h.nro}`,
+          fechaIngreso: h.fecha,
+          fechaEgreso: h.fecha,
+        })),
+      },
+    });
   };
 
   const estaSeleccionada = (fecha, nro) =>
@@ -166,7 +160,6 @@ const ReservaHabitacionPage = () => {
 
   return (
     <div className="reserva-page">
-
       <main className="main-layout">
         {/* IZQUIERDA */}
         <section className="left-panel">
@@ -204,11 +197,12 @@ const ReservaHabitacionPage = () => {
                 Buscar habitaciones
               </button>
             </form>
+
             {errorFechas && <p className="error-text">{errorFechas}</p>}
           </section>
 
           <section className="rooms-grid-section">
-            <h2 className="section-subtitle">Habitaciones</h2>
+            <h1 className="section-title">Habitaciones</h1>
 
             <div className="legend">
               <div className="legend-item">
@@ -224,12 +218,12 @@ const ReservaHabitacionPage = () => {
                 <span>Ocupada</span>
               </div>
               <div className="legend-item">
-                <span className="legend-color estado-no-disponible" />
-                <span>No disponible</span>
+                <span className="legend-color estado-fuera-servicio" />
+                <span>Fuera de servicio</span>
               </div>
             </div>
 
-            <div className="grid-container">
+            <div className="grid-rounded-wrapper">
               <table className="rooms-table">
                 <thead>
                   <tr>
@@ -241,15 +235,45 @@ const ReservaHabitacionPage = () => {
                     <th>Suite</th>
                   </tr>
                 </thead>
+
                 <tbody>
-                  {grid.map((fila) => (
+                  {grid.map((fila, rowIndex) => (
                     <tr key={fila.fecha}>
                       <td className="dia-label">{fila.fecha}</td>
+
                       {fila.habitaciones.map((hab, index) => {
+                        const seleccion = estaSeleccionada(fila.fecha, hab.nro);
+
+                        const seleccionArriba =
+                          rowIndex > 0 &&
+                          estaSeleccionada(
+                            grid[rowIndex - 1].fecha,
+                            grid[rowIndex - 1].habitaciones[index].nro
+                          );
+
+                        const seleccionAbajo =
+                          rowIndex < grid.length - 1 &&
+                          estaSeleccionada(
+                            grid[rowIndex + 1].fecha,
+                            grid[rowIndex + 1].habitaciones[index].nro
+                          );
+
+                        const extraClasses = [];
+                        if (seleccion && (seleccionArriba || seleccionAbajo)) {
+                          extraClasses.push("range-block");
+                        }
+                        if (seleccion && !seleccionArriba && seleccionAbajo) {
+                          extraClasses.push("range-start");
+                        }
+                        if (seleccion && seleccionArriba && !seleccionAbajo) {
+                          extraClasses.push("range-end");
+                        }
+
                         const clases = [
                           "cell",
                           `estado-${hab.estado}`,
-                          estaSeleccionada(fila.fecha, hab.nro) ? "cell-seleccionada" : ""
+                          seleccion ? "cell-seleccionada" : "",
+                          ...extraClasses,
                         ]
                           .filter(Boolean)
                           .join(" ");
@@ -258,9 +282,7 @@ const ReservaHabitacionPage = () => {
                           <td
                             key={`${fila.fecha}-${index}`}
                             className={clases}
-                            onClick={() =>
-                              toggleCell(fila.fecha, hab.nro, hab.estado)
-                            }
+                            onClick={() => toggleCell(fila.fecha, hab.nro, hab.estado)}
                             data-room={hab.nro}
                           ></td>
                         );
@@ -279,41 +301,32 @@ const ReservaHabitacionPage = () => {
 
         {/* DERECHA */}
         <aside className="right-panel">
-          <h2 className="section-subtitle">Habitaciones a Reservar</h2>
+          <div className="right-panel-content">
+            <h2 className="section-subtitle">Habitaciones a Reservar</h2>
 
-          <div className="selected-rooms-list">
-            {habitacionesOrdenadas.length === 0 ? (
-              <p className="text-empty-right">
-                No hay habitaciones seleccionadas.
-              </p>
-            ) : (
-              habitacionesOrdenadas.map((item, idx) => {
-                const tipo =
-                  ROOM_TYPES_BY_NUMBER[item.nro] || `Habitación ${item.nro}`;
-                const fechaIngreso = item.fecha;
-                const fechaEgreso = item.fecha; // placeholder, se ajustará con la lógica real
-
-                return (
-                  <div className="selected-room-item" key={`${item.fecha}-${item.nro}-${idx}`}>
-                    <div className="selected-room-type">
-                      Tipo de habitación: {tipo}
+            <div className="selected-rooms-list">
+              {habitacionesOrdenadas.length === 0 ? (
+                <p className="text-empty-right">No hay habitaciones seleccionadas.</p>
+              ) : (
+                habitacionesOrdenadas.map((item, idx) => {
+                  const tipo = ROOM_TYPES_BY_NUMBER[item.nro] || `Habitación ${item.nro}`;
+                  return (
+                    <div className="selected-room-item" key={idx}>
+                      <div className="selected-room-type">Tipo de habitación: {tipo}</div>
+                      <div className="selected-room-line">Ingreso: {item.fecha}, 13:00 hs</div>
+                      <div className="selected-room-line">Egreso: {item.fecha}, 8 hs</div>
                     </div>
-                    <div className="selected-room-line">
-                      Ingreso: {fechaIngreso}, 13:00 hs
-                    </div>
-                    <div className="selected-room-line">
-                      Egreso: {fechaEgreso}, 8 hs
-                    </div>
-                  </div>
-                );
-              })
-            )}
+                  );
+                })
+              )}
+            </div>
           </div>
 
           <div className="actions-row">
             <button className="secondary-button" onClick={handleCancelar}>
               Cancelar
             </button>
+
             <button
               className="primary-button primary-button-strong"
               onClick={handleSiguiente}
@@ -328,4 +341,4 @@ const ReservaHabitacionPage = () => {
   );
 };
 
-export default ReservaHabitacionPage;
+export default ReservarHabitacionPage;

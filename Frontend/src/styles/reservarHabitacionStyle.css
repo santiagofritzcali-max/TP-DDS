@@ -1,0 +1,461 @@
+/* Reset básico */
+.reserva-page * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.reserva-page {
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f2f2f2;
+  color: #333333;
+  min-height: 100vh;
+}
+
+/* LAYOUT PRINCIPAL */
+
+.main-layout {
+  max-width: 1150px;
+  margin: 16px auto 32px auto;
+  background-color: #ffffff;
+  border: 1px solid #d0d0d0;
+  display: flex;
+  min-height: 520px;
+}
+
+/* COLUMNA IZQUIERDA */
+
+.left-panel {
+  flex: 2;
+  border-right: 1px solid #d0d0d0;
+  padding: 20px 24px;
+}
+
+.section-title {
+  font-size: 20px;
+  margin-bottom: 18px;
+  text-align: left !important;
+}
+
+/* Formulario fechas */
+
+.date-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 26px;
+}
+
+.date-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.date-field label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+  text-align: left;
+  padding-left: 2px;
+}
+
+.date-field input[type="date"] {
+  padding: 4px 6px;
+  border: 1px solid #b3b3b3;
+  font-size: 13px;
+  min-width: 145px;
+  border-radius: 6px;
+}
+
+.required {
+  color: #cc0000;
+}
+
+/* ----------------------------- BOTONES ----------------------------- */
+
+.primary-button {
+  padding: 6px 16px;
+  font-size: 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #4a4a4a;
+  color: #ffffff;
+  border: 1px solid #3c3c3c;
+  font-weight: 500;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.primary-button:hover:not(:disabled) {
+  background-color: #333333;
+  transform: translateY(-1px);
+}
+
+.primary-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.primary-button-strong {
+  position: relative;
+  padding: 10px 24px;
+  font-size: 14px;
+  color: rgb(26, 85, 168);
+  border: 2px solid rgb(26, 85, 168);
+  border-radius: 12px;
+  background-color: transparent;
+  font-weight: 600;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+.primary-button-strong::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 50px;
+  height: 50px;
+  border-radius: inherit;
+  scale: 0;
+  z-index: -1;
+  background-color: rgb(26, 85, 168);
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+.primary-button-strong:hover::before {
+  scale: 3;
+}
+
+.primary-button-strong:hover:not(:disabled) {
+  color: #ffffff;
+  scale: 1.1;
+  box-shadow: 0 0px 20px rgba(26, 85, 168, 0.4);
+}
+
+.primary-button-strong:active:not(:disabled) {
+  scale: 1;
+}
+
+.primary-button:disabled,
+.primary-button-strong:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.primary-button-strong:disabled::before {
+  scale: 0 !important;
+  background-color: transparent !important;
+}
+
+.primary-button-strong:active::before {
+  scale: 1.8;
+  opacity: 0.7;
+}
+
+/*Boton CANCELAR*/
+.secondary-button {
+  cursor: pointer;
+  position: relative;
+  padding: 10px 24px;
+  font-size: 14px;
+  color: rgb(120, 120, 120);
+  border: 2px solid rgb(120, 120, 120);
+  border-radius: 12px;
+  background-color: transparent;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+  overflow: hidden;
+}
+
+.secondary-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 50px;
+  height: 50px;
+  border-radius: inherit;
+  scale: 0;
+  z-index: -1;
+  background-color: rgb(120, 120, 120);
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+.secondary-button:hover::before {
+  scale: 3;
+}
+
+.secondary-button:hover:not(:disabled) {
+  color: #ffffff;
+  scale: 1.08;
+  box-shadow: 0 0px 20px rgba(120, 120, 120, 0.4);
+}
+
+.secondary-button:active:not(:disabled) {
+  scale: 1;
+}
+
+.secondary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Habitaciones - Leyenda y grilla */
+
+.rooms-grid-section {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid #d0d0d0;
+}
+
+.section-subtitle {
+  font-size: 16px;
+  margin-bottom: 10px;
+  text-align: left !important;
+}
+
+.legend {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  font-size: 13px;
+  margin-bottom: 14px;
+  margin-top: 8px;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #555;
+  border-radius: 4px;
+}
+
+/* Colores estados */
+
+.estado-disponible {
+  background-color: #ffffff;
+}
+
+.estado-reservada {
+  background-color: #e2d380;
+}
+
+.estado-ocupada {
+  background-color: #d6a05a;
+}
+
+/* ✅ ÚNICO “no disponible”: FueraServicio */
+.estado-fuera-servicio {
+  background-color: #c6635d;
+}
+
+/* compat: por si quedó algo viejo */
+.estado-no-disponible {
+  background-color: #c6635d;
+}
+
+/* Grilla */
+
+.grid-container {
+  border: 1px solid #000000;
+  overflow-x: auto;
+}
+
+.rooms-table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.rooms-table th,
+.rooms-table td {
+  border: 1px solid #000000;
+  height: 28px;
+  text-align: center;
+  font-size: 11px;
+}
+
+.rooms-table th {
+  background-color: #e5e5e5;
+  font-weight: normal;
+}
+
+.col-dia {
+  width: 70px;
+}
+
+.dia-label {
+  font-weight: normal;
+}
+
+/* Celdas */
+.cell {
+  cursor: pointer;
+  position: relative;
+  transition:
+    transform 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    border-color 0.15s ease-out;
+  border-radius: 0;
+}
+
+/* Halo base (apagado) */
+.cell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 0%;
+  height: 0%;
+  background-color: rgba(128, 200, 153, 0.25);
+  opacity: 0;
+  transition: width 0.25s ease-out, height 0.25s ease-out, opacity 0.25s ease-out;
+  z-index: 0;
+}
+
+/* Selección */
+.cell-seleccionada {
+  position: relative;
+  z-index: 1;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #7fbfa4;
+}
+
+.cell-seleccionada::before {
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+}
+
+.cell-seleccionada:not(.range-block) {
+  border-width: 3px;
+  border-color: #2e6f56;
+}
+
+.cell-seleccionada.range-block {
+  border-left-width: 3px;
+  border-right-width: 3px;
+  border-left-color: #20815d;
+  border-right-color: #20815d;
+}
+
+.cell-seleccionada.range-start {
+  border-top-width: 3px;
+  border-top-color: #2e6f56;
+}
+
+.cell-seleccionada.range-end {
+  border-bottom-width: 3px;
+  border-bottom-color: #2e6f56;
+}
+
+/* Mensaje sin habitaciones */
+.no-rooms-message {
+  font-size: 13px;
+  margin-top: 8px;
+  color: #bb0000;
+}
+
+/* COLUMNA DERECHA */
+
+.right-panel {
+  flex: 1;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.selected-rooms-list {
+  margin-top: 8px;
+  border: none;
+  flex: 1;
+  padding: 0 10px;
+  font-size: 12px;
+  text-align: left;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.selected-rooms-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.selected-rooms-list::-webkit-scrollbar-thumb {
+  background-color: #c2c2c2;
+  border-radius: 4px;
+}
+
+.selected-room-item {
+  padding: 12px 4px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.selected-room-item:last-child {
+  border-bottom: none;
+}
+
+.selected-room-type {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.selected-room-line {
+  margin: 2px 0;
+}
+
+.actions-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.text-empty-right {
+  font-size: 12px;
+  color: #777;
+}
+
+.error-text {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #bb0000;
+}
+
+/* Responsivo mínimo */
+@media (max-width: 900px) {
+  .main-layout {
+    flex-direction: column;
+  }
+  .left-panel {
+    border-right: none;
+    border-bottom: 1px solid #d0d0d0;
+  }
+}
+
+.grid-rounded-wrapper {
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #000000;
+  margin-top: 10px;
+}
+
+.rooms-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid #d0d0d0;
+  margin: 10px 0 20px 0;
+}

@@ -5,6 +5,7 @@ import ar.edu.utn.frsf.sistemahotelero.dao.HabitacionDAO;
 import ar.edu.utn.frsf.sistemahotelero.dao.ReservaDAO;
 import ar.edu.utn.frsf.sistemahotelero.dto.EstadoHabitacionesResponse;
 import ar.edu.utn.frsf.sistemahotelero.dto.EstadoHabitacionesResponse.*;
+import ar.edu.utn.frsf.sistemahotelero.enums.EstadoHabitacion;
 import ar.edu.utn.frsf.sistemahotelero.model.Estadia;
 import ar.edu.utn.frsf.sistemahotelero.model.Habitacion;
 import ar.edu.utn.frsf.sistemahotelero.model.Reserva;
@@ -23,9 +24,9 @@ public class EstadoHabitacionesService {
     private final ReservaDAO reservaDAO;
     private final EstadiaDAO estadiaDAO;
 
-    public enum EstadoCelda { DISPONIBLE, RESERVADA, OCUPADA, NO_DISPONIBLE }
-
-    public EstadoHabitacionesService(HabitacionDAO habitacionDAO, ReservaDAO reservaDAO, EstadiaDAO estadiaDAO) {
+    public EstadoHabitacionesService(HabitacionDAO habitacionDAO,
+                                     ReservaDAO reservaDAO,
+                                     EstadiaDAO estadiaDAO) {
         this.habitacionDAO = habitacionDAO;
         this.reservaDAO = reservaDAO;
         this.estadiaDAO = estadiaDAO;
@@ -40,7 +41,7 @@ public class EstadoHabitacionesService {
             throw new IllegalArgumentException("'hasta' no puede ser anterior a 'desde'.");
         }
 
-        // 1) Habitaciones ordenadas (si no existe findAllOrdenadas, cambiá por findAll())
+        // 1) Habitaciones ordenadas
         List<Habitacion> habitaciones = habitacionDAO.findAllOrdenadas();
 
         // 2) Días inclusivo
@@ -52,8 +53,10 @@ public class EstadoHabitacionesService {
 
         for (Habitacion h : habitaciones) {
             HabitacionId id = h.getId(); // requiere @EmbeddedId en Habitacion
-            reservasPorHab.put(id, safeList(reservaDAO.buscarPorHabitacionYRangoFechas(h, desde, hasta)));
-            estadiasPorHab.put(id, safeList(estadiaDAO.buscarPorHabitacionYRangoFechas(h, desde, hasta)));
+            reservasPorHab.put(id,
+                    safeList(reservaDAO.buscarPorHabitacionYRangoFechas(h, desde, hasta)));
+            estadiasPorHab.put(id,
+                    safeList(estadiaDAO.buscarPorHabitacionYRangoFechas(h, desde, hasta)));
         }
 
         // 4) Grupos por tipo (para el front)
@@ -66,7 +69,7 @@ public class EstadoHabitacionesService {
 
             for (Habitacion h : habitaciones) {
                 HabitacionId id = h.getId();
-                EstadoCelda estado = calcularEstadoCelda(
+                EstadoHabitacion estado = calcularEstadoCelda(
                         h,
                         dia,
                         reservasPorHab.get(id),
@@ -74,6 +77,7 @@ public class EstadoHabitacionesService {
                 );
 
                 HabitacionKey key = new HabitacionKey(id.getNroPiso(), id.getNroHabitacion());
+                // mandamos el nombre del enum al front (Reservada, Ocupada, Disponible, FueraServicio)
                 celdas.add(new Celda(key, estado.name()));
             }
 
@@ -110,32 +114,33 @@ public class EstadoHabitacionesService {
         return grupos;
     }
 
-    private EstadoCelda calcularEstadoCelda(Habitacion h, LocalDate dia,
-                                            List<Reserva> reservasHab,
-                                            List<Estadia> estadiasHab) {
+    private EstadoHabitacion calcularEstadoCelda(Habitacion h, LocalDate dia,
+                                                List<Reserva> reservasHab,
+                                                List<Estadia> estadiasHab) {
 
-        // 1) NO disponible por estado de habitación (sin depender del nombre exacto del enum)
-        if (h.getEstado() != null && h.getEstado().name().equalsIgnoreCase("NO_DISPONIBLE")) {
-            return EstadoCelda.NO_DISPONIBLE;
+        // 1) FUERA DE SERVICIO si la habitación está marcada así
+        if (h.getEstado() == EstadoHabitacion.FueraServicio) {
+            return EstadoHabitacion.FueraServicio;
         }
 
-        // 2) OCUPADA si hay estadía que cubre el día (inclusivo)
+        // 2) OCUPADA si hay alguna estadía que cubra el día (inclusivo)
         if (estadiasHab != null) {
             boolean ocupada = estadiasHab.stream().anyMatch(e ->
                     enRangoInclusivo(dia, e.getFechaIngreso(), e.getFechaEgreso())
             );
-            if (ocupada) return EstadoCelda.OCUPADA;
+            if (ocupada) return EstadoHabitacion.Ocupada;
         }
 
-        // 3) RESERVADA si hay reserva que cubre el día (inclusivo)
+        // 3) RESERVADA si hay alguna reserva que cubra el día (inclusivo)
         if (reservasHab != null) {
             boolean reservada = reservasHab.stream().anyMatch(r ->
                     enRangoInclusivo(dia, r.getFechaInicio(), r.getFechaFin())
             );
-            if (reservada) return EstadoCelda.RESERVADA;
+            if (reservada) return EstadoHabitacion.Reservada;
         }
 
-        return EstadoCelda.DISPONIBLE;
+        // 4) Si nada de lo anterior aplica, está disponible
+        return EstadoHabitacion.Disponible;
     }
 
     private static boolean enRangoInclusivo(LocalDate dia, LocalDate inicio, LocalDate fin) {

@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface EstadiaDAO extends CrudRepository<Estadia, Long> {
+public interface EstadiaDAO extends CrudRepository<Estadia, String> {
 
     @Query("""
             SELECT e

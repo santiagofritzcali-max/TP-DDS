@@ -1,98 +1,135 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/ocuparHabitacionStyle.css';
 import { ocuparHabitacion } from '../services/estadiaService';
-import { buscarHuespedes } from '../services/huespedService'; 
+import { buscarHuespedes } from '../services/huespedService';
 
 const OcuparHabitacionPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Datos que vienen (o vendrán) desde CU05
+  // Lo que viene desde CU05 (asumimos formato "piso-habitacion", ej. "2-301")
   const {
     numeroHabitacion = '',
     fechaIngreso = '',
     fechaEgreso = '',
   } = location.state || {};
 
-  // Form de búsqueda de huésped
+  // Derivamos nroPiso y nroHabitacion (enteros) a partir del string "piso-hab"
+  const { nroPiso, nroHabitacion } = useMemo(() => {
+    if (typeof numeroHabitacion === 'string' && numeroHabitacion.includes('-')) {
+      const [pisoStr, habStr] = numeroHabitacion.split('-');
+      const piso = parseInt(pisoStr, 10);
+      const hab = parseInt(habStr, 10);
+      if (!isNaN(piso) && !isNaN(hab)) {
+        return { nroPiso: piso, nroHabitacion: hab };
+      }
+    }
+    return { nroPiso: null, nroHabitacion: null };
+  }, [numeroHabitacion]);
+
+
+  //estados
   const [filtroNombre, setFiltroNombre] = useState('');
   const [filtroApellido, setFiltroApellido] = useState('');
   const [filtroTipoDoc, setFiltroTipoDoc] = useState('DNI');
   const [filtroNroDoc, setFiltroNroDoc] = useState('');
 
-  // Resultados / selección
   const [resultados, setResultados] = useState([]);
-  const [idsSeleccionados, setIdsSeleccionados] = useState([]);
-  const [ocuparIgualSiReservada, setOcuparIgualSiReservada] = useState(false);
 
-  // Estado general
+  const [huespedesSeleccionados, setHuespedesSeleccionados] = useState([]);
+  const [ocuparIgualSiReservada, setOcuparIgualSiReservada] = useState(false);
+  const [puedeBuscar, setPuedeBuscar] = useState(true);
+  const [mostrarAccionesPostAceptar, setMostrarAccionesPostAceptar] = useState(false);
+
   const [buscando, setBuscando] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
   const [mensajeOk, setMensajeOk] = useState('');
 
   // --- BÚSQUEDA ---
-  const handleBuscar = async (e) => {
-    e.preventDefault();
-    setError('');
-    setMensajeOk('');
-    setResultados([]);
-    setIdsSeleccionados([]);
 
-    setBuscando(true);
-    try {
-      const data = await buscarHuespedes(
-        {
-          nombre: filtroNombre,
-          apellido: filtroApellido,
-          tipoDoc: filtroTipoDoc,
-          nroDoc: filtroNroDoc,
-        },
-        1
-      );
-      setResultados(data);
+ const handleBuscar = async (e) => {
+  e.preventDefault();
 
-      if (data.length === 0) {
-        setError('No se encontraron huéspedes con esos datos.');
-      }
-    } catch (err) {
-      setError('Error al buscar huéspedes.');
-    } finally {
-      setBuscando(false);
-    }
-  };
+  setError('');
+  setMensajeOk('');
+  setResultados([]);  // sólo limpio lo visible, NO los seleccionados
 
-
-  // --- SELECCIÓN DE HUESPEDES ---
-  const toggleSeleccionHuesped = (id) => {
-    setIdsSeleccionados((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+  setBuscando(true);
+  try {
+    const { status, data } = await buscarHuespedes(
+      {
+        nombre: filtroNombre,
+        apellido: filtroApellido,
+        tipoDoc: filtroTipoDoc,
+        nroDoc: filtroNroDoc,
+      },
+      1
     );
+
+    if (status === 204 || !Array.isArray(data) || data.length === 0) {
+      setError('No se encontraron huéspedes con esos datos.');
+      setResultados([]);
+      return;
+    }
+
+    setResultados(data);
+  } catch (err) {
+    setError('Error al buscar huéspedes.');
+    setPuedeBuscar(true);
+  } finally {
+    setBuscando(false);
+  }
+};
+
+
+
+
+  //compara tipoDoc+nroDoc
+  const esMismoHuesped = (a, b) =>
+    a.tipoDoc === b.tipoDoc && a.nroDoc === b.nroDoc;
+
+  //para la seleccion de los huespedes
+  const toggleSeleccionHuesped = (huesped) => {
+    const candidato = { tipoDoc: huesped.tipoDoc, nroDoc: huesped.nroDoc };
+
+    setHuespedesSeleccionados((prev) => {
+      const yaEsta = prev.some((h) => esMismoHuesped(h, candidato));
+      if (yaEsta) {
+        return prev.filter((h) => !esMismoHuesped(h, candidato));
+      }
+      return [...prev, candidato];
+    });
   };
 
-  // --- ACEPTAR (OCUPAR HABITACIÓN) ---
+  const estaSeleccionado = (huesped) =>
+    huespedesSeleccionados.some((h) =>
+      esMismoHuesped(h, { tipoDoc: huesped.tipoDoc, nroDoc: huesped.nroDoc })
+    );
+
+  //boton de aceptar la ocupacion
   const handleConfirmarOcupacion = async () => {
     setError('');
     setMensajeOk('');
 
-    if (!numeroHabitacion || !fechaIngreso || !fechaEgreso) {
+    if (!nroPiso || !nroHabitacion || !fechaIngreso || !fechaEgreso) {
       setError(
-        'Faltan datos de habitación o fechas (deberían venir desde el CU05).'
+        'Faltan datos de habitación o fechas.'
       );
       return;
     }
 
-    if (idsSeleccionados.length === 0) {
-      setError('Debe seleccionar al menos un huésped.');
+    if (huespedesSeleccionados.length === 0) {
       return;
     }
 
     const requestBody = {
-      numeroHabitacion: String(numeroHabitacion),
-      fechaIngreso,   // "YYYY-MM-DD"
-      fechaEgreso,    // "YYYY-MM-DD"
-      idsHuespedes: idsSeleccionados,
+      nroPiso,
+      nroHabitacion,
+      fechaIngreso,
+      fechaEgreso,
+      huespedes: huespedesSeleccionados,
       ocuparIgualSiReservada,
     };
 
@@ -100,6 +137,8 @@ const OcuparHabitacionPage = () => {
     try {
       const resp = await ocuparHabitacion(requestBody);
       setMensajeOk(resp.mensaje || 'Habitación ocupada correctamente.');
+      setPuedeBuscar(false);
+      setMostrarAccionesPostAceptar(true);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -107,13 +146,12 @@ const OcuparHabitacionPage = () => {
     }
   };
 
-  // --- CANCELAR (columna izquierda) ---
+  //manejador de cancelar de la pantalla izq
   const handleCancelar = () => {
-    navigate('/'); // o a donde quieras salir del CU15
+    navigate('/');
   };
 
-  // --- SEGUIR CARGANDO ---
-  // Deja guardados los idsSeleccionados y limpia la búsqueda/lista
+  //manejador para seguir canrgando
   const handleSeguirCargando = () => {
     setResultados([]);
     setFiltroNombre('');
@@ -122,24 +160,24 @@ const OcuparHabitacionPage = () => {
     setFiltroNroDoc('');
     setError('');
     setMensajeOk('');
-    // idsSeleccionados se mantiene tal cual
+    setPuedeBuscar(true);
+    setMostrarAccionesPostAceptar(false);
   };
 
-  // --- CARGAR OTRA HABITACIÓN ---
-  // Vuelve al CU05, pasando los huéspedes seleccionados y datos actuales
+  //manejador para cargar otra habitacion
   const handleCargarOtraHabitacion = () => {
     navigate('/cu05', {
       state: {
         numeroHabitacion,
         fechaIngreso,
         fechaEgreso,
-        idsHuespedesSeleccionados: idsSeleccionados,
+        huespedesSeleccionados, // ahora pasamos los objetos, no ids
       },
     });
   };
 
   const handleSalir = () => {
-    navigate('/'); // si no usás "Salir", podés borrar este handler
+    navigate('/');
   };
 
   return (
@@ -170,7 +208,7 @@ const OcuparHabitacionPage = () => {
           <form className="form-busqueda" onSubmit={handleBuscar}>
             <div className="form-row">
               <label>
-                Nombre <br/>
+                Nombre <br />
                 <input
                   type="text"
                   value={filtroNombre}
@@ -181,7 +219,7 @@ const OcuparHabitacionPage = () => {
 
             <div className="form-row">
               <label>
-                Apellido<br/>
+                Apellido<br />
                 <input
                   type="text"
                   value={filtroApellido}
@@ -224,7 +262,7 @@ const OcuparHabitacionPage = () => {
               <button
                 type="submit"
                 className="btn-primary"
-                disabled={buscando}
+                disabled={buscando || !puedeBuscar}
               >
                 {buscando ? 'Buscando...' : 'Aceptar'}
               </button>
@@ -232,7 +270,7 @@ const OcuparHabitacionPage = () => {
           </form>
         </section>
 
-        {/*Resultados de la busqueda */}
+        {/* Resultados de la búsqueda */}
         <section className="panel-right">
           <h2 className="panel-title">Resultados de búsqueda</h2>
 
@@ -256,7 +294,7 @@ const OcuparHabitacionPage = () => {
                   </tr>
                 ) : (
                   resultados.map((h) => (
-                    <tr key={h.id}>
+                    <tr key={`${h.tipoDoc}-${h.nroDoc}`}>
                       <td>{h.apellido}</td>
                       <td>{h.nombre}</td>
                       <td>{h.tipoDoc}</td>
@@ -264,8 +302,8 @@ const OcuparHabitacionPage = () => {
                       <td>
                         <input
                           type="checkbox"
-                          checked={idsSeleccionados.includes(h.id)}
-                          onChange={() => toggleSeleccionHuesped(h.id)}
+                          checked={estaSeleccionado(h)}
+                          onChange={() => toggleSeleccionHuesped(h)}
                         />
                       </td>
                     </tr>
@@ -292,40 +330,40 @@ const OcuparHabitacionPage = () => {
               type="button"
               className="btn-primary"
               onClick={handleConfirmarOcupacion}
-              disabled={enviando}
+              disabled={enviando || mostrarAccionesPostAceptar}
             >
               {enviando ? 'Ocupando...' : 'Aceptar'}
             </button>
           </div>
 
-          {/* Botones inferiores: seguir cargando / cargar otra habitación / salir */}
-          <div className="panel-footer-bottom">
-            <div className="panel-footer-bottom-left">
+          {/* Botones inferiores */}
+          {mostrarAccionesPostAceptar && (
+            <div className="panel-footer-bottom">
+              <div className="panel-footer-bottom-left">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={handleSeguirCargando}
+                >
+                  Seguir cargando
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={handleCargarOtraHabitacion}
+                >
+                  Cargar otra habitación
+                </button>
+              </div>
               <button
                 type="button"
                 className="btn-secondary"
-                onClick={handleSeguirCargando}
-                disabled={idsSeleccionados.length === 0}
+                onClick={handleSalir}
               >
-                Seguir cargando
-              </button>
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={handleCargarOtraHabitacion}
-                disabled={idsSeleccionados.length === 0}
-              >
-                Cargar otra habitación
+                Salir
               </button>
             </div>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={handleSalir}
-            >
-              Salir
-            </button>
-          </div>
+          )}
         </section>
       </div>
 
@@ -339,3 +377,4 @@ const OcuparHabitacionPage = () => {
 };
 
 export default OcuparHabitacionPage;
+
