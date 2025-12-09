@@ -4,7 +4,7 @@ import { buscarDisponibilidad } from "../services/reservaService";
 import { validarRangoFechas } from "../validators/validarReservaHabitacion";
 import { useNavigate } from "react-router-dom";
 
-// Mapeo nro habitación
+// Mapeo nro habitación (solo para fallback visual)
 const ROOM_TYPES_BY_NUMBER = {
   "101": "Individual Estándar",
   "102": "Individual Estándar",
@@ -13,10 +13,10 @@ const ROOM_TYPES_BY_NUMBER = {
   "301": "Doble Superior",
   "302": "Doble Superior",
   "404": "Superior Family",
-  "500": "Suite"
+  "500": "Suite",
 };
 
-// Grilla inicial (solo placeholder visual)
+// Grilla inicial (solo placeholder, no se usa con backend)
 const INITIAL_GRID = [
   {
     fecha: "28/04",
@@ -24,57 +24,18 @@ const INITIAL_GRID = [
       { nro: "101", estado: "disponible" },
       { nro: "201", estado: "reservada" },
       { nro: "301", estado: "ocupada" },
-      { nro: "404", estado: "fuera-servicio" },
-      { nro: "500", estado: "ocupada" }
-    ]
+      { nro: "404", estado: "no-disponible" },
+      { nro: "500", estado: "ocupada" },
+    ],
   },
-  {
-    fecha: "29/04",
-    habitaciones: [
-      { nro: "101", estado: "disponible" },
-      { nro: "201", estado: "disponible" },
-      { nro: "301", estado: "reservada" },
-      { nro: "404", estado: "ocupada" },
-      { nro: "500", estado: "fuera-servicio" }
-    ]
-  },
-  {
-    fecha: "30/04",
-    habitaciones: [
-      { nro: "101", estado: "ocupada" },
-      { nro: "201", estado: "reservada" },
-      { nro: "301", estado: "disponible" },
-      { nro: "404", estado: "ocupada" },
-      { nro: "500", estado: "fuera-servicio" }
-    ]
-  },
-  {
-    fecha: "01/05",
-    habitaciones: [
-      { nro: "101", estado: "disponible" },
-      { nro: "201", estado: "disponible" },
-      { nro: "301", estado: "disponible" },
-      { nro: "404", estado: "reservada" },
-      { nro: "500", estado: "ocupada" }
-    ]
-  },
-  {
-    fecha: "02/05",
-    habitaciones: [
-      { nro: "101", estado: "reservada" },
-      { nro: "201", estado: "disponible" },
-      { nro: "301", estado: "ocupada" },
-      { nro: "404", estado: "ocupada" },
-      { nro: "500", estado: "fuera-servicio" }
-    ]
-  }
+  // ... resto igual si lo querés conservar
 ];
 
 const ReservarHabitacionPage = () => {
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
-  const [grid, setGrid] = useState([]);
-  const [columnas, setColumnas] = useState([]);
+  const [grid, setGrid] = useState([]);        // viene del backend
+  const [columnas, setColumnas] = useState([]); // viene del backend
   const [selectedCells, setSelectedCells] = useState([]); // {fecha, nro}
   const [mensajeSinHabitaciones, setMensajeSinHabitaciones] = useState("");
   const [errorFechas, setErrorFechas] = useState("");
@@ -91,10 +52,14 @@ const ReservarHabitacionPage = () => {
     }
 
     try {
-      const { grid: nuevaGrid, columnas: nuevasCols } = await buscarDisponibilidad(fechaDesde, fechaHasta);
+      // llamada al backend
+      const { grid: nuevaGrid, columnas: nuevasCols } =
+        await buscarDisponibilidad(fechaDesde, fechaHasta);
+
       setGrid(nuevaGrid);
       setColumnas(nuevasCols);
       setSelectedCells([]);
+
       setMensajeSinHabitaciones(
         nuevaGrid.length === 0
           ? "No hay habitaciones disponibles para el rango seleccionado."
@@ -102,7 +67,9 @@ const ReservarHabitacionPage = () => {
       );
     } catch (err) {
       console.error(err);
-      setMensajeSinHabitaciones("Ocurrió un error al buscar la disponibilidad.");
+      setMensajeSinHabitaciones(
+        "Ocurrió un error al buscar la disponibilidad."
+      );
     }
   };
 
@@ -127,6 +94,16 @@ const ReservarHabitacionPage = () => {
     setSelectedCells([]);
   };
 
+  const estaSeleccionada = (fecha, nro) =>
+    selectedCells.some((c) => c.fecha === fecha && c.nro === nro);
+
+  const habitacionesOrdenadas = [...selectedCells].sort((a, b) => {
+    const ka = `${a.fecha}-${a.nro}`;
+    const kb = `${b.fecha}-${b.nro}`;
+    return ka.localeCompare(kb);
+  });
+
+  // Navegar a la segunda pantalla
   const navigate = useNavigate();
   const handleSiguiente = () => {
     if (habitacionesOrdenadas.length === 0) return;
@@ -138,22 +115,17 @@ const ReservarHabitacionPage = () => {
         habitaciones: habitacionesOrdenadas.map((h) => ({
           fecha: h.fecha,
           nro: h.nro,
-          tipo: columnas.find((c) => c.nro === h.nro)?.tipo || `Habitación ${h.nro}`,
+          tipo:
+            columnas.find((c) => c.nro === h.nro)?.tipo ||
+            ROOM_TYPES_BY_NUMBER[h.nro] ||
+            `Habitación ${h.nro}`,
+          // placeholder de ingreso/egreso
           fechaIngreso: h.fecha,
           fechaEgreso: h.fecha,
         })),
       },
     });
   };
-
-  const estaSeleccionada = (fecha, nro) =>
-    selectedCells.some((c) => c.fecha === fecha && c.nro === nro);
-
-  const habitacionesOrdenadas = [...selectedCells].sort((a, b) => {
-    const ka = `${a.fecha}-${a.nro}`;
-    const kb = `${b.fecha}-${b.nro}`;
-    return ka.localeCompare(kb);
-  });
 
   return (
     <div className="reserva-page">
@@ -190,11 +162,11 @@ const ReservarHabitacionPage = () => {
                 />
               </div>
 
+              {/* Botón BUSCAR HABITACIONES */}
               <button type="submit" className="primary-button">
                 Buscar habitaciones
               </button>
             </form>
-
             {errorFechas && <p className="error-text">{errorFechas}</p>}
           </section>
 
@@ -215,8 +187,8 @@ const ReservarHabitacionPage = () => {
                 <span>Ocupada</span>
               </div>
               <div className="legend-item">
-                <span className="legend-color estado-fuera-servicio" />
-                <span>Fuera de servicio</span>
+                <span className="legend-color estado-no-disponible" />
+                <span>No disponible</span>
               </div>
             </div>
 
@@ -225,19 +197,19 @@ const ReservarHabitacionPage = () => {
                 <thead>
                   <tr>
                     <th className="col-dia">Días de</th>
-                    {columnas.length > 0
-                      ? columnas.map((col) => (
+                    {columnas.length > 0 ? (
+                      columnas.map((col) => (
                         <th key={col.nro}>{col.tipo || col.nro}</th>
                       ))
-                      : (
-                        <>
-                          <th>Individual Estándar</th>
-                          <th>Doble Estándar</th>
-                          <th>Doble Superior</th>
-                          <th>Superior Family</th>
-                          <th>Suite</th>
-                        </>
-                      )}
+                    ) : (
+                      <>
+                        <th>Individual Estándar</th>
+                        <th>Doble Estándar</th>
+                        <th>Doble Superior</th>
+                        <th>Superior Family</th>
+                        <th>Suite</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
 
@@ -245,9 +217,11 @@ const ReservarHabitacionPage = () => {
                   {grid.map((fila, rowIndex) => (
                     <tr key={fila.fecha}>
                       <td className="dia-label">{fila.fecha}</td>
-
                       {fila.habitaciones.map((hab, index) => {
-                        const seleccion = estaSeleccionada(fila.fecha, hab.nro);
+                        const seleccion = estaSeleccionada(
+                          fila.fecha,
+                          hab.nro
+                        );
 
                         const seleccionArriba =
                           rowIndex > 0 &&
@@ -287,7 +261,9 @@ const ReservarHabitacionPage = () => {
                           <td
                             key={`${fila.fecha}-${index}`}
                             className={clases}
-                            onClick={() => toggleCell(fila.fecha, hab.nro, hab.estado)}
+                            onClick={() =>
+                              toggleCell(fila.fecha, hab.nro, hab.estado)
+                            }
                             data-room={hab.nro}
                           ></td>
                         );
@@ -311,15 +287,26 @@ const ReservarHabitacionPage = () => {
 
             <div className="selected-rooms-list">
               {habitacionesOrdenadas.length === 0 ? (
-                <p className="text-empty-right">No hay habitaciones seleccionadas.</p>
+                <p className="text-empty-right">
+                  No hay habitaciones seleccionadas.
+                </p>
               ) : (
                 habitacionesOrdenadas.map((item, idx) => {
-                  const tipo = ROOM_TYPES_BY_NUMBER[item.nro] || `Habitación ${item.nro}`;
+                  const tipo =
+                    columnas.find((c) => c.nro === item.nro)?.tipo ||
+                    ROOM_TYPES_BY_NUMBER[item.nro] ||
+                    `Habitación ${item.nro}`;
                   return (
                     <div className="selected-room-item" key={idx}>
-                      <div className="selected-room-type">Tipo de habitación: {tipo}</div>
-                      <div className="selected-room-line">Ingreso: {item.fecha}, 13:00 hs</div>
-                      <div className="selected-room-line">Egreso: {item.fecha}, 8 hs</div>
+                      <div className="selected-room-type">
+                        Tipo de habitación: {tipo}
+                      </div>
+                      <div className="selected-room-line">
+                        Ingreso: {item.fecha}, 13:00 hs
+                      </div>
+                      <div className="selected-room-line">
+                        Egreso: {item.fecha}, 8 hs
+                      </div>
                     </div>
                   );
                 })
@@ -331,7 +318,7 @@ const ReservarHabitacionPage = () => {
             <button className="secondary-button" onClick={handleCancelar}>
               Cancelar
             </button>
-
+            {/* Botón SIGUIENTE */}
             <button
               className="primary-button primary-button-strong"
               onClick={handleSiguiente}

@@ -1,8 +1,82 @@
+/*
+// src/services/reservaService.js
+import axios from "axios";
+
+// Raíz de la API REST del backend
+const API_ROOT = "http://localhost:8080/api";
+const RESERVAS_API = `${API_ROOT}/reservas`;
+const HAB_ESTADO_API = `${API_ROOT}/habitaciones/estado`;
+
+
+//Formato de fecha compatible con el backend
+const formatDateDMY = (isoDate) => {
+  // isoDate = "2025-12-10"
+  const [y, m, d] = isoDate.split("-");
+  return `${d}/${m}/${y}`;
+};
+
+const mapEstado = (estadoEnum) => {
+  switch (estadoEnum) {
+    case "Reservada": return "reservada";
+    case "Ocupada": return "ocupada";
+    case "Disponible": return "disponible";
+    case "FueraServicio": return "no-disponible";
+    default: return "no-disponible";
+  }
+};
+
+// Consulta de disponibilidad (pasos 6–16 del DSS de CU-04)
+export const buscarDisponibilidad = async (fechaDesdeIso, fechaHastaIso) => {
+  const params = { desde: fechaDesdeIso, hasta: fechaHastaIso };
+
+  const { data } = await axios.get(HAB_ESTADO_API, { params });
+  // data: { grupos, filas, dias, desde, hasta }
+
+  // Orden de columnas según los grupos (tipoHabitacion) 21:08
+  const columnas = data.grupos.flatMap((g) =>
+  g.habitaciones.map((h) => ({
+    nro: `${h.id.nroPiso}-${h.id.nroHabitacion}`,
+    tipo: g.tipoHabitacion, // <-- agregar esta línea
+  }))
+);
+
+  // Armar grilla con fechas y habitaciones en el mismo orden de columnas
+  const grid = data.filas.map((fila) => {
+    const fecha = formatDateDMY(fila.dia); // fila.dia viene en yyyy-MM-dd
+    const habitaciones = columnas.map((col) => {
+      const celda = fila.celdas.find(
+        (c) =>
+          c.habitacionId.nroPiso === parseInt(col.nro.split("-")[0], 10) &&
+          c.habitacionId.nroHabitacion === parseInt(col.nro.split("-")[1], 10)
+      );
+      return {
+        nro: col.nro,
+        estado: mapEstado(celda?.estado),
+      };
+    });
+    return { fecha, habitaciones };
+  });
+
+  return { grid, columnas };
+};
+
+
+
+// Confirmar reserva, pasos 21–32 del digrama de secuencia del CU-04
+export const confirmarReserva = async (payload) => {
+  const { data } = await axios.post(RESERVAS_API, payload);
+  return data;
+};
+*/
+
+
+
+// nuevo lauti
 // src/services/reservaService.js
 import axios from "axios";
 
 // Base del backend (podés setear REACT_APP_API_URL en .env)
-const API_ROOT = "http://localhost:8080";
+const API_ROOT = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 // Endpoints
 const HABITACIONES_API = `${API_ROOT}/api/habitaciones`;
@@ -13,7 +87,6 @@ export const PISO_FIJO = 1;
 
 // Orden fijo de columnas (coincide con tu UI actual)
 const ROOMS_ORDER = ["101", "201", "301", "404", "500"];
-const HAB_ESTADO_API = `${API_ROOT}/habitaciones/estado`;
 
 /**
  * "yyyy-mm-dd" (input date) -> "dd/MM/yyyy" (back)
@@ -91,21 +164,13 @@ function normalizarEstado(estadoRaw) {
   return "fuera-servicio";
 }
 
-//Formato de fecha compatible con el backend
-const formatDateDMY = (isoDate) => {
-  const [y, m, d] = isoDate.split("-");
-  return `${d}/${m}/${y}`;
-};
-
-const mapEstado = (estadoEnum) => {
-  switch (estadoEnum) {
-    case "Reservada": return "reservada";
-    case "Ocupada": return "ocupada";
-    case "Disponible": return "disponible";
-    case "FueraServicio": return "no-disponible";
-    default: return "no-disponible";
- }
-}
+/**
+ * Convierte la respuesta del backend a tu formato de grilla:
+ * [
+ *   { fecha:"dd/MM", habitaciones:[{nro:"101", estado:"..."}, ...] },
+ *   ...
+ * ]
+ */
 function toGridEstadoHabitaciones(data) {
   const filas = Array.isArray(data?.filas) ? data.filas : [];
 
@@ -135,43 +200,21 @@ function toGridEstadoHabitaciones(data) {
 // Consulta de disponibilidad (real)
 // ---------------------------------------------------------------------------
 export const buscarDisponibilidad = async (fechaDesdeIso, fechaHastaIso) => {
-  const params = { desde: fechaDesdeIso, hasta: fechaHastaIso };
+  const desde = isoToDdMmYyyy(fechaDesdeIso);
+  const hasta = isoToDdMmYyyy(fechaHastaIso);
 
-  const { data } = await axios.get(HAB_ESTADO_API, { params });
-  // data: { grupos, filas, dias, desde, hasta }
-
-  // Orden de columnas según los grupos (tipoHabitacion) 21:08
-  const columnas = data.grupos.flatMap((g) =>
-  g.habitaciones.map((h) => ({
-    nro: `${h.id.nroPiso}-${h.id.nroHabitacion}`,
-    tipo: g.tipoHabitacion, // <-- agregar esta línea
-  }))
-);
-
-  // Armar grilla con fechas y habitaciones en el mismo orden de columnas
-  const grid = data.filas.map((fila) => {
-    const fecha = formatDateDMY(fila.dia); // fila.dia viene en yyyy-MM-dd
-    const habitaciones = columnas.map((col) => {
-      const celda = fila.celdas.find(
-        (c) =>
-          c.habitacionId.nroPiso === parseInt(col.nro.split("-")[0], 10) &&
-          c.habitacionId.nroHabitacion === parseInt(col.nro.split("-")[1], 10)
-      );
-      return {
-        nro: col.nro,
-        estado: mapEstado(celda?.estado),
-      };
-    });
-    return { fecha, habitaciones };
+  const response = await axios.get(`${HABITACIONES_API}/estado`, {
+    params: { desde, hasta },
   });
 
-  return { grid, columnas};
+  // Tu backend devuelve una estructura por filas/celdas -> adaptamos
+  return toGridEstadoHabitaciones(response.data);
 };
 
 // ---------------------------------------------------------------------------
 // Confirmar reserva (lo dejo igual; ajustalo cuando tengas el endpoint real)
 // ---------------------------------------------------------------------------
 export const confirmarReserva = async (payload) => {
-const { data } = await axios.post(RESERVAS_API, payload);
-  return data;
+  const response = await axios.post(`${RESERVAS_API}/confirmar`, payload);
+  return response.data;
 };

@@ -94,7 +94,6 @@ public class GestorReservaImpl implements GestorReserva {
             reservasCreadas.add(guardada);
 
             //Se tiene que eliminar de la lista de disponibles, que se obtiene del CU del lauti
-            
         }
 
         return reservasCreadas;

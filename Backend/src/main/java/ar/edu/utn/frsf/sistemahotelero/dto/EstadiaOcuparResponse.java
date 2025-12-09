@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EstadiaOcuparResponse {
 
-    private Long estadiaId;
+    private String estadiaId;
     
     private Integer nroPiso;
     private Integer nroHabitacion; 

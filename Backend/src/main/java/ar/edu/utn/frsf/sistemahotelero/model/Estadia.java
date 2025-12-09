@@ -18,7 +18,7 @@ public class Estadia {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long id; 
+    private String id; 
 
     @Column(name = "fecha_ingreso", nullable = false)
     private LocalDate fechaIngreso;
