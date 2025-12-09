@@ -36,6 +36,7 @@ const DatosReservaPage = () => {
   const [form, setForm] = useState({
     nombre: "",
     apellido: "",
+    prefijo: "+54 9",
     telefono: "",
   });
 
@@ -107,11 +108,11 @@ const DatosReservaPage = () => {
     // TELÉFONO (solo dígitos)
     const telTrim = form.telefono.trim();
     if (!telTrim) {
-      errors.telefono = "El campo Nro. Teléfono es requerido.";
+      errors.telefono = "El campo Nro. Teléfono es requerido";
       esValido = false;
     } else if (!soloNumeros.test(telTrim)) {
       errors.telefono =
-        "El campo Nro. Teléfono solo admite números (sin guiones ni caracteres especiales).";
+        "El campo Nro. Teléfono no puede contener letras o caracteres especiales";
       esValido = false;
     }
 
@@ -137,6 +138,8 @@ const DatosReservaPage = () => {
     try {
       setEnviando(true);
 
+      const telefonoCompleto = `${form.prefijo} ${form.telefono}`;
+
       const reservasPayload = habitaciones.map((h) => ({
         numeroHabitacion: h.nro,
         fechaInicio: toIsoFromDMY(h.fechaIngreso),
@@ -147,7 +150,7 @@ const DatosReservaPage = () => {
         reservas: reservasPayload,
         nombre: form.nombre.trim(),
         apellido: form.apellido.trim(),
-        telefono: form.telefono.trim(),
+        telefono: telefonoCompleto.trim(),
       };
 
       console.log("Payload reserva:", payload);
@@ -220,7 +223,6 @@ const DatosReservaPage = () => {
 
           <form
             className="datos-form"
-            noValidate
             onSubmit={(e) => {
               e.preventDefault();
               handleConfirmar();
@@ -235,9 +237,12 @@ const DatosReservaPage = () => {
                 id="nombre"
                 name="nombre"
                 type="text"
-                className={`input datos-input ${fieldErrors.nombre ? "input-error" : ""}`}
+                className={`input datos-input ${
+                  fieldErrors.nombre ? "input-error" : ""
+                }`}
                 value={form.nombre}
                 onChange={handleChange}
+                required
               />
               {fieldErrors.nombre && (
                 <p className="field-error-message">{fieldErrors.nombre}</p>
@@ -253,9 +258,12 @@ const DatosReservaPage = () => {
                 id="apellido"
                 name="apellido"
                 type="text"
-                className={`input datos-input ${fieldErrors.apellido ? "input-error" : ""}`}
+                className={`input datos-input ${
+                  fieldErrors.apellido ? "input-error" : ""
+                }`}
                 value={form.apellido}
                 onChange={handleChange}
+                required
               />
               {fieldErrors.apellido && (
                 <p className="field-error-message">{fieldErrors.apellido}</p>
@@ -263,20 +271,38 @@ const DatosReservaPage = () => {
             </div>
 
             {/* Teléfono */}
-            <div className="datos-field">
-              <label className="datos-label" htmlFor="telefono">
+            <div className="phone-group">
+              <label className="phone-label" htmlFor="telefono">
                 Número Teléfono <span className="required">*</span>
               </label>
-              <input
-                id="telefono"
-                name="telefono"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                className={`input datos-input ${fieldErrors.telefono ? "input-error" : ""}`}
-                value={form.telefono}
-                onChange={handleChange}
-              />
+
+              <div className="phone-row">
+                <select
+                  id="prefijo"
+                  name="prefijo"
+                  className="phone-prefix"
+                  value={form.prefijo}
+                  onChange={handleChange}
+                >
+                  <option value="+54 9">+54 9</option>
+                  <option value="+54">+54</option>
+                </select>
+
+                <input
+                  id="telefono"
+                  name="telefono"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  className={`phone-input ${
+                    fieldErrors.telefono ? "input-error" : ""
+                  }`}
+                  value={form.telefono}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
               {fieldErrors.telefono && (
                 <p className="field-error-message">{fieldErrors.telefono}</p>
               )}
@@ -355,6 +381,7 @@ const DatosReservaPage = () => {
 };
 
 export default DatosReservaPage;
+
 
 
 

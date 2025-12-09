@@ -62,6 +62,8 @@ const ReservarHabitacionPage = () => {
   const [selectedCells, setSelectedCells] = useState([]); // {fecha, nro}
   const [mensajeSinHabitaciones, setMensajeSinHabitaciones] = useState("");
   const [errorFechas, setErrorFechas] = useState("");
+  const [erroresFechas, setErroresFechas] = useState({});
+  const [buscando, setBuscando] = useState(false);
 
   // 👇 NUEVO: estado para popup
   const [showNoDispPopup, setShowNoDispPopup] = useState(false);
@@ -98,6 +100,16 @@ const ReservarHabitacionPage = () => {
     e.preventDefault();
     setErrorFechas("");
     setMensajeSinHabitaciones("");
+    setErroresFechas({});
+
+    const errs = {};
+    if (!fechaDesde) errs.desde = "El campo Desde no puede quedar vacío.";
+    if (!fechaHasta) errs.hasta = "El campo Hasta no puede quedar vacío.";
+
+    if (Object.keys(errs).length > 0) {
+      setErroresFechas(errs);
+      return;
+    }
 
     const error = validarRangoFechas(fechaDesde, fechaHasta);
     if (error) {
@@ -105,6 +117,7 @@ const ReservarHabitacionPage = () => {
       return;
     }
 
+    setBuscando(true);
     try {
       const { grid: nuevaGrid, columnas: nuevasCols } =
         await buscarDisponibilidad(fechaDesde, fechaHasta);
@@ -113,18 +126,25 @@ const ReservarHabitacionPage = () => {
       setColumnas(nuevasCols);
       setSelectedCells([]);
 
+      const hayDisponible = nuevaGrid.some((fila) =>
+        (fila.habitaciones || []).some((hab) => hab.estado === "disponible")
+      );
+
+      const sinDisponibles = !hayDisponible;
+
       setMensajeSinHabitaciones(
-        nuevaGrid.length === 0
+        sinDisponibles
           ? "No hay habitaciones disponibles para el rango seleccionado."
           : ""
       );
-      setShowSinDisponibilidadPopup(nuevaGrid.length === 0);
+      setShowSinDisponibilidadPopup(sinDisponibles);
     } catch (err) {
       console.error(err);
       setMensajeSinHabitaciones(
         "Ocurrió un error al buscar la disponibilidad."
       );
     }
+    setBuscando(false);
   };
 
   // -------------------------------------------------------------------
@@ -314,6 +334,7 @@ const ReservarHabitacionPage = () => {
   };
   const handleCloseSinDisponibilidad = () => {
     setShowSinDisponibilidadPopup(false);
+    navigate("/");
   };
 
   // -------------------------------------------------------------------
@@ -327,7 +348,7 @@ const ReservarHabitacionPage = () => {
           <section className="reservation-search">
             <h1 className="section-title">Reserva de Habitación</h1>
 
-            <form className="date-form reserva-form" onSubmit={handleBuscar}>
+            <form className="date-form reserva-form" onSubmit={handleBuscar} noValidate>
               <div className="date-field">
                 <label htmlFor="desde">
                   Desde <span className="required">*</span>
@@ -336,9 +357,21 @@ const ReservarHabitacionPage = () => {
                   type="date"
                   id="desde"
                   value={fechaDesde}
-                  onChange={(e) => setFechaDesde(e.target.value)}
+                  onChange={(e) => {
+                    setFechaDesde(e.target.value);
+                    if (erroresFechas.desde) {
+                      setErroresFechas((prev) => ({ ...prev, desde: "" }));
+                    }
+                    if (errorFechas) setErrorFechas("");
+                  }}
                   required
+                  className={erroresFechas.desde ? "inputError" : ""}
                 />
+                {erroresFechas.desde ? (
+                  <div className="fieldError">{erroresFechas.desde}</div>
+                ) : (
+                  <div className="fieldError fieldErrorSpacer">&nbsp;</div>
+                )}
               </div>
 
               <div className="date-field">
@@ -349,13 +382,29 @@ const ReservarHabitacionPage = () => {
                   type="date"
                   id="hasta"
                   value={fechaHasta}
-                  onChange={(e) => setFechaHasta(e.target.value)}
+                  onChange={(e) => {
+                    setFechaHasta(e.target.value);
+                    if (erroresFechas.hasta) {
+                      setErroresFechas((prev) => ({ ...prev, hasta: "" }));
+                    }
+                    if (errorFechas) setErrorFechas("");
+                  }}
                   required
+                  className={erroresFechas.hasta ? "inputError" : ""}
                 />
+                {erroresFechas.hasta ? (
+                  <div className="fieldError">{erroresFechas.hasta}</div>
+                ) : (
+                  <div className="fieldError fieldErrorSpacer">&nbsp;</div>
+                )}
               </div>
 
-              <button type="submit" className="btnPrimary searchButtonInline">
-                Buscar habitaciones
+              <button
+                type="submit"
+                className={`btnPrimary searchButtonInline ${buscando ? "btnPrimaryDisabled" : ""}`}
+                disabled={buscando}
+              >
+                {buscando ? "Buscando..." : "Buscar habitaciones"}
               </button>
             </form>
 
@@ -555,7 +604,7 @@ const ReservarHabitacionPage = () => {
             </div>
             <div className="modalButtonsErrorReserva">
               <button
-                className="modalButtonBase modalButtonPrimary"
+                className="modalButtonBase modalButtonErrorReserva"
                 onClick={handleCloseSinDisponibilidad}
                 type="button"
               >
@@ -598,6 +647,10 @@ const ReservarHabitacionPage = () => {
 };
 
 export default ReservarHabitacionPage;
+
+
+
+
 
 
 

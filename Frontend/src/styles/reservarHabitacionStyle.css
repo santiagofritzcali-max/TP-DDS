@@ -47,12 +47,12 @@
 }
 
 .reserva-form {
-  align-items: flex-end;
+  align-items: center;
 }
 
 .searchButtonInline {
-  align-self: flex-end;
-  margin-top: 4px;
+  align-self: center;
+  margin-top: 0;
 }
 
 .date-field {
@@ -93,6 +93,10 @@
   font-size: 11px;
   color: #d9534f;
   min-height: 14px;
+}
+
+.fieldErrorSpacer {
+  visibility: hidden;
 }
 
 /* ----------------------------- BOTONES ----------------------------- */
@@ -684,6 +688,23 @@
   border-left-width: 1px;
 }
 
+/* Campos datos reserva (labels arriba) */
+.datos-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.datos-label {
+  font-size: 13px;
+  color: #333;
+  text-align: left;
+}
+
+.datos-input {
+  border-radius: 0;
+}
+
 /* error en teléfono */
 .phone-input.input-error {
   border-color: #bb0000 !important;
@@ -985,7 +1006,7 @@
 .modalOverlayReservaError {
   position: fixed;
   inset: 0;
-  background-color: rgba(242,139,130,0.28);
+  background-color: rgba(0, 0, 0, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1023,4 +1044,9 @@
 .modalButtonsErrorReserva {
   display: flex;
   justify-content: center;
+}
+
+.modalButtonErrorReserva {
+  background-color: #c62828;
+  color: #ffffff;
 }

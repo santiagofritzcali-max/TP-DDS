@@ -28,21 +28,23 @@ const PopupHabitacionNoDisponible = ({ rango, onClose }) => {
     : "para las fechas";
 
   return (
-    <div className="popup-overlay">
-      <div className="popup-card">
-        <h3 className="popup-title">{titulo}</h3>
-
-        <p className="popup-message">
+    <div className="modalOverlayReservaError">
+      <div className="modalContentErrorReserva">
+        <div className="modalTitleErrorReserva">
+          {titulo}
+        </div>
+        <div className="modalBodyErrorReserva">
           {sujeto} {verbo} {complemento}{" "}
-          <strong>{textoRango}</strong>.
-        </p>
-
-        <div className="popup-actions">
+          <strong>{textoRango}</strong>.{" "}
+          Por favor, elija otra habitación o modifique las fechas de búsqueda.
+        </div>
+        <div className="modalButtonsErrorReserva">
           <button
-            className="primary-button primary-button-strong"
+            className="modalButtonBase modalButtonErrorReserva"
             onClick={onClose}
+            type="button"
           >
-            OK
+            Volver a la selección
           </button>
         </div>
       </div>
