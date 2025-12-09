@@ -535,7 +535,7 @@ const EstadoHabitacionPage = () => {
       />
       <main className="main-layout">
         <section className="left-panel">
-          <section className="reservation-search">
+          <section className="reservation-search estado-search">
             <h1 className="section-title">
               Estado de Habitaciones (CU-05{desdeCU15 ? " / CU-15" : ""})
             </h1>

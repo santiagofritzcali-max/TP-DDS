@@ -215,6 +215,11 @@
   background-color: #fff7f7;
 }
 
+.input.inputError {
+  border: 1px solid #d9534f !important;
+  background-color: #fff7f7 !important;
+}
+
 .fieldError {
   margin-top: 3px;
   font-size: 11px;

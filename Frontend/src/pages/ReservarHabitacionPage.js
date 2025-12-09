@@ -66,6 +66,7 @@ const ReservarHabitacionPage = () => {
   // 👇 NUEVO: estado para popup
   const [showNoDispPopup, setShowNoDispPopup] = useState(false);
   const [rangoNoDisp, setRangoNoDisp] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   const navigate = useNavigate();
 
@@ -145,9 +146,15 @@ const ReservarHabitacionPage = () => {
   };
 
   const handleCancelar = () => {
-    // 7.A.2 El CU termina 
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = () => {
+    setShowCancelModal(false);
     navigate(-1);
   };
+
+  const handleCloseCancelModal = () => setShowCancelModal(false);
 
 
   const estaSeleccionada = (fecha, nro) =>
@@ -315,7 +322,7 @@ const ReservarHabitacionPage = () => {
           <section className="reservation-search">
             <h1 className="section-title">Reserva de Habitación</h1>
 
-            <form className="date-form" onSubmit={handleBuscar}>
+            <form className="date-form reserva-form" onSubmit={handleBuscar}>
               <div className="date-field">
                 <label htmlFor="desde">
                   Desde <span className="required">*</span>
@@ -342,7 +349,7 @@ const ReservarHabitacionPage = () => {
                 />
               </div>
 
-              <button type="submit" className="primary-button">
+              <button type="submit" className="btnPrimary searchButtonInline">
                 Buscar habitaciones
               </button>
             </form>
@@ -511,12 +518,12 @@ const ReservarHabitacionPage = () => {
           </div>
 
           <div className="actions-row">
-            <button className="secondary-button" onClick={handleCancelar}>
+            <button className="btnSecondary" onClick={handleCancelar}>
               Cancelar
             </button>
 
             <button
-              className="primary-button primary-button-strong"
+              className={`btnPrimary ${reservasAgrupadas.length === 0 ? "btnPrimaryDisabled" : ""}`}
               onClick={handleSiguiente}
               disabled={reservasAgrupadas.length === 0}
             >
@@ -533,8 +540,37 @@ const ReservarHabitacionPage = () => {
           onClose={handleCloseNoDispPopup}
         />
       )}
+
+      {showCancelModal && (
+        <div className="modalOverlay">
+          <div className="modalContent modalCancel">
+            <div className="modalTitle modalCancelTitle">CANCELAR</div>
+            <div className="modalBody modalCancelBody">
+              <p>¿Desea cancelar la Reserva?</p>
+            </div>
+            <div className="modalButtons modalCancelButtons">
+              <button
+                className="modalButtonBase modalButtonSecondary"
+                onClick={handleCloseCancelModal}
+                type="button"
+              >
+                No
+              </button>
+              <button
+                className="modalButtonBase modalButtonPrimary"
+                onClick={handleConfirmCancel}
+                type="button"
+              >
+                Si
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
 
 export default ReservarHabitacionPage;
+
