@@ -3,8 +3,8 @@ import "../styles/FechaInvalidaPopup.css";
 
 export default function FechaInvalidaPopup({
   open,
-  title = "FECHA INVÁLIDA",
-  message = "Formato de fecha inválido o inconsistencia entre fecha desde/hasta.",
+  title = "FECHA INVALIDA",
+  message = "Formato de fecha invalido o inconsistencia entre fecha desde/hasta.",
   buttonText = "Volver",
   onClose,
 }) {
@@ -37,7 +37,7 @@ export default function FechaInvalidaPopup({
         <div className="fip-actions">
           <button
             ref={btnRef}
-            className="fip-btn fip-btn--grey"
+            className="fip-btn fip-btn--primary"
             onClick={onClose}
             type="button"
           >

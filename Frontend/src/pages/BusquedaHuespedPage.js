@@ -147,7 +147,7 @@ const BusquedaHuespedPage = () => {
             <section className="formSection">
               <div className="formSectionTitle">Buscar Huésped</div>
 
-              <div className="formGrid2">
+              <div className="formGrid2 formGrid2Separated">
                 <div className="formGroup">
                   <label className="label">Apellido</label>
                   <input
@@ -291,7 +291,7 @@ const BusquedaHuespedPage = () => {
             </button>
 
             <button
-              className="modalButtonBase modalButtonPrimary"
+              className="modalButtonBase modalButtonPrimary modalButtonDanger"
               onClick={irAltaHuesped}
             >
               Dar alta de huésped
@@ -321,7 +321,7 @@ const BusquedaHuespedPage = () => {
             </button>
 
             <button
-              className="modalButtonBase modalButtonPrimary"
+              className="modalButtonBase modalButtonPrimary modalButtonDanger"
               onClick={irAltaHuesped}
             >
               Dar alta de huésped
@@ -365,3 +365,4 @@ const BusquedaHuespedPage = () => {
 };
 
 export default BusquedaHuespedPage;
+

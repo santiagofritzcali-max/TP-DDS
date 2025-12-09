@@ -72,8 +72,61 @@
   color: #cc0000;
 }
 
+/* Errores en inputs (alineado con AltaHuesped) */
+.inputError {
+  border: 1px solid #d9534f !important;
+  background-color: #fff7f7;
+}
+
+.fieldError {
+  margin-top: 3px;
+  font-size: 11px;
+  color: #d9534f;
+}
+
 /* ----------------------------- BOTONES ----------------------------- */
 
+.btnPrimary {
+  min-width: 120px;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 2px;
+  border: none;
+  background-color: #333;
+  color: #fff;
+  cursor: pointer;
+}
+
+.btnPrimaryDisabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btnSecondary {
+  min-width: 120px;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 2px;
+  border: none;
+  background-color: #e0e0e0;
+  color: #444;
+  cursor: pointer;
+}
+
+.actionsSearch {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.cancelBottomLeft {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Botones originales (usados en otras pantallas) */
 .primary-button {
   padding: 6px 16px;
   font-size: 13px;
@@ -665,7 +718,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background-color: rgba(242,139,130,0.28);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -674,18 +727,31 @@
 
 /* Caja del modal */
 .modal-box {
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 1.5rem;
-  max-width: 480px;
-  width: 100%;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  background-color: #ffecec;
+  padding: 20px 24px;
+  border-radius: 6px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  font-size: 14px;
+  border: 2px solid #f28b82;
+  color: #5a1f1f;
 }
 
 /* Título */
 .modal-title {
-  margin-top: 0;
-  margin-bottom: 0.75rem;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #b00020;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modal-body {
+  margin-bottom: 16px;
+  color: #5a1f1f;
+  font-size: 14px;
 }
 
 /* Acciones del modal */
@@ -694,6 +760,133 @@
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+/* Popup de selección exitosa (estilo azul del alta) */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalSuccess {
+  background-color: #e7f3ff;
+  border: 2px solid #007bff;
+  color: #0056b3;
+  padding: 20px 24px;
+  border-radius: 6px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  font-size: 14px;
+}
+
+.modalTitleSuccess {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #007bff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modalBodySuccess {
+  margin-bottom: 4px;
+  color: #333333;
+  font-size: 14px;
+}
+
+.modalContent {
+  background-color: #fff8d6;
+  padding: 20px 24px;
+  border-radius: 6px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  font-size: 14px;
+  border: 2px solid #f6c343;
+}
+
+.modalTitle {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #d39e00;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modalBody {
+  margin-bottom: 16px;
+  color: #5a4a1f;
+  font-size: 14px;
+}
+
+.modalButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modalButtonBase {
+  min-width: 140px;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: none;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.modalButtonSecondary {
+  background-color: #e4e4e4;
+  color: #444;
+}
+
+.modalButtonPrimary {
+  background-color: #2e7d32;
+  color: #fff;
+}
+
+.modalCancel {
+  background-color: #f5fff5;
+  padding: 20px 24px;
+  border-radius: 6px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  font-size: 14px;
+  border: 2px solid #7bc47b;
+  color: #1f3b1f;
+}
+
+.modalCancelTitle {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #1b5e20;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modalCancelBody {
+  margin-bottom: 16px;
+  color: #000;
+  font-size: 14px;
+}
+
+.modalCancelButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: center;
 }
 
 /* Celdas seleccionables y seleccionadas en CU15 */

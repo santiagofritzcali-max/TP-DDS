@@ -147,6 +147,11 @@
   color: #fff;
 }
 
+.modalButtonDanger {
+  background-color: #c62828 !important;
+  color: #fff !important;
+}
+
 .formMainGrid {
   display: grid;
   grid-template-columns: 2fr 1.2fr;
@@ -173,7 +178,14 @@
 .formGrid2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0,1fr));
-  gap: 14px 24px;
+  row-gap: 14px;
+  column-gap: 48px;
+  grid-column-gap: 48px; /* refuerzo explícito */
+}
+
+.formGrid2Separated {
+  column-gap: 48px !important;
+  grid-column-gap: 48px !important;
 }
 
 .formGroup {

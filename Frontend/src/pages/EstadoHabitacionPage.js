@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom"; // NUEVO
 import "../styles/reservarHabitacionStyle.css";
 import "../styles/FechaInvalidaPopup.css";
@@ -87,11 +87,13 @@ const EstadoHabitacionPage = () => {
 
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
+  const [erroresFechas, setErroresFechas] = useState({});
 
   const [gridData, setGridData] = useState(null); // backend raw
   const [errorFechas, setErrorFechas] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   // NUEVO: selección de habitación + días (solo cuando viene desde CU15)
   const [seleccion, setSeleccion] = useState(null);
@@ -103,6 +105,12 @@ const EstadoHabitacionPage = () => {
   // NUEVO: popup para fechas inválidas
   const [fechaPopup, setFechaPopup] = useState({ open: false, message: "" });
 
+  const [seleccionExitosa, setSeleccionExitosa] = useState({
+    open: false,
+    payload: null,
+  });
+  const seleccionExitosaHandledRef = useRef(false);
+
   const abrirFechaPopup = (msg) => {
     setErrorFechas(msg); // mantenés el texto rojo como antes
     setFechaPopup({ open: true, message: msg });
@@ -112,8 +120,18 @@ const EstadoHabitacionPage = () => {
 
   // NUEVO: cancelar a pantalla principal
   const handleCancelar = () => {
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = () => {
+    setShowCancelModal(false);
+    setSeleccion(null);
+    setGridData(null);
+    setMensaje("");
     navigate("/"); // ajustá si tu "principal" es otra ruta
   };
+
+  const handleCloseCancelModal = () => setShowCancelModal(false);
 
   const cerrarPopup = () => setPopup({ open: false, type: null, data: null });
 
@@ -122,11 +140,17 @@ const EstadoHabitacionPage = () => {
     setErrorFechas("");
     setMensaje("");
     setSeleccion(null); // NUEVO: limpiar selección al buscar de nuevo
+    setErroresFechas({});
 
-    if (!fechaDesde || !fechaHasta) {
-      abrirFechaPopup("Las fechas 'Desde' y 'Hasta' son obligatorias.");
+    const errs = {};
+    if (!fechaDesde) errs.desde = "El campo Desde no puede quedar vacío.";
+    if (!fechaHasta) errs.hasta = "El campo Hasta no puede quedar vacío.";
+    if (Object.keys(errs).length > 0) {
+      setErroresFechas(errs);
+      setErrorFechas("");
       return;
     }
+
     if (fechaHasta < fechaDesde) {
       abrirFechaPopup("'Hasta' no puede ser anterior a 'Desde'.");
       return;
@@ -304,8 +328,9 @@ const EstadoHabitacionPage = () => {
 
     // Caso 4: todas disponibles -> seguir sin conflicto
 
-    navigate("/cu15", {
-      state: {
+    setSeleccionExitosa({
+      open: true,
+      payload: {
         desdeCU15: true,
         numeroHabitacion: seleccion.habitacionId,
         fechaIngreso: rangoSeleccionado.desde,
@@ -315,6 +340,28 @@ const EstadoHabitacionPage = () => {
     });
 
   };
+
+  useEffect(() => {
+    if (!seleccionExitosa.open) {
+      seleccionExitosaHandledRef.current = false;
+      return;
+    }
+
+    const handleKeyDown = () => {
+      if (seleccionExitosaHandledRef.current) return;
+      seleccionExitosaHandledRef.current = true;
+
+      const payload = seleccionExitosa.payload;
+      setSeleccionExitosa({ open: false, payload: null });
+
+      if (payload) {
+        navigate("/cu15", { state: payload });
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [seleccionExitosa, navigate]);
 
   // NUEVO: contenido del popup según tipo
   let popupTitle = "";
@@ -493,7 +540,7 @@ const EstadoHabitacionPage = () => {
               Estado de Habitaciones (CU-05{desdeCU15 ? " / CU-15" : ""})
             </h1>
 
-            <form className="date-form" onSubmit={handleBuscar}>
+            <form className="date-form" onSubmit={handleBuscar} noValidate>
               <div className="date-field">
                 <label htmlFor="desde">
                   Desde <span className="required">*</span>
@@ -502,9 +549,17 @@ const EstadoHabitacionPage = () => {
                   type="date"
                   id="desde"
                   value={fechaDesde}
-                  onChange={(e) => setFechaDesde(e.target.value)}
-                  required
+                  onChange={(e) => {
+                    setFechaDesde(e.target.value);
+                    if (erroresFechas.desde) {
+                      setErroresFechas((prev) => ({ ...prev, desde: "" }));
+                    }
+                  }}
+                  className={erroresFechas.desde ? "inputError" : ""}
                 />
+                {erroresFechas.desde && (
+                  <div className="fieldError">{erroresFechas.desde}</div>
+                )}
               </div>
 
               <div className="date-field">
@@ -515,21 +570,28 @@ const EstadoHabitacionPage = () => {
                   type="date"
                   id="hasta"
                   value={fechaHasta}
-                  onChange={(e) => setFechaHasta(e.target.value)}
-                  required
+                  onChange={(e) => {
+                    setFechaHasta(e.target.value);
+                    if (erroresFechas.hasta) {
+                      setErroresFechas((prev) => ({ ...prev, hasta: "" }));
+                    }
+                  }}
+                  className={erroresFechas.hasta ? "inputError" : ""}
                 />
+                {erroresFechas.hasta && (
+                  <div className="fieldError">{erroresFechas.hasta}</div>
+                )}
               </div>
 
-              <button type="submit" className="primary-button" disabled={loading}>
-                {loading ? "Buscando..." : "Buscar estado"}
-              </button>
-              <button
-                type="button"
-                className="secondary-button"
-                onClick={handleCancelar}
-              >
-                Cancelar
-              </button>
+              <div className="actionsSearch">
+                <button
+                  type="submit"
+                  className={`btnPrimary ${loading ? "btnPrimaryDisabled" : ""}`}
+                  disabled={loading}
+                >
+                  {loading ? "Buscando..." : "Buscar estado"}
+                </button>
+              </div>
             </form>
 
             {errorFechas && <p className="error-text">{errorFechas}</p>}
@@ -626,7 +688,7 @@ const EstadoHabitacionPage = () => {
               <div className="seleccion-cu15-panel">
                 <button
                   type="button"
-                  className="primary-button"
+                  className={`btnPrimary ${!rangoSeleccionado ? "btnPrimaryDisabled" : ""}`}
                   disabled={!rangoSeleccionado}
                   onClick={handleContinuarCU15}
                 >
@@ -635,6 +697,16 @@ const EstadoHabitacionPage = () => {
               </div>
             )}
           </section>
+
+          <div className="cancelBottomLeft">
+            <button
+              type="button"
+              className="btnSecondary"
+              onClick={handleCancelar}
+            >
+              Cancelar
+            </button>
+          </div>
         </section>
       </main>
 
@@ -647,6 +719,44 @@ const EstadoHabitacionPage = () => {
       >
         {popupBody}
       </PopupModal>
+
+      {showCancelModal && (
+        <div className="modalOverlay">
+          <div className="modalContent modalCancel">
+            <div className="modalTitle modalCancelTitle">CANCELAR</div>
+            <div className="modalBody modalCancelBody">
+              <p>¿Desea cancelar la operación?</p>
+            </div>
+            <div className="modalButtons modalCancelButtons">
+              <button
+                className="modalButtonBase modalButtonSecondary"
+                onClick={handleCloseCancelModal}
+                type="button"
+              >
+                No
+              </button>
+              <button
+                className="modalButtonBase modalButtonPrimary"
+                onClick={handleConfirmCancel}
+                type="button"
+              >
+                Sí
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {seleccionExitosa.open && (
+        <div className="modalOverlay">
+          <div className="modalSuccess">
+            <div className="modalTitleSuccess">SELECCION EXITOSA</div>
+            <div className="modalBodySuccess">
+              <p>PRESIONE CUALQUIER TECLA Y CONTINUA...</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
