@@ -318,3 +318,37 @@
   align-items: flex-start;
   align-self: stretch;
 }
+
+/* Modal cancelar en verde */
+.modalCancel {
+  background-color: #f5fff5;       /* tenue verde */
+  padding: 20px 24px;
+  border-radius: 6px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  font-size: 14px;
+  border: 2px solid #7bc47b;
+  color: #1f3b1f;
+}
+
+.modalCancelTitle {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #1b5e20;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modalCancelBody {
+  margin-bottom: 16px;
+  color: #000;
+  font-size: 14px;
+}
+
+/* Ajuste de botones del modal de cancelar */
+.modalCancelButtons .modalButtonPrimary {
+  background-color: #000;
+  color: #fff;
+}

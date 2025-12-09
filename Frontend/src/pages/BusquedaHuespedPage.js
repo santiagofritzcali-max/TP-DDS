@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import '../styles/busquedaHuesped.css';
 import { buscarHuespedes } from '../services/huespedService';
+import { useNavigate } from 'react-router-dom';
 
 const TIPO_DOC_OPCIONES = ['DNI', 'LE', 'LC', 'Pasaporte', 'Otro'];
 
@@ -21,6 +22,9 @@ const BusquedaHuespedPage = () => {
   const [mostrarModalSinSeleccion, setMostrarModalSinSeleccion] = useState(false);
   const [page, setPage] = useState(1); 
   const [loadingMore, setLoadingMore] = useState(false); 
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const navigate = useNavigate(); 
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -110,8 +114,24 @@ const BusquedaHuespedPage = () => {
     };
 
     const handleCancelar = () => {
-      window.location.reload();
+      setShowCancelModal(true);
     };
+
+    const handleConfirmCancel = () => {
+      setForm(initialSearchForm);
+      setHuespedes([]);
+      setHuespedSeleccionado(null);
+      setMensaje('');
+      setMostrarModalSinResultados(false);
+      setMostrarModalSinSeleccion(false);
+      navigate('/'); // ir a la página principal
+  };
+
+    const handleCloseCancelModal = () => {
+      setShowCancelModal(false);
+    };
+
+
 
  return (
   <div className="appRoot">
@@ -310,7 +330,35 @@ const BusquedaHuespedPage = () => {
         </div>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
       </div>
     )}
+
+    {showCancelModal && (
+  <div className="modalOverlay">
+    <div className="modalContent modalCancel">
+      <div className="modalTitle modalCancelTitle">CANCELAR</div>
+      <div className="modalBody modalCancelBody">
+        <p>¿Desea cancelar la búsqueda de huésped?</p>
+      </div>
+      <div className="modalButtons modalCancelButtons">
+        <button
+          className="modalButtonBase modalButtonSecondary"
+          onClick={handleCloseCancelModal}
+        >
+          No
+        </button>
+        <button
+          className="modalButtonBase modalButtonPrimary"
+          onClick={handleConfirmCancel}
+        >
+          Sí
+        </button>
+      </div>
+    </div>
   </div>
+)}
+
+  </div>
+
+  
 );
 
 
