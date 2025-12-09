@@ -2,9 +2,7 @@ const BASE_URL = 'http://localhost:8080';
 
 //PARA DAR DE ALTA HUESPED
 export async function crearHuesped(form, { aceptarDuplicado = false } = {}) {
-  const payload = aceptarDuplicado
-    ? { ...form, aceptarDuplicado: true }
-    : form;
+  const payload = aceptarDuplicado ? { ...form, aceptarDuplicado: true } : form;
 
   const resp = await fetch(`${BASE_URL}/api/huespedes`, {
     method: 'POST',
@@ -12,7 +10,6 @@ export async function crearHuesped(form, { aceptarDuplicado = false } = {}) {
     body: JSON.stringify(payload),
   });
 
-  // Intentamos parsear el JSON, pero si falla no rompemos
   let data = null;
   try {
     data = await resp.json();
