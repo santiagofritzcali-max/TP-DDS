@@ -8,17 +8,18 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "G17_habitacion") // usá el nombre real exacto de tu tabla
+@Table(name = "g17_habitacion")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(
+    name = "tipo_de_habitacion",
+    discriminatorType = DiscriminatorType.STRING
+)
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
-public class Habitacion {
+public abstract class Habitacion {
 
   @EmbeddedId
   private HabitacionId id;
-
-  @Enumerated(EnumType.STRING)
-  @Column(name = "tipoDeHabitacion", nullable = false)
-  private TipoHabitacion tipoDeHabitacion;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "tipoDeCama", nullable = false)
@@ -40,4 +41,8 @@ public class Habitacion {
   public Habitacion(Integer nroPiso, Integer nroHabitacion) {
     this.id = new HabitacionId(nroPiso, nroHabitacion);
   }
+  
+  @Transient
+  public abstract TipoHabitacion getTipoHabitacion();
+  
 }

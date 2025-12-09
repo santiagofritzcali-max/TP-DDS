@@ -91,10 +91,11 @@ public class EstadoHabitacionesService {
         // Preserva orden de entrada (si habitaciones viene ordenada ya, el grupo queda prolijo)
         Map<String, List<Habitacion>> porTipo = habitaciones.stream()
                 .collect(Collectors.groupingBy(
-                        h -> h.getTipoDeHabitacion().name(),
+                        h -> h.getTipoHabitacion().name(),
                         LinkedHashMap::new,
                         Collectors.toList()
                 ));
+
 
         List<GrupoHabitaciones> grupos = new ArrayList<>();
         for (Map.Entry<String, List<Habitacion>> entry : porTipo.entrySet()) {
