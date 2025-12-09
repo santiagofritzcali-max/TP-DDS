@@ -1,33 +1,26 @@
 package ar.edu.utn.frsf.sistemahotelero.pkCompuestas;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
+import java.io.Serializable;
 import lombok.*;
 
-import java.io.Serializable;
-import java.util.Objects;
-
-@Embeddable
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class HabitacionId implements Serializable {
 
-  @Column(name = "nro_piso", nullable = false)
-  private Integer nroPiso;
+    private Integer numero;
+    private Integer piso;
 
-  @Column(name = "nro_habitacion", nullable = false)
-  private Integer nroHabitacion;
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        HabitacionId that = (HabitacionId) obj;
+        return numero.equals(that.numero) && piso.equals(that.piso);
+    }
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof HabitacionId that)) return false;
-    return Objects.equals(nroPiso, that.nroPiso)
-        && Objects.equals(nroHabitacion, that.nroHabitacion);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(nroPiso, nroHabitacion);
-  }
+    @Override
+    public int hashCode() {
+        return 31 * numero.hashCode() + piso.hashCode();
+    }
 }

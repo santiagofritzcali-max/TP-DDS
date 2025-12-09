@@ -1,52 +1,31 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
-import java.util.List;
-
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
-@Table(name = "G17_estadia")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
+@Table(name = "G17_estadia_prueba")
 public class Estadia {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private String id; 
+    private Long id;
 
-    @Column(name = "fecha_ingreso", nullable = false)
+    @Column(name = "fecha_ingreso")
     private LocalDate fechaIngreso;
-
-    @Column(name = "fecha_egreso", nullable = false)
+    
+    @Column(name = "fecha_egreso")
     private LocalDate fechaEgreso;
 
-    @ManyToOne(optional = false)
+    @ManyToOne
     @JoinColumns({
-      @JoinColumn(name="nro_piso", referencedColumnName="nro_piso"),
-      @JoinColumn(name="nro_habitacion", referencedColumnName="nro_habitacion")
+        @JoinColumn(name = "habitacion_numero", referencedColumnName = "numero"),
+        @JoinColumn(name = "habitacion_piso", referencedColumnName = "piso")
     })
     private Habitacion habitacion;
-
-
-    @OneToOne(optional = true)
-    @JoinColumn(name = "reserva_id")
-    private Reserva reserva;
-
-    @ManyToMany
-    @JoinTable(
-        name = "G17_estadia_huesped",
-        joinColumns = @JoinColumn(name = "estadia_id", referencedColumnName = "id"),
-        inverseJoinColumns = {
-            @JoinColumn(name = "huesped_nro_doc", referencedColumnName = "nro_doc"),
-            @JoinColumn(name = "huesped_tipo_doc", referencedColumnName = "tipo_doc")
-        }
-    )
-    private List<Huesped> huespedes;
 }
-

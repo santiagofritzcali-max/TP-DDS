@@ -1,46 +1,38 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Entity
-@Table(name = "G17_reserva")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
+@Table(name = "G17_reserva_prueba")
 public class Reserva {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
-
-    @Column(name = "fecha_inicio", nullable = false)
+    private Long id;
+    
+    @Column(name = "fecha_inicio")
     private LocalDate fechaInicio;
-
-    @Column(name = "fecha_fin", nullable = false)
+    
+    @Column(name = "fecha_fin")
     private LocalDate fechaFin;
-
-    @Column(name = "fecha_reserva", nullable = false)
+    
+    @Column(name = "fecha_reserva")
     private LocalDate fechaReserva;
 
-    @Column(name = "nombre", nullable = false, length = 100)
     private String nombre;
-
-    @Column(name = "apellido", nullable = false, length = 100)
     private String apellido;
-
-    @Column(name = "telefono", length = 30)
     private String telefono;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumns({
-        @JoinColumn(name = "nro_piso", referencedColumnName = "nro_piso", nullable = false),
-        @JoinColumn(name = "nro_habitacion", referencedColumnName = "nro_habitacion", nullable = false)
+        @JoinColumn(name = "habitacion_numero", referencedColumnName = "numero"),
+        @JoinColumn(name = "habitacion_piso", referencedColumnName = "piso")
     })
     private Habitacion habitacion;
-
-
 }
