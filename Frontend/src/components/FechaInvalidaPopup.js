@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import "../styles/fechaInvalidaPopup.css";
+import "../styles/FechaInvalidaPopup.css";
 
 export default function FechaInvalidaPopup({
   open,

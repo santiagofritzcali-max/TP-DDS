@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom"; // NUEVO
 import "../styles/reservarHabitacionStyle.css";
+import "../styles/FechaInvalidaPopup.css";
 import { obtenerEstadoHabitaciones } from "../services/estadoHabitacionService";
-import FechaInvalidaPopup from "./components/FechaInvalidaPopup";
+import FechaInvalidaPopup from "../components/FechaInvalidaPopup";
+
 
 
 // --- Modal simple (popup) --- // NUEVO
