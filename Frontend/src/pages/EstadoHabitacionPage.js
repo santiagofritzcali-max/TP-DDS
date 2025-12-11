@@ -410,31 +410,24 @@ const EstadoHabitacionPage = () => {
                 if (!cell || cell.slug !== "reservada" || !cell.raw) return null;
 
                 const raw = cell.raw;
+                const info = raw.reservaInfo || {};
 
-                // 🔽 Acá adaptás los nombres de campos a tu DTO 🔽
                 const apellido =
-                  raw.apellidoHuesped ??
-                  raw.apellidoTitular ??
-                  raw.huespedPrincipal?.apellido ??
-                  "";
+                  info.apellido ?? raw.apellidoHuesped ?? raw.apellidoTitular ?? raw.huespedPrincipal?.apellido ?? "";
                 const nombre =
-                  raw.nombreHuesped ??
-                  raw.nombreTitular ??
-                  raw.huespedPrincipal?.nombre ??
-                  "";
-                const docTipo =
-                  raw.tipoDoc ??
-                  raw.huespedPrincipal?.tipoDoc ??
-                  "";
-                const docNro =
-                  raw.nroDoc ??
-                  raw.huespedPrincipal?.nroDoc ??
-                  "";
+                  info.nombre ?? raw.nombreHuesped ?? raw.nombreTitular ?? raw.huespedPrincipal?.nombre ?? "";
+                const telefono = info.telefono ?? raw.telefono ?? raw.huespedPrincipal?.telefono ?? "";
+                const docTipo = raw.tipoDoc ?? raw.huespedPrincipal?.tipoDoc ?? "";
+                const docNro = raw.nroDoc ?? raw.huespedPrincipal?.nroDoc ?? "";
+
+                const baseNombre = apellido || nombre ? `${apellido}, ${nombre}` : "";
+                const contacto = telefono ? ` - ${telefono}` : "";
+                const doc = docTipo || docNro ? ` (${docTipo} ${docNro})` : "";
 
                 const descripcion =
-                  apellido || nombre
-                    ? `${apellido}, ${nombre} (${docTipo} ${docNro})`
-                    : "Huésped asociado no informado (ajustar campos según DTO)";
+                  baseNombre || contacto || doc
+                    ? `${baseNombre}${contacto}${doc}`
+                    : "Reserva sin titular informado.";
 
                 return {
                   diaIso: r.diaIso,

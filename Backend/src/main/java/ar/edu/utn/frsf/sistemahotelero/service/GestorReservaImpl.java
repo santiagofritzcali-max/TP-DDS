@@ -141,9 +141,19 @@ public class GestorReservaImpl implements GestorReserva {
                 = reservaDAO.buscarPorHabitacionYRangoFechas(habitacion, desde, hasta);
 
         if (!reservas.isEmpty() && !request.isOcuparIgualSiReservada()) {
-            throw new ReglaNegocioException(
-                    "La habitación piso " + nroPiso + " número " + nroHabitacion
+            Reserva reservaConflicto = reservas.get(0);
+
+            EstadiaOcuparResponse response = new EstadiaOcuparResponse();
+            response.setRequiereConfirmacion(true);
+            response.setReservaInfo(toReservaInfo(reservaConflicto));
+            response.setNroPiso(habitacion.getId().getNroPiso());
+            response.setNroHabitacion(habitacion.getId().getNroHabitacion());
+            response.setFechaIngreso(desde);
+            response.setFechaEgreso(hasta);
+            response.setMensaje(
+                    "La habitacion piso " + nroPiso + " numero " + nroHabitacion
                             + " se encuentra reservada en ese rango de fechas");
+            return response;
         }
 
         //Tomamos una reserva (la primera) si existe
@@ -188,6 +198,8 @@ public class GestorReservaImpl implements GestorReserva {
         response.setNroHabitacion(habitacion.getId().getNroHabitacion());
         response.setFechaIngreso(guardada.getFechaIngreso());
         response.setFechaEgreso(guardada.getFechaEgreso());
+        response.setReservaInfo(toReservaInfo(reservaAsociada));
+        response.setRequiereConfirmacion(false);
         response.setMensaje(
                 "Habitación piso " + nroPiso
                         + " número " + nroHabitacion
@@ -195,5 +207,18 @@ public class GestorReservaImpl implements GestorReserva {
         );
 
         return response;
+    }
+
+    private EstadiaOcuparResponse.ReservaInfo toReservaInfo(Reserva reserva) {
+        if (reserva == null) return null;
+
+        EstadiaOcuparResponse.ReservaInfo info = new EstadiaOcuparResponse.ReservaInfo();
+        info.setId(reserva.getId());
+        info.setFechaInicio(reserva.getFechaInicio());
+        info.setFechaFin(reserva.getFechaFin());
+        info.setNombre(reserva.getNombre());
+        info.setApellido(reserva.getApellido());
+        info.setTelefono(reserva.getTelefono());
+        return info;
     }
 }

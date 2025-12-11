@@ -19,4 +19,27 @@ public class EstadiaOcuparResponse {
     private LocalDate fechaEgreso;
     
     private String mensaje;
+
+    /**
+     * Se setea en true cuando la habitación está reservada en el rango solicitado
+     * y el front debe pedir confirmación antes de ocupar igualmente.
+     */
+    private boolean requiereConfirmacion;
+
+    /**
+     * Datos básicos de la reserva encontrada, para mostrar en el popup de advertencia.
+     */
+    private ReservaInfo reservaInfo;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ReservaInfo {
+        private Long id;
+        private LocalDate fechaInicio;
+        private LocalDate fechaFin;
+        private String nombre;
+        private String apellido;
+        private String telefono;
+    }
 }

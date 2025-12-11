@@ -77,8 +77,14 @@ public class EstadoHabitacionesService {
                 );
 
                 HabitacionKey key = new HabitacionKey(id.getNroPiso(), id.getNroHabitacion());
+                Reserva reservaDelDia = EstadoHabitacion.Reservada.equals(estado)
+                        ? findReservaParaDia(reservasPorHab.get(id), dia)
+                        : null;
+
+                ReservaInfo reservaInfo = toReservaInfo(reservaDelDia);
+
                 // mandamos el nombre del enum al front (Reservada, Ocupada, Disponible, FueraServicio)
-                celdas.add(new Celda(key, estado.name()));
+                celdas.add(new Celda(key, estado.name(), reservaInfo));
             }
 
             filas.add(new FilaDia(dia, celdas));
@@ -142,6 +148,28 @@ public class EstadoHabitacionesService {
 
         // 4) Si nada de lo anterior aplica, está disponible
         return EstadoHabitacion.Disponible;
+    }
+
+    private Reserva findReservaParaDia(List<Reserva> reservas, LocalDate dia) {
+        if (reservas == null || dia == null) return null;
+
+        return reservas.stream()
+                .filter(r -> enRangoInclusivo(dia, r.getFechaInicio(), r.getFechaFin()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private ReservaInfo toReservaInfo(Reserva reserva) {
+        if (reserva == null) return null;
+
+        return new ReservaInfo(
+                reserva.getId(),
+                reserva.getFechaInicio(),
+                reserva.getFechaFin(),
+                reserva.getNombre(),
+                reserva.getApellido(),
+                reserva.getTelefono()
+        );
     }
 
     private static boolean enRangoInclusivo(LocalDate dia, LocalDate inicio, LocalDate fin) {

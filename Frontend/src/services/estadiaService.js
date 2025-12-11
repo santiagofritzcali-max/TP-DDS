@@ -11,15 +11,22 @@ export async function ocuparHabitacion(requestBody) {
     body: JSON.stringify(requestBody),
   });
 
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (_) {
+    data = null;
+  }
+
+  if (response.status === 409) {
+    return { status: response.status, data };
+  }
+
   if (!response.ok) {
-    // intento leer mensaje de error del backend
-    let msg = "Error al ocupar la habitación.";
-    try {
-      const dataError = await response.json();
-      if (dataError.mensaje) msg = dataError.mensaje;
-    } catch (_) {}
+    let msg = "Error al ocupar la habitaci?n.";
+    if (data && data.mensaje) msg = data.mensaje;
     throw new Error(msg);
   }
 
-  return await response.json(); // OcuparHabitacionResponse
+  return { status: response.status, data };
 }

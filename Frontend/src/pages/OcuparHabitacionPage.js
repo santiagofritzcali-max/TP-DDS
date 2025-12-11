@@ -49,6 +49,8 @@ const OcuparHabitacionPage = () => {
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState('');
   const [mensajeOk, setMensajeOk] = useState('');
+  const [conflictoReserva, setConflictoReserva] = useState(null);
+  const [accionTrasOcupar, setAccionTrasOcupar] = useState(null);
 
   // --- BÚSQUEDA ---
 
@@ -131,14 +133,41 @@ const OcuparHabitacionPage = () => {
 
   // --- construir body para ocuparHabitacion ---
 
-  const buildRequestBody = () => ({
+  const buildRequestBody = (forzarReserva = false) => ({
     nroPiso,
     nroHabitacion,
     fechaIngreso,
     fechaEgreso,
     huespedes: huespedesSeleccionados,
-    ocuparIgualSiReservada,
+    ocuparIgualSiReservada: forzarReserva || ocuparIgualSiReservada,
   });
+
+  const formatFecha = (iso) => {
+    if (!iso) return '-';
+    const [y, m, d] = String(iso).split('-');
+    if (!y || !m || !d) return String(iso);
+    return `${d}/${m}/${y}`;
+  };
+
+  const buildReservaLabel = (info) => {
+    if (!info) return 'Reserva existente';
+    const { apellido, nombre, telefono } = info;
+    const titular = [apellido, nombre].filter(Boolean).join(' ').trim();
+    const contacto = telefono ? ` - ${telefono}` : '';
+    return (titular || 'Reserva existente') + contacto;
+  };
+
+  const navegarDespuesDeOcupar = (accion) => {
+    if (accion === 'otra') {
+      navigate('/cu05', {
+        state: {
+          modo: 'desdeCU15',
+        },
+      });
+    } else if (accion === 'salir') {
+      navigate('/');
+    }
+  };
 
   // --- manejador de cancelar de la pantalla izq ---
 
@@ -159,57 +188,66 @@ const OcuparHabitacionPage = () => {
     setMensajeOk('');
     setMostrarAccionesPostAceptar(false);
     setPuedeBuscar(true);
+    setConflictoReserva(null);
+    setAccionTrasOcupar(null);
     // Importante: NO tocamos huespedesSeleccionados
   };
 
-  // --- manejador para cargar otra habitación (CREA estadía + vuelve al CU05) ---
-
-  const handleCargarOtraHabitacion = async () => {
+  const ejecutarOcupacion = async (accion, forzarReserva = false) => {
     setError('');
     setMensajeOk('');
     setEnviando(true);
+    setAccionTrasOcupar(accion);
+    setConflictoReserva(null);
 
     try {
-      const requestBody = buildRequestBody();
-      const resp = await ocuparHabitacion(requestBody);
+      if (forzarReserva) {
+        setOcuparIgualSiReservada(true);
+      }
 
-      setMensajeOk(resp.mensaje || 'Habitación ocupada correctamente.');
+      const requestBody = buildRequestBody(forzarReserva);
+      const result = await ocuparHabitacion(requestBody);
 
-      // Luego de crear la estadía, volvemos a ejecutar el CU05 dentro del CU15
-      navigate('/cu05', {
-        state: {
-          modo: 'desdeCU15',
-        },
-      });
+      if (result.status === 409) {
+        const data = result.data || {};
+        setConflictoReserva({
+          rango: {
+            desde: data.fechaIngreso || fechaIngreso,
+            hasta: data.fechaEgreso || fechaEgreso,
+          },
+          reservaInfo: data.reservaInfo,
+          mensaje: data.mensaje,
+        });
+        return;
+      }
+
+      const resp = (result && result.data) || {};
+      setMensajeOk(resp.mensaje || 'Habitacion ocupada correctamente.');
+
+      navegarDespuesDeOcupar(accion);
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Error al ocupar la habitación.');
+      setError(err.message || 'Error al ocupar la habitacion.');
     } finally {
       setEnviando(false);
     }
   };
 
-  // --- manejador para salir (CREA estadía + vuelve al home) ---
+  const handleCargarOtraHabitacion = async () => {
+    await ejecutarOcupacion('otra');
+  };
 
   const handleSalir = async () => {
-    setError('');
-    setMensajeOk('');
-    setEnviando(true);
+    await ejecutarOcupacion('salir');
+  };
 
-    try {
-      const requestBody = buildRequestBody();
-      const resp = await ocuparHabitacion(requestBody);
+  const cerrarConflicto = () => {
+    setConflictoReserva(null);
+  };
 
-      setMensajeOk(resp.mensaje || 'Habitación ocupada correctamente.');
-
-      // Volvemos al inicio de la app
-      navigate('/');
-    } catch (err) {
-      console.error(err);
-      setError(err.message || 'Error al ocupar la habitación.');
-    } finally {
-      setEnviando(false);
-    }
+  const handleOcuparIgual = async () => {
+    cerrarConflicto();
+    await ejecutarOcupacion(accionTrasOcupar || 'otra', true);
   };
 
   return (
@@ -390,6 +428,35 @@ const OcuparHabitacionPage = () => {
           )}
         </section>
       </div>
+
+      {conflictoReserva && (
+        <div className="modalOverlay">
+          <div className="modalContent">
+            <div className="modalTitle">CUIDADO</div>
+            <div className="modalBody">
+              <p>
+                Desde: {formatFecha(conflictoReserva.rango?.desde)} Hasta:{' '}
+                {formatFecha(conflictoReserva.rango?.hasta)}
+              </p>
+              <p>Reservado por: {buildReservaLabel(conflictoReserva.reservaInfo)}</p>
+              {conflictoReserva.mensaje && <p>{conflictoReserva.mensaje}</p>}
+            </div>
+            <div className="modalButtons">
+              <button type="button" className="btn-secondary" onClick={cerrarConflicto}>
+                Volver
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleOcuparIgual}
+                disabled={enviando}
+              >
+                {enviando ? 'Ocupando...' : 'Ocupar igual'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mensajes */}
       {error && <div className="alert alert-error">{error}</div>}

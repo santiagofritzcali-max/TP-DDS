@@ -23,7 +23,10 @@ public class EstadiaController {
             @Valid @RequestBody EstadiaOcuparRequest request) {
 
         EstadiaOcuparResponse response = gestorReserva.ocuparHabitacion(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        HttpStatus status = response.isRequiereConfirmacion()
+                ? HttpStatus.CONFLICT
+                : HttpStatus.CREATED;
+
+        return ResponseEntity.status(status).body(response);
     }
 }
-

@@ -225,3 +225,45 @@
   border: 1px solid #a3d7a3;
   color: #256029;
 }
+
+/* Modal de advertencia por habitación reservada */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modalContent {
+  background-color: #fff8d6;
+  border: 2px solid #f6c343;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  padding: 20px 24px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  color: #5a4a1f;
+}
+
+.modalTitle {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #d39e00;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modalBody {
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.modalButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
