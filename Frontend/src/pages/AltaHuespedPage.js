@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import '../styles/altaHuespedStyle.css';
+import '../styles/ui.css';
+import Modal from '../components/Modal';
 import { validarAltaHuesped } from '../validators/validarAltaHuesped';
 import { crearHuesped } from '../services/huespedService';
 //import ModalExito from '../components/modalExito';
 //import { useSearchParams } from 'react-router-dom'; 
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { DOC_TYPES } from '../constants/docTypes';
 
-const TIPO_DOC_OPCIONES = ['DNI', 'LE', 'LC', 'Pasaporte', 'Otro'];
 const POSICION_IVA_OPCIONES = [
   'ConsumidorFinal',
   'ResponsableInscripto',
@@ -112,23 +114,23 @@ export default function AltaHuespedPage() {
 
   setCargando(true);
   try {
-    const { resp, data } = await crearHuesped(form);
+    const result = await crearHuesped(form);
 
-    if (resp.status === 409) {
+    if (result.status === 409) {
       setDocDuplicado(true);
       setDocDuplicadoMsg(
-        (data && data.message) ||
+        (result.data && result.data.message) ||
           'Ya existe un huésped con ese tipo y número de documento.'
       );
       setCargando(false);
       return;
     }
 
-    if (!resp.ok) {
-      throw new Error((data && data.message) || 'Error al registrar huésped');
+    if (!result.ok) {
+      throw new Error((result.data && result.data.message) || 'Error al registrar huésped');
     }
 
-    setNombreHuesped(`${data.nombre} ${data.apellido}`);
+    setNombreHuesped(`${result.data.nombre} ${result.data.apellido}`);
     setModalExito(true);
     setForm(initialForm);
     setErrores({});
@@ -168,14 +170,14 @@ const handleCloseCancelModal = () => {
   setMensaje('');
 
   try {
-    const { resp, data } = await crearHuesped(form, { aceptarDuplicado: true });
+    const result = await crearHuesped(form, { aceptarDuplicado: true });
 
-    if (!resp.ok) {
-      throw new Error((data && data.message) || 'Error al registrar huésped');
+    if (!result.ok) {
+      throw new Error((result.data && result.data.message) || 'Error al registrar huésped');
     }
 
-    if (data && data.nombre && data.apellido) {
-      setNombreHuesped(`${data.nombre} ${data.apellido}`);
+    if (result.data && result.data.nombre && result.data.apellido) {
+      setNombreHuesped(`${result.data.nombre} ${result.data.apellido}`);
       setModalExito(true);
     } else {
       setMensaje('Huésped registrado, pero no se encontraron datos completos.');
@@ -207,104 +209,76 @@ const handleClose = () => {
   return (
   <div className="appRoot">
    {/* Modal Éxito integrado directamente */}
-    {modalExito && (
-      <div className="modalOverlay">
-        <div className="modalSuccess">
-          
-          <div className="modalTitleSuccess">
-            Alta de huésped exitosa
-          </div>
+    <Modal
+      open={modalExito}
+      title="Alta de huésped exitosa"
+      variant="success"
+      onClose={handleClose}
+      actions={
+        <>
+          <button className="btnSecondary" onClick={handleClose} type="button">
+            No
+          </button>
+          <button className="btnPrimary" onClick={handleConfirm} type="button">
+            Sí
+          </button>
+        </>
+      }
+    >
+      <p>
+        El huésped <strong>{nombreHuesped}</strong> ha sido creado satisfactoriamente.
+        ¿Desea cargar otro?
+      </p>
+    </Modal>
 
-          <div className="modalBodySuccess">
-            <p>
-              El huésped <strong>{nombreHuesped}</strong> ha sido creado satisfactoriamente.
-              ¿Desea cargar otro?
-            </p>
-          </div>
+      {/* Modal cancelar alta */}
+      <Modal
+        open={showCancelModal}
+        title="CANCELAR"
+        variant="success"
+        onClose={handleCloseCancelModal}
+        actions={
+          <>
+            <button className="btnSecondary" onClick={handleCloseCancelModal} type="button">No</button>
+            <button className="btnPrimary" onClick={handleConfirmCancel} type="button">Sí</button>
+          </>
+        }
+      >
+        <p>¿Desea cancelar el alta de huésped?</p>
+      </Modal>
 
-          <div className="modalButtonsSuccess">
-            <button 
-              className="btnSecondary" 
-              onClick={handleClose}
-            >
-              No
-            </button>
 
-            <button 
-              className="btnPrimary" 
-              onClick={handleConfirm}
-            >
-              Sí
-            </button>
-          </div>
-
-        </div>
-      </div>
-    )}
-
-   {showCancelModal && (
-  <div className="modalOverlay">
-    <div className="modalContent modalCancel">
-      <div className="modalTitle modalCancelTitle">CANCELAR</div>
-      <div className="modalBody modalCancelBody">
-        <p>¿Desea cancelar el alta de Huésped?</p>
-      </div>
-      <div className="modalButtons modalCancelButtons">
-        <button
-          className="modalButtonBase modalButtonSecondary"
-          onClick={handleCloseCancelModal}
+         {/* Modal documento duplicado */}
+    
+        <Modal
+          open={docDuplicado}
+          title="CUIDADO"
+          variant="warning"
+          onClose={() => setDocDuplicado(false)}
+          actions={
+            <>
+              <button type="button" className="btnSecondary" onClick={() => setDocDuplicado(false)}>
+                Corregir
+              </button>
+              <button
+                type="button"
+                className={`btnPrimary ${cargando ? 'btnPrimaryDisabled' : ''}`}
+                onClick={handleAceptarIgualmente}
+                disabled={cargando}
+              >
+                {cargando ? 'Guardando...' : 'Aceptar igualmente'}
+              </button>
+            </>
+          }
         >
-          No
-        </button>
-        <button
-          className="modalButtonBase modalButtonPrimary"
-          onClick={handleConfirmCancel}
-        >
-          Sí
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-
-
-
-    {docDuplicado && (
-      <div className="modalOverlay">
-        <div className="modalContent">
-          <div className="modalTitle">CUIDADO</div>
-          <div className="modalBody">
-            <strong>
-              El tipo y número de documento ya existen en el sistema.
-            </strong>
-            {docDuplicadoMsg && (
-              <>
-                <br />
-                <span>{docDuplicadoMsg}</span>
-              </>
-            )}
-          </div>
-          <div className="modalButtons">
-            <button
-              type="button"
-              className="btnSecondary"
-              onClick={() => setDocDuplicado(false)}
-            >
-              Corregir
-            </button>
-            <button
-              type="button"
-              className={`btnPrimary ${cargando ? 'btnPrimaryDisabled' : ''}`}
-              onClick={handleAceptarIgualmente}
-              disabled={cargando}
-            >
-              {cargando ? 'Guardando...' : 'Aceptar igualmente'}
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
+          <strong>El tipo y número de documento ya existen en el sistema.</strong>
+          {docDuplicadoMsg && (
+            <>
+              <br />
+              <span>{docDuplicadoMsg}</span>
+            </>
+          )}
+        </Modal>
 
     {/* CONTENIDO PRINCIPAL */}
     <main className="page">
@@ -380,13 +354,13 @@ const handleClose = () => {
                       errores.tipoDoc ? 'input inputError' : 'input'
                     }
                   >
-                    {TIPO_DOC_OPCIONES.map((op) => (
+                    {DOC_TYPES.map((op) => (
                       <option
                         key={op}
                         value={
-                          op === 'Pasaporte'
+                          op === 'PASAPORTE'
                             ? 'PASAPORTE'
-                            : op === 'Otro'
+                            : op === 'OTRO'
                             ? 'OTRO'
                             : op
                         }

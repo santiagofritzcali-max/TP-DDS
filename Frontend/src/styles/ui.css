@@ -1,0 +1,276 @@
+:root {
+  --modal-warning-bg: #fff8d6;
+  --modal-warning-border: #f6c343;
+  --modal-warning-title: #d39e00;
+
+  --modal-danger-bg: #ffecec;
+  --modal-danger-border: #d32f2f;
+  --modal-danger-title: #c62828;
+
+  --modal-info-bg: #e7f3ff;
+  --modal-info-border: #99c7ff;
+  --modal-info-title: #0a3d91;
+
+  --modal-success-bg: #f5fff5;
+  --modal-success-border: #7bc47b;
+  --modal-success-title: #2e7d32;
+}
+
+.btn {
+  min-width: 120px;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.05s ease, box-shadow 0.1s ease;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-primary {
+  background-color: #333;
+  color: #fff;
+}
+
+.btn-secondary {
+  background-color: #e0e0e0;
+  color: #444;
+}
+
+.btn-danger {
+  background-color: #c62828;
+  color: #fff;
+}
+
+.btn-success {
+  background-color: #2e7d32;
+  color: #fff;
+}
+
+/* Compat: clases antiguas */
+.btnPrimary {
+  min-width: 120px;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: none;
+  background-color: #333;
+  color: #fff;
+  cursor: pointer;
+}
+
+.btnSecondary {
+  min-width: 120px;
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: none;
+  background-color: #e0e0e0;
+  color: #444;
+  cursor: pointer;
+}
+
+.btnPrimaryDisabled,
+.btnSecondaryDisabled,
+.btnPrimary:disabled,
+.btnSecondary:disabled {
+  opacity: 0.6;
+  cursor: default;
+  pointer-events: none;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 2000;
+  padding: 12px;
+}
+
+.modalContent {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  padding: 20px 24px;
+  max-width: 560px;
+  width: 90%;
+}
+
+.modalButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.modalContentError {
+  background: var(--modal-danger-bg);
+  border: 2px solid var(--modal-danger-border);
+  color: #5a1f1f;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  padding: 20px 24px;
+  max-width: 560px;
+  width: 90%;
+}
+
+.modalWarning {
+  background: var(--modal-warning-bg);
+  border: 2px solid var(--modal-warning-border);
+  color: #4b3c0b;
+}
+
+.modalWarning .modalTitle,
+.modalWarning .modalCancelTitle {
+  color: var(--modal-warning-title);
+}
+
+.modalTitleError {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--modal-danger-title);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modalBodyError {
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.modalCancel {
+  background-color: var(--modal-success-bg);
+  border: 2px solid var(--modal-success-border);
+  color: #1f3b1f;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  padding: 20px 24px;
+  max-width: 520px;
+  width: 90%;
+}
+
+.modalCancelTitle {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--modal-success-title);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modalTitle {
+  color: inherit;
+}
+
+.modalCancelBody {
+  margin-bottom: 16px;
+  color: #000;
+  font-size: 14px;
+}
+
+.modalCancelButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  align-items: center;
+}
+
+.modalCancelButtons .modalButtonPrimary {
+  background-color: #000;
+  color: #fff;
+  border: none;
+}
+
+.modalFechaError {
+  background: var(--modal-danger-bg);
+  border: 2px solid var(--modal-danger-border);
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.modalFechaErrorTitle {
+  color: var(--modal-danger-title);
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: 0.04em;
+}
+
+.modalFechaButtons {
+  justify-content: center;
+}
+
+.modalCancelButtons .modalButtonSecondary,
+.modalButtonSecondary {
+  background-color: #e0e0e0;
+  color: #444;
+  border: none;
+}
+
+/* Refuerzos de variantes (aseguran color de fondo/borde) */
+.modal-warning-card {
+  background: var(--modal-warning-bg, #fff8d6) !important;
+  border: 2px solid var(--modal-warning-border, #f6c343) !important;
+  color: #4b3c0b;
+}
+
+.modal-warning-card .modal-title {
+  color: var(--modal-warning-title, #d39e00);
+}
+
+/* Conflicto reserva CU15 con clases únicas para evitar solapados */
+
+.alert {
+  margin-top: 16px;
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.alert-info {
+  background: #eef3ff;
+  border: 1px solid #c7d7ff;
+  color: #1a3c8b;
+}
+
+.alert-success {
+  background-color: #e7f6e7;
+  border: 1px solid #a3d7a3;
+  color: #256029;
+}
+
+.alert-error {
+  background-color: #fdecea;
+  border: 1px solid #f5c2c0;
+  color: #b02a37;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid #ddd;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.table-empty {
+  text-align: center;
+  padding: 10px 0;
+  color: #777;
+}

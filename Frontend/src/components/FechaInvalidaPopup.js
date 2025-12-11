@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import Modal from "./Modal";
 import "../styles/FechaInvalidaPopup.css";
 
 export default function FechaInvalidaPopup({
@@ -12,39 +13,29 @@ export default function FechaInvalidaPopup({
 
   useEffect(() => {
     if (!open) return;
-
     btnRef.current?.focus();
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") onClose?.();
-      if (e.key === "Enter") onClose?.();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
-  const onOverlayMouseDown = (e) => {
-    if (e.target === e.currentTarget) onClose?.();
-  };
-
   return (
-    <div className="fip-overlay" onMouseDown={onOverlayMouseDown}>
-      <div className="fip-modal" role="dialog" aria-modal="true">
-        <h3 className="fip-title">{title}</h3>
-        <p className="fip-message">{message}</p>
-
-        <div className="fip-actions">
-          <button
-            ref={btnRef}
-            className="fip-btn fip-btn--primary"
-            onClick={onClose}
-            type="button"
-          >
-            {buttonText}
-          </button>
-        </div>
-      </div>
-    </div>
+    <Modal
+      open={open}
+      title={title}
+      variant="danger"
+      onClose={onClose}
+      actions={
+        <button
+          ref={btnRef}
+          className="btnPrimary"
+          onClick={onClose}
+          type="button"
+        >
+          {buttonText}
+        </button>
+      }
+    >
+      <p className="fip-message">{message}</p>
+    </Modal>
   );
 }

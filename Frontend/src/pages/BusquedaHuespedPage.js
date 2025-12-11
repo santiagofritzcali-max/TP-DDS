@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import '../styles/busquedaHuesped.css';
+import '../styles/ui.css';
 import { buscarHuespedes } from '../services/huespedService';
+import { DOC_TYPES } from '../constants/docTypes';
 import { useNavigate } from 'react-router-dom';
+import Modal from '../components/Modal';
 
-const TIPO_DOC_OPCIONES = ['DNI', 'LE', 'LC', 'Pasaporte', 'Otro'];
 
 const initialSearchForm = {
   apellido: '',
@@ -54,7 +56,7 @@ const BusquedaHuespedPage = () => {
       setPage(1);
       setHasMore(Array.isArray(data) && data.length > 0);
     } catch (error) {
-      setMensaje('Error al realizar la búsqueda.');
+      setMensaje(error.message || 'Error al realizar la búsqueda.');
     } finally {
       setCargando(false);
     }
@@ -69,10 +71,7 @@ const BusquedaHuespedPage = () => {
       setPage(nextPage);
 
       try {
-        const response = await fetch(
-          `http://localhost:8080/api/huespedes/busqueda?apellido=${form.apellido}&nombre=${form.nombre}&nroDoc=${form.nroDoc}&tipoDoc=${form.tipoDoc}&page=${nextPage}`
-        );
-        const data = await response.json();
+        const { data } = await buscarHuespedes(form, nextPage);
 
         if (!Array.isArray(data) || data.length === 0) {
           setHasMore(false);
@@ -94,7 +93,7 @@ const BusquedaHuespedPage = () => {
           }
         }
       } catch (error) {
-        setMensaje('Error al cargar más resultados.');
+        setMensaje(error.message || 'Error al cargar más resultados.');
       } finally {
         setLoadingMore(false);
       }
@@ -194,7 +193,7 @@ const BusquedaHuespedPage = () => {
                       className="input"
                     >
                       <option value="">Seleccionar tipo de documento</option>
-                      {TIPO_DOC_OPCIONES.map((op) => (
+                      {DOC_TYPES.map((op) => (
                         <option key={op} value={op}>{op}</option>
                       ))}
                     </select>
@@ -288,90 +287,63 @@ const BusquedaHuespedPage = () => {
         </form>
       </main>
 
-      {mostrarModalSinResultados && (
-        <div className="modalOverlay">
-          <div className="modalContentError">
-            <div className="modalTitleError">
-              Huésped no encontrado
-            </div>
+      <Modal
+        open={mostrarModalSinResultados}
+        title="CUIDADO"
+        variant="warning"
+        onClose={cerrarModalSinResultados}
+        actions={
+          <>
+            <button className="btnSecondary" onClick={cerrarModalSinResultados} type="button">
+              Cancelar
+            </button>
+            <button className="btnPrimary" onClick={irAltaHuesped} type="button">
+              Dar alta de huésped
+            </button>
+          </>
+        }
+      >
+        <p>No se encontraron registros que coincidan con la búsqueda.</p>
+        <p>Verifique los datos ingresados o registre un nuevo huésped.</p>
+      </Modal>
 
-            <div className="modalBodyError">
-              No se encontraron registros que coincidan con la búsqueda. Verifique los datos ingresados o registre un nuevo huésped.
-            </div>
+      <Modal
+        open={mostrarModalSinSeleccion}
+        title="Huésped no seleccionado"
+        variant="danger"
+        onClose={cerrarModalSinSeleccion}
+        actions={
+          <>
+            <button className="btnSecondary" onClick={cerrarModalSinSeleccion} type="button">
+              Cancelar
+            </button>
+            <button className="btnPrimary" onClick={irAltaHuesped} type="button">
+              Dar alta de huésped
+            </button>
+          </>
+        }
+      >
+        <p>Debe seleccionar un huésped para continuar.</p>
+      </Modal>
 
-            <div className="modalButtons">
-              <button
-                className="modalButtonBase modalButtonSecondary"
-                onClick={cerrarModalSinResultados}
-              >
-                Cancelar
-              </button>
-
-              <button
-                className="modalButtonBase modalButtonPrimary modalButtonDanger"
-                onClick={irAltaHuesped}
-              >
-                Dar alta de huésped
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {mostrarModalSinSeleccion && (
-        <div className="modalOverlay">
-          <div className="modalContentError">
-            <div className="modalTitleError">
-              Huésped no seleccionado
-            </div>
-
-            <div className="modalBodyError">
-              Debe seleccionar un huésped para continuar.
-            </div>
-
-            <div className="modalButtons">
-              <button
-                className="modalButtonBase modalButtonSecondary"
-                onClick={cerrarModalSinSeleccion}
-              >
-                Cancelar
-              </button>
-
-              <button
-                className="modalButtonBase modalButtonPrimary modalButtonDanger"
-                onClick={irAltaHuesped}
-              >
-                Dar alta de huésped
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showCancelModal && (
-        <div className="modalOverlay">
-          <div className="modalContent modalCancel">
-            <div className="modalTitle modalCancelTitle">CANCELAR</div>
-            <div className="modalBody modalCancelBody">
-              <p>¿Desea cancelar la búsqueda de huésped?</p>
-            </div>
-            <div className="modalButtons modalCancelButtons">
-              <button
-                className="modalButtonBase modalButtonSecondary"
-                onClick={handleCloseCancelModal}
-              >
-                No
-              </button>
-              <button
-                className="modalButtonBase modalButtonPrimary"
-                onClick={handleConfirmCancel}
-              >
-                Sí
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={showCancelModal}
+        title="CANCELAR"
+        variant="success"
+        onClose={handleCloseCancelModal}
+        actions={
+          <>
+            <button className="btnSecondary" onClick={handleCloseCancelModal} type="button">
+              No
+            </button>
+            <button className="btnPrimary" onClick={handleConfirmCancel} type="button">
+              Sí
+            </button>
+          </>
+        }
+      >
+        <p>¿Desea cancelar la búsqueda de huésped?</p>
+      </Modal>
     </div>
   );
 };

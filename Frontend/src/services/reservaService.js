@@ -1,13 +1,10 @@
 // src/services/reservaService.js
+import { apiRequest } from "./apiClient";
 
-// Base del backend (podés setear REACT_APP_API_URL en .env)
-const API_ROOT = "http://localhost:8080";
-
-// Endpoints
-const HABITACIONES_API = `${API_ROOT}/api/habitaciones`;
-const RESERVAS_API = `${API_ROOT}/api/reservas`;
-// Importante: el controller está en /api/habitaciones/estado
-const HAB_ESTADO_API = `${API_ROOT}/api/habitaciones/estado`;
+// Endpoints (apiClient ya incluye /api)
+const HABITACIONES_API = "/habitaciones";
+const RESERVAS_API = "/reservas";
+const HAB_ESTADO_API = "/habitaciones/estado";
 
 // Piso fijo (según tu regla: consultas sobre un único piso)
 export const PISO_FIJO = 1;
@@ -142,50 +139,23 @@ function toGridEstadoHabitaciones(data) {
  * Helpers genéricos de fetch
  */
 
-async function getJson(url, params = {}) {
-  const u = new URL(url);
-
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      u.searchParams.append(key, value);
-    }
-  });
-
-  const resp = await fetch(u.toString(), {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
-  });
-
-  if (!resp.ok) {
-    const text = await resp.text().catch(() => "");
-    throw new Error(
-      `Error GET ${u.toString()}: ${resp.status} ${resp.statusText} ${text}`
-    );
+async function getJson(path) {
+  const result = await apiRequest(path, { method: "GET" });
+  if (!result.ok) {
+    throw new Error(result.error || `Error al obtener ${path}`);
   }
-
-  return resp.json();
+  return result.data;
 }
 
-async function postJson(url, body) {
-  const resp = await fetch(url, {
+async function postJson(path, body) {
+  const result = await apiRequest(path, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
     body: JSON.stringify(body),
   });
-
-  if (!resp.ok) {
-    const text = await resp.text().catch(() => "");
-    throw new Error(
-      `Error POST ${url}: ${resp.status} ${resp.statusText} ${text}`
-    );
+  if (!result.ok) {
+    throw new Error(result.error || `Error al enviar ${path}`);
   }
-
-  return resp.json();
+  return result.data;
 }
 
 const addOneDayIso = (iso) => {
@@ -235,8 +205,8 @@ export const buscarDisponibilidad = async (fechaDesdeIso, fechaHastaIso) => {
     hasta: addOneDayIso(fechaHastaIso),
   };
 
-  // Llamada al backend con fetch
-  const data = await getJson(HAB_ESTADO_API, params);
+  const query = new URLSearchParams(params).toString();
+  const data = await getJson(`${HAB_ESTADO_API}?${query}`);
   // data: { grupos, filas, dias, desde, hasta }
 
   // Filtramos filas para mostrar solo entre desde/hasta inclusive

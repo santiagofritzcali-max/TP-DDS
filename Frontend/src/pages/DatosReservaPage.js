@@ -1,19 +1,11 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/reservarHabitacionStyle.css";
+import "../styles/ui.css";
 import { confirmarReserva } from "../services/reservaService";
 import PopupCancelarReserva from "../components/PopupCancelarReserva";
+import { ROOM_TYPES_BY_NUMBER } from "../constants/roomTypes";
 
-const ROOM_TYPES_BY_NUMBER = {
-  "101": "Individual Estándar",
-  "102": "Individual Estándar",
-  "201": "Doble Estándar",
-  "203": "Doble Estándar",
-  "301": "Doble Superior",
-  "302": "Doble Superior",
-  "404": "Superior Family",
-  "500": "Suite",
-};
 
 const toIsoFromDMY = (dmy) => {
   if (!dmy) return "";

@@ -1,8 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/ocuparHabitacionStyle.css';
+import '../styles/ui.css';
+import Modal from '../components/Modal';
 import { ocuparHabitacion } from '../services/estadiaService';
 import { buscarHuespedes } from '../services/huespedService';
+import Button from '../components/Button';
+import Alert from '../components/Alert';
+import DataTable from '../components/DataTable';
+import { formatFecha } from '../utils/date';
+import { validarOcuparHabitacion } from '../validators/validarOcuparHabitacion';
+import { parseOcuparNavigationState } from '../utils/ocupacionState';
+import { DOC_TYPES } from '../constants/docTypes';
 
 const OcuparHabitacionPage = () => {
   const location = useLocation();
@@ -14,7 +23,8 @@ const OcuparHabitacionPage = () => {
     fechaIngreso = '',
     fechaEgreso = '',
     ocupaSobreReserva = false, // por si viene desde el popup de "ocupar igualmente"
-  } = location.state || {};
+    reservaInfo = null,
+  } = parseOcuparNavigationState(location.state || {});
 
   // Derivamos nroPiso y nroHabitacion (enteros) a partir del string "piso-hab"
   const { nroPiso, nroHabitacion } = useMemo(() => {
@@ -32,7 +42,7 @@ const OcuparHabitacionPage = () => {
   // --- estados ---
   const [filtroNombre, setFiltroNombre] = useState('');
   const [filtroApellido, setFiltroApellido] = useState('');
-  const [filtroTipoDoc, setFiltroTipoDoc] = useState('DNI');
+  const [filtroTipoDoc, setFiltroTipoDoc] = useState(DOC_TYPES[0]);
   const [filtroNroDoc, setFiltroNroDoc] = useState('');
 
   const [resultados, setResultados] = useState([]);
@@ -117,13 +127,9 @@ const OcuparHabitacionPage = () => {
     setError('');
     setMensajeOk('');
 
-    if (!nroPiso || !nroHabitacion || !fechaIngreso || !fechaEgreso) {
-      setError('Faltan datos de habitación o fechas.');
-      return;
-    }
-
-    if (huespedesSeleccionados.length === 0) {
-      setError('Debe seleccionar al menos un huésped antes de continuar.');
+    const validacion = validarOcuparHabitacion(buildRequestBody());
+    if (validacion.length > 0) {
+      setError(validacion[0]);
       return;
     }
 
@@ -142,12 +148,6 @@ const OcuparHabitacionPage = () => {
     ocuparIgualSiReservada: forzarReserva || ocuparIgualSiReservada,
   });
 
-  const formatFecha = (iso) => {
-    if (!iso) return '-';
-    const [y, m, d] = String(iso).split('-');
-    if (!y || !m || !d) return String(iso);
-    return `${d}/${m}/${y}`;
-  };
 
   const buildReservaLabel = (info) => {
     if (!info) return 'Reserva existente';
@@ -196,16 +196,23 @@ const OcuparHabitacionPage = () => {
   const ejecutarOcupacion = async (accion, forzarReserva = false) => {
     setError('');
     setMensajeOk('');
+    setConflictoReserva(null);
+
+    const requestBody = buildRequestBody(forzarReserva);
+    const validacion = validarOcuparHabitacion(requestBody);
+    if (validacion.length > 0) {
+      setError(validacion[0]);
+      return;
+    }
+
     setEnviando(true);
     setAccionTrasOcupar(accion);
-    setConflictoReserva(null);
 
     try {
       if (forzarReserva) {
         setOcuparIgualSiReservada(true);
       }
 
-      const requestBody = buildRequestBody(forzarReserva);
       const result = await ocuparHabitacion(requestBody);
 
       if (result.status === 409) {
@@ -306,9 +313,11 @@ const OcuparHabitacionPage = () => {
                   value={filtroTipoDoc}
                   onChange={(e) => setFiltroTipoDoc(e.target.value)}
                 >
-                  <option value="DNI">DNI</option>
-                  <option value="LC">LC</option>
-                  <option value="PASAPORTE">Pasaporte</option>
+                  {DOC_TYPES.map((op) => (
+                    <option key={op} value={op}>
+                      {op}
+                    </option>
+                  ))}
                 </select>
               </label>
 
@@ -323,20 +332,12 @@ const OcuparHabitacionPage = () => {
             </div>
 
             <div className="form-actions-left">
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={handleCancelar}
-              >
+              <Button variant="secondary" type="button" onClick={handleCancelar}>
                 Cancelar
-              </button>
-              <button
-                type="submit"
-                className="btn-primary"
-                disabled={buscando || !puedeBuscar}
-              >
+              </Button>
+              <Button type="submit" variant="primary" disabled={buscando || !puedeBuscar}>
                 {buscando ? 'Buscando...' : 'Aceptar'}
-              </button>
+              </Button>
             </div>
           </form>
         </section>
@@ -346,123 +347,108 @@ const OcuparHabitacionPage = () => {
           <h2 className="panel-title">Resultados de búsqueda</h2>
 
           <div className="tabla-wrapper">
-            <table className="tabla-huespedes">
-              <thead className="tabla-encabezado">
-                <tr>
-                  <th>Apellido</th>
-                  <th>Nombre</th>
-                  <th>Tipo de Documento</th>
-                  <th>Nro. de Documento</th>
-                  <th>Seleccionar</th>
+            <DataTable
+              headers={[
+                'Apellido',
+                'Nombre',
+                'Tipo de Documento',
+                'Nro. de Documento',
+                'Seleccionar',
+              ]}
+              data={resultados}
+              className="tabla-huespedes"
+              headerClassName="tabla-encabezado"
+              emptyClassName="tabla-empty"
+              emptyMessage="No hay resultados para mostrar."
+              renderRow={(h) => (
+                <tr key={`${h.tipoDoc}-${h.nroDoc}`}>
+                  <td>{h.apellido}</td>
+                  <td>{h.nombre}</td>
+                  <td>{h.tipoDoc}</td>
+                  <td>{h.nroDoc}</td>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={estaSeleccionado(h)}
+                      onChange={() => toggleSeleccionHuesped(h)}
+                    />
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {resultados.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="tabla-empty">
-                      No hay resultados para mostrar.
-                    </td>
-                  </tr>
-                ) : (
-                  resultados.map((h) => (
-                    <tr key={`${h.tipoDoc}-${h.nroDoc}`}>
-                      <td>{h.apellido}</td>
-                      <td>{h.nombre}</td>
-                      <td>{h.tipoDoc}</td>
-                      <td>{h.nroDoc}</td>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={estaSeleccionado(h)}
-                          onChange={() => toggleSeleccionHuesped(h)}
-                        />
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+              )}
+            />
           </div>
 
           {/* Aceptar (derecha) */}
           <div className="panel-footer-right">
             <div />
-            <button
+            <Button
               type="button"
-              className="btn-primary"
+              variant="primary"
               onClick={handleAceptarSeleccion}
               disabled={enviando || mostrarAccionesPostAceptar}
             >
               Aceptar
-            </button>
+            </Button>
           </div>
           {/* Botones inferiores: sólo visibles después de Aceptar */}
           {mostrarAccionesPostAceptar && (
             <div className="panel-footer-bottom">
               <div className="panel-footer-bottom-left">
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={handleSeguirCargando}
-                >
+                <Button variant="secondary" type="button" onClick={handleSeguirCargando}>
                   Seguir cargando
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="secondary"
                   type="button"
-                  className="btn-secondary"
                   onClick={handleCargarOtraHabitacion}
                   disabled={enviando}
                 >
                   {enviando ? 'Guardando...' : 'Cargar otra habitación'}
-                </button>
+                </Button>
               </div>
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={handleSalir}
-                disabled={enviando}
-              >
+              <Button variant="secondary" type="button" onClick={handleSalir} disabled={enviando}>
                 {enviando ? 'Guardando...' : 'Salir'}
-              </button>
+              </Button>
             </div>
           )}
         </section>
       </div>
 
       {conflictoReserva && (
-        <div className="modalOverlay">
-          <div className="modalContent">
-            <div className="modalTitle">CUIDADO</div>
-            <div className="modalBody">
-              <p>
-                Desde: {formatFecha(conflictoReserva.rango?.desde)} Hasta:{' '}
-                {formatFecha(conflictoReserva.rango?.hasta)}
-              </p>
-              <p>Reservado por: {buildReservaLabel(conflictoReserva.reservaInfo)}</p>
-              {conflictoReserva.mensaje && <p>{conflictoReserva.mensaje}</p>}
-            </div>
-            <div className="modalButtons">
-              <button type="button" className="btn-secondary" onClick={cerrarConflicto}>
+        <Modal
+          open
+          title="CUIDADO"
+          variant="warning"
+          onClose={cerrarConflicto}
+          actions={
+            <>
+              <Button type="button" variant="secondary" onClick={cerrarConflicto}>
                 Volver
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="btn-primary"
+                variant="primary"
                 onClick={handleOcuparIgual}
                 disabled={enviando}
               >
-                {enviando ? 'Ocupando...' : 'Ocupar igual'}
-              </button>
-            </div>
-          </div>
-        </div>
+                {enviando ? "Ocupando..." : "Ocupar igualmente"}
+              </Button>
+            </>
+          }
+        >
+          <p>En el rango seleccionado hay días donde la habitación está reservada.</p>
+          <p>
+            Desde: {formatFecha(conflictoReserva.rango?.desde)} Hasta:{" "}
+            {formatFecha(conflictoReserva.rango?.hasta)}
+          </p>
+          <p>Reservado por: {buildReservaLabel(conflictoReserva.reservaInfo)}</p>
+          {conflictoReserva.mensaje && <p>{conflictoReserva.mensaje}</p>}
+        </Modal>
       )}
 
       {/* Mensajes */}
-      {error && <div className="alert alert-error">{error}</div>}
-      {mensajeOk && (
-        <div className="alert alert-success">{mensajeOk}</div>
-      )}
+      {error && <Alert type="error">{error}</Alert>}
+      {mensajeOk && <Alert type="success">{mensajeOk}</Alert>}
     </div>
   );
 };

@@ -75,28 +75,10 @@
   color: #b02a37;
 }
 
-.modalOverlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(242,139,130,0.28);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
 
 
-.modalContentError {
-  background-color: #ffecec;
-  padding: 20px 24px;
-  border-radius: 6px;
-  max-width: 420px;
-  width: 90%;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  font-size: 14px;
-  border: 2px solid #f28b82;
-  color: #5a1f1f;
-}
+
+
 
 
 .modalTitleError {
@@ -116,12 +98,7 @@
 }
 
 
-.modalButtons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  align-items: center;
-}
+
 
 .modalButtonBase {
   min-width: 140px;
@@ -221,30 +198,8 @@
   gap: 16px;
 }
 
-.btnPrimary {
-  min-width: 120px;
-  padding: 10px 18px;
-  font-size: 14px;
-  border-radius: 2px;
-  border: none;
-  background-color: #333;
-  color: #fff;
-  cursor: pointer;
-}
-
 .btnPrimaryDanger {
   background-color: #c62828;
-}
-
-.btnSecondary {
-  min-width: 120px;
-  padding: 10px 18px;
-  font-size: 14px;
-  border-radius: 2px;
-  border: none;
-  background-color: #e0e0e0;
-  color: #444;
-  cursor: pointer;
 }
 
 .searchActions {
@@ -333,25 +288,17 @@
 
 /* Modal cancelar en verde */
 .modalCancel {
-  background-color: #f5fff5;       /* tenue verde */
+  background-color: var(--modal-success-bg, #f5fff5);       /* tenue verde */
   padding: 20px 24px;
   border-radius: 6px;
   max-width: 420px;
   width: 90%;
   box-shadow: 0 4px 12px rgba(0,0,0,0.25);
   font-size: 14px;
-  border: 2px solid #7bc47b;
+  border: 2px solid var(--modal-success-border, #7bc47b);
   color: #1f3b1f;
 }
 
-.modalCancelTitle {
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #1b5e20;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
 
 .modalCancelBody {
   margin-bottom: 16px;

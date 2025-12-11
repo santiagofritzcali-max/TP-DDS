@@ -1,57 +1,22 @@
-// src/pages/ReservarHabitacionPage.js
+﻿// src/pages/ReservarHabitacionPage.js
 import React, { useState, useMemo } from "react";
 import "../styles/reservarHabitacionStyle.css";
+import "../styles/ui.css";
 import { buscarDisponibilidad } from "../services/reservaService";
 import { validarRangoFechas } from "../validators/validarReservaHabitacion";
 import { useNavigate } from "react-router-dom";
-import PopupHabitacionNoDisponible from "../components/PopupHabitacionNoDisponible"; // 👈 NUEVO
+import PopupHabitacionNoDisponible from "../components/PopupHabitacionNoDisponible"; // ðŸ‘ˆ NUEVO
+import { parseDdMmYyyy, formatDateFromObj } from "../utils/date";
+import { ROOM_TYPES_BY_NUMBER, PRETTY_ROOM_TYPE } from "../constants/roomTypes";
+import FechaInvalidaPopup from "../components/FechaInvalidaPopup";
+import Modal from "../components/Modal";
 
-// Mapeo nro habitación (para mostrar tipo en el panel derecho)
-const ROOM_TYPES_BY_NUMBER = {
-  "101": "Individual Estándar",
-  "102": "Individual Estándar",
-  "201": "Doble Estándar",
-  "203": "Doble Estándar",
-  "301": "Doble Superior",
-  "302": "Doble Superior",
-  "404": "Superior Family",
-  "500": "Suite",
-};
+// Mapeo nro Habitación (para mostrar tipo en el panel derecho)
 
 // Igual que en CU05: pasa del enum del back a texto legible
 const prettyTipoHabitacion = (raw) => {
   const t = String(raw || "").toUpperCase();
-  const map = {
-    INDIVIDUAL_ESTANDAR: "Individual Estándar",
-    DOBLE_ESTANDAR: "Doble Estándar",
-    DOBLE_SUPERIOR: "Doble Superior",
-    SUPERIOR_FAMILY: "Superior Family",
-    SUITE: "Suite",
-  };
-  return map[t] || raw;
-};
-
-// parsear "dd/MM/yyyy" a Date
-const parseDdMmYyyy = (s) => {
-  if (!s) return null;
-  const [dd, mm, yyyy] = s.split("/");
-  return new Date(
-    Number(yyyy),
-    Number(mm) - 1,
-    Number(dd),
-    0,
-    0,
-    0,
-    0
-  );
-};
-
-// formatear Date otra vez a "dd/MM/yyyy"
-const formatDateFromObj = (date) => {
-  const dd = String(date.getDate()).padStart(2, "0");
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const yyyy = String(date.getFullYear());
-  return `${dd}/${mm}/${yyyy}`;
+  return PRETTY_ROOM_TYPE[t] || raw;
 };
 
 const ReservarHabitacionPage = () => {
@@ -64,8 +29,10 @@ const ReservarHabitacionPage = () => {
   const [errorFechas, setErrorFechas] = useState("");
   const [erroresFechas, setErroresFechas] = useState({});
   const [buscando, setBuscando] = useState(false);
+  const [showFechasPopup, setShowFechasPopup] = useState(false);
+  const [mensajeFechasPopup, setMensajeFechasPopup] = useState("");
 
-  // 👇 NUEVO: estado para popup
+  // ðŸ‘‡ NUEVO: estado para popup
   const [showNoDispPopup, setShowNoDispPopup] = useState(false);
   const [rangoNoDisp, setRangoNoDisp] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -73,7 +40,7 @@ const ReservarHabitacionPage = () => {
 
   const navigate = useNavigate();
 
-  // Agrupamos columnas por tipo de habitación (para header doble como CU05)
+  // Agrupamos columnas por tipo de Habitación (para header doble como CU05)
   const gruposColumnas = useMemo(() => {
     if (!Array.isArray(columnas) || columnas.length === 0) return [];
 
@@ -101,10 +68,12 @@ const ReservarHabitacionPage = () => {
     setErrorFechas("");
     setMensajeSinHabitaciones("");
     setErroresFechas({});
+    setShowFechasPopup(false);
+    setMensajeFechasPopup("");
 
     const errs = {};
-    if (!fechaDesde) errs.desde = "El campo Desde no puede quedar vacío.";
-    if (!fechaHasta) errs.hasta = "El campo Hasta no puede quedar vacío.";
+    if (!fechaDesde) errs.desde = "El campo Desde no puede quedar vacÃ­o.";
+    if (!fechaHasta) errs.hasta = "El campo Hasta no puede quedar vacÃ­o.";
 
     if (Object.keys(errs).length > 0) {
       setErroresFechas(errs);
@@ -114,6 +83,8 @@ const ReservarHabitacionPage = () => {
     const error = validarRangoFechas(fechaDesde, fechaHasta);
     if (error) {
       setErrorFechas(error);
+      setMensajeFechasPopup(error);
+      setShowFechasPopup(true);
       return;
     }
 
@@ -141,17 +112,17 @@ const ReservarHabitacionPage = () => {
     } catch (err) {
       console.error(err);
       setMensajeSinHabitaciones(
-        "Ocurrió un error al buscar la disponibilidad."
+        "OcurriÃ³ un error al buscar la disponibilidad."
       );
     }
     setBuscando(false);
   };
 
   // -------------------------------------------------------------------
-  // Helpers de selección / estado
+  // Helpers de selecciÃ³n / estado
   // -------------------------------------------------------------------
 
-  // 👉 NUEVO: ahora permitimos seleccionar cualquier estado
+  // ðŸ‘‰ NUEVO: ahora permitimos seleccionar cualquier estado
   const toggleCell = (fecha, nro /*, estado */) => {
     const key = `${fecha}-${nro}`;
     const yaSeleccionada = selectedCells.some(
@@ -191,7 +162,7 @@ const ReservarHabitacionPage = () => {
   };
 
   // -------------------------------------------------------------------
-  // ORDENAMIENTO BÁSICO POR FECHA Y HABITACIÓN (celdas individuales)
+  // ORDENAMIENTO BÃSICO POR FECHA Y HABITACIÃ“N (celdas individuales)
   // -------------------------------------------------------------------
   const habitacionesOrdenadas = useMemo(() => {
     return [...selectedCells].sort((a, b) => {
@@ -202,7 +173,7 @@ const ReservarHabitacionPage = () => {
   }, [selectedCells]);
 
   // -------------------------------------------------------------------
-  // AGRUPAR POR HABITACIÓN + RANGOS CONSECUTIVOS DE FECHAS
+  // AGRUPAR POR HABITACIÃ“N + RANGOS CONSECUTIVOS DE FECHAS
   // Resultado: [{ nro, fechaIngreso, fechaEgreso }]
   // -------------------------------------------------------------------
   const reservasAgrupadas = useMemo(() => {
@@ -280,7 +251,7 @@ const ReservarHabitacionPage = () => {
 
     if (fechasNoDisp.length === 0) return null;
 
-    // Fechas únicas ordenadas
+    // Fechas Ãºnicas ordenadas
     const ordenadas = [...new Set(fechasNoDisp)].sort((f1, f2) => {
       const d1 = parseDdMmYyyy(f1);
       const d2 = parseDdMmYyyy(f2);
@@ -290,7 +261,7 @@ const ReservarHabitacionPage = () => {
     return {
       desde: ordenadas[0],
       hasta: ordenadas[ordenadas.length - 1],
-      cantidad: ordenadas.length, // 👈 cantidad de fechas no disponibles
+      cantidad: ordenadas.length, // ðŸ‘ˆ cantidad de fechas no disponibles
     };
   };
 
@@ -327,7 +298,7 @@ const ReservarHabitacionPage = () => {
     });
   };
 
-  // 👈 NUEVO: cerrar popup -> limpiar selección
+  // ðŸ‘ˆ NUEVO: cerrar popup -> limpiar selecciÃ³n
   const handleCloseNoDispPopup = () => {
     setShowNoDispPopup(false);
     setSelectedCells([]); // limpia grilla y panel derecho
@@ -439,7 +410,7 @@ const ReservarHabitacionPage = () => {
                   {/* Encabezado igual a CU05 */}
                   <tr>
                     <th className="col-dia" rowSpan={2}>
-                      Días de
+                      DÃ­as de
                     </th>
 
                     {gruposColumnas.length > 0 ? (
@@ -587,66 +558,69 @@ const ReservarHabitacionPage = () => {
         </aside>
       </main>
 
-      {/* POPUP DE HABITACIÓN NO DISPONIBLE */}
+      {/* POPUP DE HABITACIÃ“N NO DISPONIBLE */}
       {showNoDispPopup && (
         <PopupHabitacionNoDisponible
-          rango={rangoNoDisp}   // 👈 le pasamos {desde, hasta, cantidad}
+          rango={rangoNoDisp}   
           onClose={handleCloseNoDispPopup}
         />
       )}
 
-      {showSinDisponibilidadPopup && (
-        <div className="modalOverlayReservaError">
-          <div className="modalContentErrorReserva">
-            <div className="modalTitleErrorReserva">Error de reserva</div>
-            <div className="modalBodyErrorReserva">
-              No hay habitaciones disponibles para las fechas seleccionadas.
-            </div>
-            <div className="modalButtonsErrorReserva">
-              <button
-                className="modalButtonBase modalButtonErrorReserva"
-                onClick={handleCloseSinDisponibilidad}
-                type="button"
-              >
-                Salir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={showSinDisponibilidadPopup}
+        title="Error de reserva"
+        variant="danger"
+        onClose={handleCloseSinDisponibilidad}
+        actions={
+          <button
+            className="btnPrimary"
+            onClick={handleCloseSinDisponibilidad}
+            type="button"
+          >
+            Salir
+          </button>
+        }
+      >
+        <p>No hay habitaciones disponibles para las fechas seleccionadas.</p>
+      </Modal>
 
-      {showCancelModal && (
-        <div className="modalOverlay">
-          <div className="modalContent modalCancel">
-            <div className="modalTitle modalCancelTitle">CANCELAR</div>
-            <div className="modalBody modalCancelBody">
-              <p>¿Desea cancelar la Reserva?</p>
-            </div>
-            <div className="modalButtons modalCancelButtons">
-              <button
-                className="modalButtonBase modalButtonSecondary"
-                onClick={handleCloseCancelModal}
-                type="button"
-              >
-                No
-              </button>
-              <button
-                className="modalButtonBase modalButtonPrimary"
-                onClick={handleConfirmCancel}
-                type="button"
-              >
-                Si
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
+      <Modal
+        open={showCancelModal}
+        title="CANCELAR"
+        variant="success"
+        onClose={handleCloseCancelModal}
+        actions={
+          <>
+            <button className="btnSecondary" onClick={handleCloseCancelModal} type="button">
+              No
+            </button>
+            <button className="btnPrimary" onClick={handleConfirmCancel} type="button">
+              Sí
+            </button>
+          </>
+        }
+      >
+        <p>¿Desea cancelar la Reserva?</p>
+      </Modal>
+
+
+      <FechaInvalidaPopup
+        open={showFechasPopup}
+        message={mensajeFechasPopup || "Las fechas ingresadas son inconsistentes. Revise el rango."}
+        buttonText="Volver"
+        onClose={() => setShowFechasPopup(false)}
+      />
 
     </div>
   );
 };
 
 export default ReservarHabitacionPage;
+
+
+
+
 
 
 

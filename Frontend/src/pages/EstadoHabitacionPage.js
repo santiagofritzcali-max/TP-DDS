@@ -1,20 +1,60 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom"; // NUEVO
 import "../styles/reservarHabitacionStyle.css";
+import '../styles/ui.css';
 import "../styles/FechaInvalidaPopup.css";
+import { PRETTY_ROOM_TYPE } from "../constants/roomTypes";
 import { obtenerEstadoHabitaciones } from "../services/estadoHabitacionService";
 import FechaInvalidaPopup from "../components/FechaInvalidaPopup";
+import { formatDia } from "../utils/date";
+import { getReservaDescripcion } from "../utils/mappers";
+import { buildOcuparNavigationState } from "../utils/ocupacionState";
 
 
 
 // --- Modal simple (popup) --- // NUEVO
-const PopupModal = ({ open, title, children, actions, onClose }) => {
+const PopupModal = ({ open, title, children, actions, onClose, variant = "default", className = "" }) => {
   if (!open) return null;
+
+  const palette = {
+    warning: {
+      bg: "var(--modal-warning-bg, #fff8d6)",
+      border: "2px solid var(--modal-warning-border, #f6c343)",
+      title: "var(--modal-warning-title, #d39e00)",
+      color: "#4b3c0b",
+    },
+    danger: {
+      bg: "var(--modal-danger-bg, #ffecec)",
+      border: "2px solid var(--modal-danger-border, #d32f2f)",
+      title: "var(--modal-danger-title, #c62828)",
+      color: "#5a1f1f",
+    },
+  };
+
+  const variantStyles = palette[variant] || null;
 
   return (
     <div className="modal-overlay">
-      <div className="modal-box">
-        {title && <h2 className="modal-title">{title}</h2>}
+      <div
+        className={`modal-box ${className}`.trim()}
+        style={
+          variantStyles
+            ? {
+                background: variantStyles.bg,
+                border: variantStyles.border,
+                color: variantStyles.color,
+              }
+            : undefined
+        }
+      >
+        {title && (
+          <h2
+            className="modal-title"
+            style={variantStyles ? { color: variantStyles.title } : undefined}
+          >
+            {title}
+          </h2>
+        )}
         <div className="modal-body">{children}</div>
         <div className="modal-actions">
           {actions}
@@ -29,25 +69,9 @@ const PopupModal = ({ open, title, children, actions, onClose }) => {
   );
 };
 
-// --- Helpers ---
-const formatDia = (isoDate) => {
-  // "YYYY-MM-DD" => "DD/MM"
-  if (!isoDate) return "";
-  const [y, m, d] = String(isoDate).split("-");
-  if (!y || !m || !d) return String(isoDate);
-  return `${d}/${m}`;
-};
-
 const prettyTipoHabitacion = (raw) => {
   const t = String(raw || "").toUpperCase();
-  const map = {
-    INDIVIDUAL_ESTANDAR: "Individual Estándar",
-    DOBLE_ESTANDAR: "Doble Estándar",
-    DOBLE_SUPERIOR: "Doble Superior",
-    SUPERIOR_FAMILY: "Superior Family",
-    SUITE: "Suite",
-  };
-  return map[t] || raw;
+  return PRETTY_ROOM_TYPE[t] || raw;
 };
 
 const keyToString = (k) => {
@@ -351,12 +375,12 @@ const EstadoHabitacionPage = () => {
       if (seleccionExitosaHandledRef.current) return;
       seleccionExitosaHandledRef.current = true;
 
-      const payload = seleccionExitosa.payload;
-      setSeleccionExitosa({ open: false, payload: null });
+    const payload = seleccionExitosa.payload;
+    setSeleccionExitosa({ open: false, payload: null });
 
-      if (payload) {
-        navigate("/cu15", { state: payload });
-      }
+    if (payload) {
+        navigate("/cu15", { state: buildOcuparNavigationState(payload) });
+    }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -364,38 +388,33 @@ const EstadoHabitacionPage = () => {
   }, [seleccionExitosa, navigate]);
 
   // NUEVO: contenido del popup según tipo
-  let popupTitle = "";
-  let popupBody = null;
-  let popupActions = null;
+  const buildPopupView = () => {
+    if (!popup.open) return { open: false };
 
-  if (popup.open) {
     const rango = popup.data?.rango;
-    const rangoTexto =
-      rango ? `${formatDia(rango.desde)} al ${formatDia(rango.hasta)}` : "";
+    const rangoTexto = rango ? `${formatDia(rango.desde)} al ${formatDia(rango.hasta)}` : "";
 
     switch (popup.type) {
       case "bloqueo-ocupada":
-        popupTitle = "Rango no válido";
-        popupBody = (
-          <p>
-            En el rango seleccionado ({rangoTexto}) hay días donde la habitación
-            está <strong>ocupada</strong> o <strong>fuera de servicio</strong>.
-            Por favor seleccione otro rango de fechas.
-          </p>
-        );
-        popupActions = (
-          <button className="btn-primary" onClick={cerrarPopup}>
-            Aceptar
-          </button>
-        );
-        break;
+        return {
+          open: true,
+          variant: "danger",
+          title: "Rango no válido",
+          body: (
+            <p>
+              En el rango seleccionado ({rangoTexto}) hay días donde la habitación
+              está <strong>ocupada</strong> o <strong>fuera de servicio</strong>.
+              Por favor seleccione otro rango de fechas.
+            </p>
+          ),
+          actions: (
+            <button className="btn-primary" onClick={cerrarPopup}>
+              Aceptar
+            </button>
+          ),
+        };
 
       case "reservada-conflicto": {
-        const rango = popup.data?.rango;
-        const rangoTexto =
-          rango ? `${formatDia(rango.desde)} al ${formatDia(rango.hasta)}` : "";
-
-        // Armamos el detalle de las reservas en ese rango
         let reservasDetalle = [];
         if (normalized && seleccion && rango) {
           const habIndex = normalized.columnOrder.findIndex(
@@ -407,117 +426,105 @@ const EstadoHabitacionPage = () => {
               .filter((r) => r.diaIso >= rango.desde && r.diaIso <= rango.hasta)
               .map((r) => {
                 const cell = r.cells[habIndex];
-                if (!cell || cell.slug !== "reservada" || !cell.raw) return null;
-
-                const raw = cell.raw;
-                const info = raw.reservaInfo || {};
-
-                const apellido =
-                  info.apellido ?? raw.apellidoHuesped ?? raw.apellidoTitular ?? raw.huespedPrincipal?.apellido ?? "";
-                const nombre =
-                  info.nombre ?? raw.nombreHuesped ?? raw.nombreTitular ?? raw.huespedPrincipal?.nombre ?? "";
-                const telefono = info.telefono ?? raw.telefono ?? raw.huespedPrincipal?.telefono ?? "";
-                const docTipo = raw.tipoDoc ?? raw.huespedPrincipal?.tipoDoc ?? "";
-                const docNro = raw.nroDoc ?? raw.huespedPrincipal?.nroDoc ?? "";
-
-                const baseNombre = apellido || nombre ? `${apellido}, ${nombre}` : "";
-                const contacto = telefono ? ` - ${telefono}` : "";
-                const doc = docTipo || docNro ? ` (${docTipo} ${docNro})` : "";
-
-                const descripcion =
-                  baseNombre || contacto || doc
-                    ? `${baseNombre}${contacto}${doc}`
-                    : "Reserva sin titular informado.";
+                if (!cell || cell.slug !== "reservada") return null;
 
                 return {
                   diaIso: r.diaIso,
-                  descripcion,
+                  descripcion: getReservaDescripcion(cell),
                 };
               })
               .filter(Boolean);
           }
         }
 
-        popupTitle = "Habitación reservada";
-        popupBody = (
-          <>
-            <p>
-              En el rango seleccionado ({rangoTexto}) hay días donde la
-              habitación está <strong>reservada</strong>.
-            </p>
+        return {
+          open: true,
+          title: "CUIDADO",
+          variant: "warning",
+          body: (
+            <>
+              <p>
+                En el rango seleccionado ({rangoTexto}) hay días donde la
+                habitación está <strong>reservada</strong>.
+              </p>
 
-            {reservasDetalle.length > 0 && (
-              <>
-                <p>Detalle de reservas en el rango:</p>
-                <ul>
-                  {reservasDetalle.map((r) => (
-                    <li key={r.diaIso}>
-                      Día {formatDia(r.diaIso)} - {r.descripcion}
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
+              {reservasDetalle.length > 0 && (
+                <>
+                  <p>Detalle de reservas en el rango:</p>
+                  <ul>
+                    {reservasDetalle.map((r) => (
+                      <li key={r.diaIso}>
+                        Día {formatDia(r.diaIso)} - {r.descripcion}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
 
-            <p>
-              ¿Desea <strong>ocupar igualmente</strong> la habitación en esas
-              fechas o prefiere volver a la grilla?
-            </p>
-          </>
-        );
-        popupActions = (
-          <>
-            <button className="btn-secondary" onClick={cerrarPopup}>
-              Volver
-            </button>
-            <button
-              className="btn-primary"
-              onClick={() => {
-                cerrarPopup();
-                navigate("/cu15", {
-                  state: {
-                    desdeCU15: true,
-                    numeroHabitacion: seleccion?.habitacionId,
-                    fechaIngreso: rango?.desde,
-                    fechaEgreso: rango?.hasta,
-                    ocupaSobreReserva: true,
-                  },
-                });
-              }}
-            >
-              Ocupar igualmente
-            </button>
-          </>
-        );
-        break;
+              <p>
+                ¿Desea <strong>ocupar igualmente</strong> la habitación en esas
+                fechas o prefiere volver a la grilla?
+              </p>
+            </>
+          ),
+          actions: (
+            <>
+              <button className="btn-secondary" onClick={cerrarPopup}>
+                Volver
+              </button>
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  cerrarPopup();
+                  navigate("/cu15", {
+                    state: buildOcuparNavigationState({
+                      habitacionId: seleccion?.habitacionId,
+                      fechaIngreso: rango?.desde,
+                      fechaEgreso: rango?.hasta,
+                      ocupaSobreReserva: true,
+                      reservaInfo: reservasDetalle?.[0]?.descripcion || null,
+                    }),
+                  });
+                }}
+              >
+                Ocupar igualmente
+              </button>
+            </>
+          ),
+        };
       }
 
-
       case "sin-habitaciones":
-        popupTitle = "Sin habitaciones válidas";
-        popupBody = (
-          <p>
-            No se encontraron habitaciones válidas para el rango seleccionado.
-          </p>
-        );
-        popupActions = (
-          <button className="btn-primary" onClick={cerrarPopup}>
-            Aceptar
-          </button>
-        );
-        break;
+        return {
+          open: true,
+          title: "Sin habitaciones válidas",
+          body: (
+            <p>
+              No se encontraron habitaciones válidas para el rango seleccionado.
+            </p>
+          ),
+          actions: (
+            <button className="btn-primary" onClick={cerrarPopup}>
+              Aceptar
+            </button>
+          ),
+        };
 
       default:
-        popupTitle = "Mensaje";
-        popupBody = <p>Ocurrió una condición no manejada.</p>;
-        popupActions = (
-          <button className="btn-primary" onClick={cerrarPopup}>
-            Cerrar
-          </button>
-        );
-        break;
+        return {
+          open: true,
+          title: "Mensaje",
+          body: <p>Ocurrió una condición no manejada.</p>,
+          actions: (
+            <button className="btn-primary" onClick={cerrarPopup}>
+              Cerrar
+            </button>
+          ),
+        };
     }
-  }
+  };
+
+  const popupView = buildPopupView();
 
   return (
     <div className="reserva-page">
@@ -705,12 +712,13 @@ const EstadoHabitacionPage = () => {
 
       {/* NUEVO: popup para conflictos / mensajes del CU15 */}
       <PopupModal
-        open={popup.open}
-        title={popupTitle}
+        open={popupView.open}
+        title={popupView.title}
+        variant={popupView.variant}
         onClose={cerrarPopup}
-        actions={popupActions}
+        actions={popupView.actions}
       >
-        {popupBody}
+        {popupView.body}
       </PopupModal>
 
       {showCancelModal && (

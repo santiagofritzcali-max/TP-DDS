@@ -1,6 +1,6 @@
 export const validarAltaHuesped = (form) => {
   const errs = {};
-  const soloLetras = /^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/;
+  const soloLetras = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü ]+$/;
   const soloNumeros = /^[0-9]+$/;
 
     // Datos personales
@@ -64,7 +64,7 @@ export const validarAltaHuesped = (form) => {
     //Piso
     if (form.direccion.piso.trim() && !/^[0-9]+$/.test(form.direccion.piso.trim())) {errs["direccion.piso"] = "El campo piso solo puede contener números";}
     //Departamento
-    if (form.direccion.departamento.trim() && !/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+$/.test(form.direccion.departamento.trim())) {errs["direccion.departamento"] = "El campo Departamento solo puede contener letras y espacios";}
+    if (form.direccion.departamento.trim() && !/^[A-Za-zÁÉÍÓÚáéíóúÑñÜü ]+$/.test(form.direccion.departamento.trim())) {errs["direccion.departamento"] = "El campo Departamento solo puede contener letras y espacios";}
 
     return errs;
 };
