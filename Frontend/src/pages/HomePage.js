@@ -40,7 +40,7 @@ const HomePage = () => {
         >
           Ejecutar CU 09 
         </button>
-
+        
         <button
           className="home-cu-btn"
           onClick={() => navigate('/cu05', { state: { modo: 'desdeCU15' } })}

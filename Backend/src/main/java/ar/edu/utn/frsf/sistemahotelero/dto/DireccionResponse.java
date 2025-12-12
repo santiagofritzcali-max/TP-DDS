@@ -30,5 +30,7 @@ public class DireccionResponse {
         this.ciudad = direccion.getCiudad();
         this.provincia = direccion.getProvincia();
         this.codigoPostal = direccion.getCodigoPostal();
+        this.localidad = direccion.getLocalidad();
+        this.pais = direccion.getPais();
     }
 }

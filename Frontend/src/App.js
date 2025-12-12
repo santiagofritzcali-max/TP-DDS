@@ -6,6 +6,7 @@ import Navbar from "./components/navbar";
 import HomePage from "./pages/HomePage";
 import BusquedaHuespedPage from "./pages/BusquedaHuespedPage";
 import AltaHuespedPage from "./pages/AltaHuespedPage";
+import ModificarHuespedPage from "./pages/ModificarHuespedPage";
 import ReservarHabitacionPage from "./pages/ReservarHabitacionPage";
 import EstadoHabitacionesPage from "./pages/EstadoHabitacionPage";
 import DatosReservaPage from "./pages/DatosReservaPage";
@@ -34,6 +35,8 @@ function App() {
             <Route path="/cu05" element={<EstadoHabitacionesPage />} />
 
             <Route path="/cu09" element={<AltaHuespedPage />} />
+
+            <Route path="/cu10" element={<ModificarHuespedPage />} />
 
             <Route path="/cu15" element={<OcuparHabitacionPage />} />
           </Routes>

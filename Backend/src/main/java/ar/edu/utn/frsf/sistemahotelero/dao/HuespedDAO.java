@@ -8,6 +8,8 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.repository.query.Param;
 
 @Repository
 public interface HuespedDAO extends CrudRepository<Huesped, HuespedId> {
@@ -18,4 +20,20 @@ public interface HuespedDAO extends CrudRepository<Huesped, HuespedId> {
             "(COALESCE(:nroDoc, '') = '' OR h.nroDoc = :nroDoc) AND " +
             "(COALESCE(:tipoDoc, '') = '' OR h.tipoDoc = :tipoDoc)")
     List<Huesped> buscarPorCriterios(String apellido, String nombre, String nroDoc, TipoDocumento tipoDoc);
+    
+    @Modifying
+    @Query("""
+           UPDATE Huesped h
+           SET h.tipoDoc = :nuevoTipo,
+               h.nroDoc = :nuevoNro
+           WHERE h.tipoDoc = :viejoTipo
+             AND h.nroDoc = :viejoNro
+           """)
+    int actualizarDocumento(
+            @Param("viejoTipo") TipoDocumento viejoTipo,
+            @Param("viejoNro") String viejoNro,
+            @Param("nuevoTipo") TipoDocumento nuevoTipo,
+            @Param("nuevoNro") String nuevoNro
+    );
+    
 }

@@ -106,9 +106,7 @@ const BusquedaHuespedPage = () => {
       return;
     }
     if (!huespedSeleccionado) return;
-    setMensaje(
-      `Huesped seleccionado: ${huespedSeleccionado.apellido} - ${huespedSeleccionado.nombre} - ${huespedSeleccionado.nroDoc} (${huespedSeleccionado.tipoDoc})`
-    );
+    navigate('/cu10', { state: { huesped: huespedSeleccionado } });
   };
 
   const cerrarModalSinResultados = () => {

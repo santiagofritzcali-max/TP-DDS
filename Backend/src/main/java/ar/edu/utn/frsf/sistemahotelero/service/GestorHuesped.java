@@ -1,6 +1,7 @@
 package ar.edu.utn.frsf.sistemahotelero.service;
 
 import ar.edu.utn.frsf.sistemahotelero.dto.*;
+import ar.edu.utn.frsf.sistemahotelero.enums.TipoDocumento;
 
 import java.util.List;
 
@@ -14,4 +15,11 @@ public interface GestorHuesped {
     
     // Método para dar de alta un nuevo huesped
     HuespedResponse darAltaHuesped(HuespedRequest huespedRequest);
+    
+    //Metodo para dar de baja un huesped
+    HuespedResponse eliminarHuesped(String nroDoc, TipoDocumento tipoDoc);
+    
+    HuespedResponse modificarHuesped(HuespedModificarRequest req);
+
+    boolean puedeEliminar(String nroDoc, TipoDocumento tipoDoc);
 }

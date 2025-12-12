@@ -1,5 +1,6 @@
 package ar.edu.utn.frsf.sistemahotelero.controller;
 
+import ar.edu.utn.frsf.sistemahotelero.dto.HuespedModificarRequest;
 import ar.edu.utn.frsf.sistemahotelero.dto.HuespedResponse;
 import ar.edu.utn.frsf.sistemahotelero.dto.HuespedRequest;
 import ar.edu.utn.frsf.sistemahotelero.dto.HuespedSearchRequest;
@@ -12,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import ar.edu.utn.frsf.sistemahotelero.enums.TipoDocumento;
+import ar.edu.utn.frsf.sistemahotelero.excepciones.HuespedDuplicadoException;
+import ar.edu.utn.frsf.sistemahotelero.excepciones.ReglaNegocioException;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
@@ -61,4 +64,54 @@ public class HuespedController {
           // Devolvemos los resultados con un 200 OK
           return ResponseEntity.ok(huespedesResponse);
       }
+
+    @GetMapping("/{tipoDoc}/{nroDoc}/puede-eliminar")
+    public ResponseEntity<?> puedeEliminar(@PathVariable TipoDocumento tipoDoc,
+                                           @PathVariable String nroDoc) {
+        try {
+            gestorHuesped.puedeEliminar(nroDoc, tipoDoc);
+            return ResponseEntity.ok(Collections.singletonMap("message", "Se puede eliminar."));
+        } catch (ReglaNegocioException e) {
+            return ResponseEntity.badRequest()
+                    .body(Collections.singletonMap("message", e.getMessage()));
+        }
+    }
+    
+    
+    @DeleteMapping("/{tipoDoc}/{nroDoc}")
+    public ResponseEntity<?> eliminarHuesped(@PathVariable TipoDocumento tipoDoc,
+                                             @PathVariable String nroDoc) {
+        try {
+            HuespedResponse eliminado = gestorHuesped.eliminarHuesped(nroDoc, tipoDoc);
+            String msg = String.format(
+                    "Los datos del huésped %s %s, %s %s han sido eliminados del sistema. Presione cualquier tecla para continuar.",
+                    eliminado.getNombre(),
+                    eliminado.getApellido(),
+                    eliminado.getTipoDoc(),
+                    eliminado.getNroDoc()
+            );
+            return ResponseEntity.ok(Collections.singletonMap("message", msg));
+        } catch (ReglaNegocioException e) {
+            return ResponseEntity.badRequest()
+                    .body(Collections.singletonMap("message", e.getMessage()));
+        }
+    }
+    
+    @PutMapping("")
+    public ResponseEntity<?> modificarHuesped(@RequestBody HuespedModificarRequest request) {
+        try {
+            HuespedResponse actualizado = gestorHuesped.modificarHuesped(request);
+            return ResponseEntity.ok(actualizado);
+        } catch (HuespedDuplicadoException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Collections.singletonMap("message", ex.getMessage()));
+        } catch (ReglaNegocioException ex) {
+            return ResponseEntity.badRequest()
+                    .body(Collections.singletonMap("message", ex.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity.internalServerError()
+                    .body(Collections.singletonMap("message", "Error inesperado"));
+        }
+    }
+    
 }    
