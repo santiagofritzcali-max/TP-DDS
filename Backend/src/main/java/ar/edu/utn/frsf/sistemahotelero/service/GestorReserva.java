@@ -4,7 +4,6 @@ import ar.edu.utn.frsf.sistemahotelero.dto.EstadiaOcuparRequest;
 import ar.edu.utn.frsf.sistemahotelero.dto.EstadiaOcuparResponse;
 import ar.edu.utn.frsf.sistemahotelero.dto.ReservaHabitacionRequest;
 import ar.edu.utn.frsf.sistemahotelero.model.Reserva;
-
 import java.util.List;
 
 public interface GestorReserva {
@@ -27,4 +26,10 @@ public interface GestorReserva {
      * (ya lo tenías, lo dejamos igual)
      */
     EstadiaOcuparResponse ocuparHabitacion(EstadiaOcuparRequest request);
+    
+    //Para CU06
+    List<Reserva> buscarReservas(String apellido, String nombre);
+
+    List<Reserva> cancelarReservas(List<Long> idsReservas);
+
 }

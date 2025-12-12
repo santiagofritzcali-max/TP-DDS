@@ -41,10 +41,12 @@ public class GestorReservaImpl implements GestorReserva {
 
     @Autowired
     private GestorHabitacion gestorHabitacion;
+    
+    @Autowired
+    private PoliticaCancelacion politicaCancelacion;
 
-    // =============================================================
-    // CU04 - Reservar habitaciones (N habitaciones, cada una con su rango)
-    // =============================================================
+    
+    // CU04 - Reservar habitaciones 
     @Override
     @Transactional
     public List<Reserva> reservarHabitaciones(List<ReservaHabitacionRequest> reservasRequest,
@@ -100,9 +102,8 @@ public class GestorReservaImpl implements GestorReserva {
         return reservasCreadas;
     }
 
-    // =============================================================
-    // CU05 - Ocupar habitación (SIN CAMBIOS)
-    // =============================================================
+    
+    // CU05 - OCUPAR HABITACION
     @Override
     @Transactional
     public EstadiaOcuparResponse ocuparHabitacion(EstadiaOcuparRequest request) {
@@ -220,5 +221,46 @@ public class GestorReservaImpl implements GestorReserva {
         info.setApellido(reserva.getApellido());
         info.setTelefono(reserva.getTelefono());
         return info;
+    }
+    
+    //CU06 - CANCELAR RESERVAS
+    @Override
+    public List<Reserva> buscarReservas(String apellido, String nombre){
+        
+        if (apellido == null || apellido.isBlank()) throw new IllegalArgumentException("El campo apellido no puede estar vacío.");
+        String apell = apellido.trim();
+        
+        //veo si el nombre esta vacio o no para filtar posteriormente
+        String nom = null;
+        if (nombre != null && !nombre.isBlank()) nom = nombre.trim();
+        
+        if(nom == null)return reservaDAO.buscarPorApellido(apell);
+        else return reservaDAO.buscarPorApellidoYNombre(apell, nom);
+    }
+
+    @Override
+    @Transactional
+    public List<Reserva> cancelarReservas(List<Long> idsReservas){
+        
+        if (idsReservas == null || idsReservas.isEmpty()) throw new IllegalArgumentException("Debe seleccionar al menos una reserva a cancelar.");
+        
+        //Manejar el caso de IDs repetidos
+        Set<Long> idsUnicos = new LinkedHashSet<>(idsReservas);
+        
+        /*Se añaden las reservas en base a la lista de IDs
+        que se pasan en el Set idsUnicos*/
+        List<Reserva> reservas = new ArrayList<>();
+        reservaDAO.findAllById(idsUnicos).forEach(reservas::add);
+        
+        //Validar si algun ID no existe 
+        if (reservas.size() != idsUnicos.size()) throw new IllegalArgumentException("Una o más reservas seleccionadas no existen.");
+        
+        //Validar si la reserva puede cancelarse, PATRON STRATEGY
+        for (Reserva r : reservas)politicaCancelacion.validarCancelacion(r);
+        
+        //Cancelo las reservas
+        reservaDAO.deleteAll(reservas);
+        
+        return reservas;
     }
 }

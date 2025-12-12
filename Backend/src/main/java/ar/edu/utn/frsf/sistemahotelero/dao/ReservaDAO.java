@@ -34,4 +34,24 @@ public interface ReservaDAO extends CrudRepository<Reserva, Long> {
     List<Reserva> findSolapadas(
                 @Param("desde") LocalDate desde, 
                 @Param("hasta") LocalDate hasta);
+    
+    // CU06 - CANCELAR RESERVA
+    
+    @Query("""
+            SELECT r
+            FROM Reserva r
+            WHERE LOWER(r.apellido) LIKE LOWER(CONCAT(:apellido, '%'))
+            ORDER BY r.apellido, r.nombre, r.fechaInicio
+           """)
+    List<Reserva> buscarPorApellido(@Param("apellido") String apellido);
+    
+     @Query("""
+            SELECT r
+            FROM Reserva r
+            WHERE LOWER(r.apellido) LIKE LOWER(CONCAT(:apellido, '%'))
+              AND LOWER(r.nombre)  LIKE LOWER(CONCAT(:nombre,  '%'))
+            ORDER BY r.apellido, r.nombre, r.fechaInicio
+           """)
+    List<Reserva> buscarPorApellidoYNombre(@Param("apellido") String apellido,@Param("nombre") String nombre);
+    
 }
