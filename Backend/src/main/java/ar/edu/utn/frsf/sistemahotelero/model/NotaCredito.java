@@ -35,7 +35,7 @@ public class NotaCredito {
     private int numero;  
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "factura_id", referencedColumnName = "idFactura")  
+    @JoinColumn(name = "factura_id", referencedColumnName = "id_factura")
     private Factura factura;  
 
     @Temporal(TemporalType.DATE)
