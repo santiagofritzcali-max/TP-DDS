@@ -1,9 +1,6 @@
 package ar.edu.utn.frsf.sistemahotelero.controller;
 
-import ar.edu.utn.frsf.sistemahotelero.dto.ReservaHabitacionRequest;
-import ar.edu.utn.frsf.sistemahotelero.dto.ReservaMapper;
-import ar.edu.utn.frsf.sistemahotelero.dto.ReservaRequest;
-import ar.edu.utn.frsf.sistemahotelero.dto.ReservaResponse;
+import ar.edu.utn.frsf.sistemahotelero.dto.*;
 import ar.edu.utn.frsf.sistemahotelero.model.Reserva;
 import ar.edu.utn.frsf.sistemahotelero.service.GestorReserva;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,14 +19,13 @@ public class ReservaController {
     @Autowired
     private GestorReserva gestorReserva;
 
+    // CU04 - Reservar (ya estaba)
     @PostMapping
     public ResponseEntity<?> reservar(@RequestBody ReservaRequest request) {
 
         try {
-            // Validaciones de formato y consistencia
             validarReservaRequest(request);
 
-            // Si llega acá, todo está validado
             List<Reserva> reservas = gestorReserva.reservarHabitaciones(
                     request.getReservas(),
                     request.getNombre().trim(),
@@ -44,26 +40,70 @@ public class ReservaController {
             return ResponseEntity.ok(respuesta);
         }
         catch (IllegalArgumentException | IllegalStateException e) {
-            // Errores de validación (del controller o del servicio)
             return ResponseEntity.badRequest().body(e.getMessage());
         }
         catch (Exception e) {
-            // Cualquier otro error inesperado
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Ocurrió un error inesperado al procesar la reserva.");
         }
     }
 
-    // ====================================================================
-    // Validación de la request
-    // ====================================================================
-    private void validarReservaRequest(ReservaRequest request) {
 
+    // CU06 - Buscar reservas para la grilla
+    @GetMapping("/buscar")
+    public ResponseEntity<?> buscarReservas(@RequestParam(name = "apellido") String apellido, 
+            @RequestParam(name = "nombre", required = false) String nombre) {
+        try {
+            
+            //Valido que el apellido no este vacio
+            if (apellido == null || apellido.isBlank()) return ResponseEntity.badRequest().body("El campo apellido no puede estar vacío.");
+
+            //Busco las reservas
+            List<Reserva> reservas = gestorReserva.buscarReservas(apellido.trim(), (nombre == null || nombre.isBlank()) ? null : nombre.trim());
+
+            List<CancelarReservaItemDTO> respuesta = reservas.stream().map(ReservaMapper::toCancelarItem).toList();
+
+            //Flujo alternativo 4.A
+            if (reservas.isEmpty())return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No existen reservas para los criterios de búsqueda");
+            return ResponseEntity.ok(respuesta);
+        }
+        catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ocurrió un error inesperado al buscar reservas.");
+        }
+    }
+
+    // CU06 - Cancelar reservas seleccionadas en la grilla
+    @PostMapping("/cancelar")
+    public ResponseEntity<?> cancelarReservas(@RequestBody CancelarReservasRequest request) {
+        try {
+            if (request == null || request.getIdsReservas() == null || request.getIdsReservas().isEmpty()) {
+                return ResponseEntity.badRequest().body("Debe seleccionar al menos una reserva a cancelar.");
+            }
+
+            gestorReserva.cancelarReservas(request.getIdsReservas());
+
+            return ResponseEntity.ok("Reservas canceladas correctamente.");
+        }
+        catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Ocurrió un error inesperado al cancelar las reservas.");
+        }
+    }
+
+
+    // CU04 - Validación de la request  
+
+    private void validarReservaRequest(ReservaRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("El pedido de reserva no puede ser nulo.");
         }
 
-        // ---- Validar lista de reservas por habitación ----
         if (request.getReservas() == null || request.getReservas().isEmpty()) {
             throw new IllegalArgumentException("Se debe seleccionar al menos una habitación.");
         }
@@ -95,14 +135,12 @@ public class ReservaController {
                         "La fecha de fin no puede ser anterior a la fecha de inicio para la habitación " + nro + ".");
             }
 
-            // (Opcional, pero razonable)
             if (fin.isBefore(hoy)) {
                 throw new IllegalArgumentException(
                         "No se pueden realizar reservas completamente en el pasado para la habitación " + nro + ".");
             }
         }
 
-        // ---- Validación de nombre ----
         String nombre = request.getNombre();
         if (nombre == null || nombre.isBlank()) {
             throw new IllegalArgumentException("El nombre es obligatorio.");
@@ -115,7 +153,6 @@ public class ReservaController {
             throw new IllegalArgumentException("El nombre solo puede contener letras y espacios.");
         }
 
-        // ---- Validación de apellido ----
         String apellido = request.getApellido();
         if (apellido == null || apellido.isBlank()) {
             throw new IllegalArgumentException("El apellido es obligatorio.");
@@ -128,7 +165,6 @@ public class ReservaController {
             throw new IllegalArgumentException("El apellido solo puede contener letras y espacios.");
         }
 
-        // ---- Validación de teléfono ----
         String telefono = request.getTelefono();
         if (telefono == null || telefono.isBlank()) {
             throw new IllegalArgumentException("El teléfono es obligatorio.");
