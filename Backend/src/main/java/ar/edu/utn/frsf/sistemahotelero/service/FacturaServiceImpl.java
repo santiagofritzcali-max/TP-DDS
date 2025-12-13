@@ -214,7 +214,10 @@ public class FacturaServiceImpl implements FacturaService {
 
             // Si tiene CUIT, buscamos por CUIT; si no, buscamos PF por doc (ConsumidorFinal)
             if (h.getCuit() != null && !h.getCuit().isBlank()) {
+                String norm = normalizeCuit(h.getCuit());
                 return responsableDAO.findByCuit(h.getCuit())
+                        .or(() -> responsableDAO.findByCuitNormalized(norm))
+                        .or(() -> responsableDAO.findByTipoDocAndNroDoc(h.getTipoDoc(), h.getNroDoc()))
                         .orElseThrow(() -> new IllegalArgumentException(
                                 "No se encontro Responsable de Pago para el huesped seleccionado"));
             } else {
@@ -225,6 +228,11 @@ public class FacturaServiceImpl implements FacturaService {
         }
 
         throw new IllegalArgumentException("Debe indicar un huesped responsable o un CUIT de tercero");
+    }
+
+    private String normalizeCuit(String cuit) {
+        if (cuit == null) return "";
+        return cuit.replaceAll("[^0-9]", "");
     }
 
     private double calcularIva(double subtotal, TipoFact tipoFactura) {

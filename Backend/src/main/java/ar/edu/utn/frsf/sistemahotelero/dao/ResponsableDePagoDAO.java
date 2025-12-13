@@ -28,6 +28,13 @@ public interface ResponsableDePagoDAO extends CrudRepository<ResponsableDePago, 
     @Query("""
             SELECT r
             FROM ResponsableDePago r
+            WHERE REPLACE(REPLACE(r.cuit, '-', ''), ' ', '') = :cuit
+           """)
+    Optional<ResponsableDePago> findByCuitNormalized(@Param("cuit") String cuit);
+
+    @Query("""
+            SELECT r
+            FROM ResponsableDePago r
             WHERE r.tipoDoc = :tipoDoc
               AND r.nroDoc = :nroDoc
            """)

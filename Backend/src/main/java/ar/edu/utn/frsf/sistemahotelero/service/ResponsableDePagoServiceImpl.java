@@ -59,13 +59,17 @@ public class ResponsableDePagoServiceImpl implements ResponsableDePagoService {
         validarCuitUnicoSiCorresponde(request.getCuit(), null);
 
         ResponsableDePago guardado;
-        if (request.getHuespedTipoDoc() != null && request.getHuespedNroDoc() != null) {
-            guardado = crearResponsableFisico(request);
-        } else {
+        // Si se informó CUIT, siempre lo tratamos como PJ (tercero o huésped con CUIT)
+        if (request.getCuit() != null && !request.getCuit().isBlank()) {
             PersonaJuridica responsable = new PersonaJuridica();
             mapDatosBasicosJuridico(responsable, request);
             responsable.setDireccion(crearOactualizarDireccion(null, request.getDireccion()));
             guardado = responsableDAO.save(responsable);
+        } else if (request.getHuespedTipoDoc() != null && request.getHuespedNroDoc() != null) {
+            // Sin CUIT: PF (Consumidor Final) buscable por doc
+            guardado = crearResponsableFisico(request);
+        } else {
+            throw new ReglaNegocioException("Debe indicar CUIT o tipo/nro de documento de huesped");
         }
         sincronizarCuitHuesped(request);
         return toResponse(guardado);
@@ -186,11 +190,16 @@ public class ResponsableDePagoServiceImpl implements ResponsableDePagoService {
         // Para PF sin CUIT (Consumidor Final) no validamos
         if (cuit == null || cuit.isBlank()) return;
 
+        String norm = normalizeCuit(cuit);
         boolean existe;
         if (idAExcluir == null) {
-            existe = responsableDAO.existsByCuit(cuit);
+            existe = responsableDAO.existsByCuit(cuit)
+                    || responsableDAO.findByCuitNormalized(norm).isPresent();
         } else {
-            existe = responsableDAO.existsByCuitAndIdNot(cuit, idAExcluir);
+            existe = responsableDAO.existsByCuitAndIdNot(cuit, idAExcluir)
+                    || responsableDAO.findByCuitNormalized(norm)
+                    .filter(r -> !r.getId().equals(idAExcluir))
+                    .isPresent();
         }
         if (existe) {
             throw new ReglaNegocioException("El CUIT ya existe en el sistema");
@@ -214,5 +223,10 @@ public class ResponsableDePagoServiceImpl implements ResponsableDePagoService {
         if (valor == null) return null;
         String trimmed = valor.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String normalizeCuit(String cuit) {
+        if (cuit == null) return "";
+        return cuit.replaceAll("[^0-9]", "");
     }
 }

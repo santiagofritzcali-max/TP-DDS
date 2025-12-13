@@ -192,8 +192,26 @@ const FacturarPage = () => {
     );
   };
 
-  const handleGenerar = async () => {
+  const validarItemsSeleccionados = () => {
+    const items = preview?.items || [];
+    const requeridos = items.filter((i) => i.tipo === "ESTADIA" || i.descripcion?.includes("*"));
+    const faltaRequerido = requeridos.some((i) => !itemsSeleccionados.includes(i.id));
+    if (faltaRequerido) {
+      setErrorModal("Debe seleccionar los items obligatorios (estadia y consumos marcados).");
+      return false;
+    }
+    return true;
+  };
+
+  const handleConfirmarSeleccion = () => {
     if (!preview) return;
+    validarItemsSeleccionados();
+  };
+
+  const handleImprimir = async () => {
+    if (!preview) return;
+    if (!validarItemsSeleccionados()) return;
+
     setGenerando(true);
     const payload = {
       estadiaId: preview.estadiaId,
@@ -208,9 +226,12 @@ const FacturarPage = () => {
     }
     setFacturaFinal(data);
     setSuccessModal(
-      `Factura Nº ${data.numero || data.facturaId} generada correctamente.`
+      `Factura NA? ${data.numero || data.facturaId} generada correctamente.`
     );
+    window.print();
   };
+
+
 
   const resetTodo = () => {
     setNumeroHabitacion("");
@@ -335,93 +356,105 @@ const FacturarPage = () => {
 
   const renderPreview = () => (
     <div className="factura-page">
-      <section className="factura-panel left">
-        <div className="responsable-box">
-          <div className="avatar-placeholder" />
-          <div>
-            <p className="label">Persona responsable</p>
-            <p className="responsable-text">
-              {preview?.responsable?.nombreOrazonSocial} - {preview?.responsable?.cuit}
-            </p>
-            <p className="muted small">IVA: {preview?.responsable?.posicionIVA}</p>
-          </div>
-        </div>
+      {(() => {
+        const items = preview?.items || [];
+        const seleccionados = items.filter((i) => itemsSeleccionados.includes(i.id));
+        const totalEstadia = seleccionados
+          .filter((i) => i.tipo === "ESTADIA")
+          .reduce((acc, i) => acc + (i.monto || 0), 0);
+        const totalConsumos = seleccionados
+          .filter((i) => i.tipo === "SERVICIO")
+          .reduce((acc, i) => acc + (i.monto || 0), 0);
+        const subtotal = totalEstadia + totalConsumos;
+        const esFacturaA = preview?.responsable?.tipoFactura === "A";
+        const iva = esFacturaA ? subtotal * 0.21 : 0;
+        const total = subtotal + iva;
 
-        <hr />
+        return (
+          <>
+            <section className="factura-panel left">
+              <div className="responsable-box">
+                <div className="avatar-placeholder" />
+                <div>
+                  <p className="label">Persona responsable</p>
+                  <p className="responsable-text">
+                    {preview?.responsable?.nombreOrazonSocial} - {preview?.responsable?.cuit}
+                  </p>
+                  <p className="muted small">IVA: {preview?.responsable?.posicionIVA}</p>
+                </div>
+              </div>
 
-        <h3>Items pendientes a facturar</h3>
-        <div className="items-list">
-          {(preview?.items || []).map((item) => (
-            <label key={item.id} className="check-line">
-              <input
-                type="checkbox"
-                checked={itemsSeleccionados.includes(item.id)}
-                onChange={() => toggleItem(item.id)}
-              />
-              <span>
-                {item.descripcion} {item.descripcion?.includes("*") ? "" : <span className="required">*</span>}
-              </span>
-            </label>
-          ))}
+              <hr />
 
-        </div>
+              <h3>Items pendientes a facturar</h3>
+              <div className="items-list">
+                {(preview?.items || []).map((item) => (
+                  <label key={item.id} className="check-line">
+                    <input
+                      type="checkbox"
+                      checked={itemsSeleccionados.includes(item.id)}
+                      onChange={() => toggleItem(item.id)}
+                    />
+                    <span>
+                      {item.descripcion} {item.descripcion?.includes("*") ? "" : <span className="required">*</span>}
+                    </span>
+                  </label>
+                ))}
 
-        <div className="actions-row">
+              </div>
+
+              <div className="actions-row">
           <button className="btn btn-secondary" type="button" onClick={resetTodo}>
             Cancelar
           </button>
           <button
             className="btn btn-primary"
             type="button"
-            onClick={handleGenerar}
-            disabled={generando}
+            onClick={handleConfirmarSeleccion}
           >
-            {generando ? "Generando..." : "Aceptar"}
+            Aceptar
           </button>
         </div>
       </section>
 
-      <section className="factura-panel right">
-        <h2>Detalles de factura</h2>
-        <div className="detalle-line">
-          <span>VALOR DE ESTADIA</span>
-          <strong>${preview?.items?.find((i) => i.tipo === "ESTADIA")?.monto?.toFixed(2) || "0.00"}</strong>
-        </div>
-        <div className="detalle-line">
-          <span>CONSUMOS DE HABITACIÓN</span>
-          <strong>
-            $
-            {preview?.items
-              ?.filter((i) => i.tipo === "SERVICIO")
-              .reduce((acc, i) => acc + (i.monto || 0), 0)
-              .toFixed(2) || "0.00"}
-          </strong>
-        </div>
-        <hr />
-        <div className="detalle-line">
-          <span>SUBTOTAL</span>
-          <strong>${preview?.subtotal?.toFixed(2) || "0.00"}</strong>
-        </div>
-        <div className="detalle-line">
-          <span>IVA</span>
-          <strong>${preview?.iva?.toFixed(2) || "0.00"}</strong>
-        </div>
-        <div className="detalle-line">
-          <span>FACTURA TIPO</span>
-          <strong>{preview?.responsable?.tipoFactura}</strong>
-        </div>
-        <hr />
-        <div className="detalle-line total">
-          <span>TOTAL</span>
-          <strong>${preview?.total?.toFixed(2) || "0.00"}</strong>
-        </div>
+            <section className="factura-panel right">
+              <h2>Detalles de factura</h2>
+              <div className="detalle-line">
+                <span>VALOR DE ESTADIA</span>
+                <strong>${totalEstadia.toFixed(2)}</strong>
+              </div>
+              <div className="detalle-line">
+                <span>CONSUMOS DE HABITACI?N</span>
+                <strong>${totalConsumos.toFixed(2)}</strong>
+              </div>
+              <hr />
+              <div className="detalle-line">
+                <span>SUBTOTAL</span>
+                <strong>${subtotal.toFixed(2)}</strong>
+              </div>
+              <div className="detalle-line">
+                <span>IVA</span>
+                <strong>${iva.toFixed(2)}</strong>
+              </div>
+              <div className="detalle-line">
+                <span>FACTURA TIPO</span>
+                <strong>{preview?.responsable?.tipoFactura}</strong>
+              </div>
+              <hr />
+              <div className="detalle-line total">
+                <span>TOTAL</span>
+                <strong>${total.toFixed(2)}</strong>
+              </div>
 
         <div className="actions-row right-align">
-          <button className="btn btn-primary" type="button" onClick={() => window.print()}>
-            Imprimir
+          <button className="btn btn-primary" type="button" onClick={handleImprimir} disabled={generando}>
+            {generando ? "Generando..." : "Imprimir"}
           </button>
         </div>
-      </section>
+            </section>
+          </>
+        );
+      })()}
     </div>
   );
 

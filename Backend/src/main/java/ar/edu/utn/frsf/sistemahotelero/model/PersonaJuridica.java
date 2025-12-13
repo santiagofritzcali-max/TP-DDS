@@ -23,7 +23,7 @@ import lombok.ToString;
 @ToString(exclude = "direccion")
 public class PersonaJuridica extends ResponsableDePago {
 
-    @Column(nullable = false)
+    @Column(name = "razon_social", nullable = true)
     private String razonSocial;
 
     private String telefono;
