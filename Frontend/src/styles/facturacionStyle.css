@@ -1,0 +1,165 @@
+.factura-wrapper {
+  padding: 32px;
+  background: #f7f7f7;
+  min-height: calc(100vh - 80px);
+}
+
+.factura-page {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  background: #fff;
+  padding: 24px;
+  border-radius: 10px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+
+.factura-panel {
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.factura-panel h2 {
+  font-size: 20px;
+  margin-bottom: 16px;
+  color: #444;
+}
+
+.field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  color: #555;
+  font-size: 14px;
+}
+
+.field-label input,
+.field-label select {
+  padding: 10px;
+  border: 1px solid #cfcfcf;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.required {
+  color: #d32f2f;
+}
+
+.actions-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.actions-row.right-align {
+  justify-content: flex-end;
+}
+
+.lista-ocupantes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+}
+
+.ocupante-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.ocupante-item:last-child {
+  border-bottom: none;
+}
+
+.radio-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tercero-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.tercero-row input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #cfcfcf;
+  border-radius: 4px;
+}
+
+.error-inline {
+  color: #c62828;
+  font-size: 13px;
+}
+
+.muted {
+  color: #777;
+}
+
+.muted.small {
+  font-size: 12px;
+}
+
+.responsable-box {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.avatar-placeholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #e0e0e0;
+}
+
+.responsable-text {
+  font-weight: 600;
+  color: #333;
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.check-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.detalle-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  color: #444;
+}
+
+.detalle-line.total {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+hr {
+  border: none;
+  border-bottom: 1px solid #ddd;
+  margin: 12px 0;
+}
+
+@media (max-width: 960px) {
+  .factura-page {
+    grid-template-columns: 1fr;
+  }
+}
+

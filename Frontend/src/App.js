@@ -12,6 +12,10 @@ import EstadoHabitacionesPage from "./pages/EstadoHabitacionPage";
 import DatosReservaPage from "./pages/DatosReservaPage";
 
 import OcuparHabitacionPage from "./pages/OcuparHabitacionPage";
+import FacturarPage from "./pages/FacturarPage";
+import BuscarResponsablePage from "./pages/BuscarResponsablePage";
+import AltaResponsablePage from "./pages/AltaResponsablePage";
+import ModificarResponsablePage from "./pages/ModificarResponsablePage";
 
 import "./App.css";
 
@@ -33,6 +37,12 @@ function App() {
             <Route path="/datos-reserva" element={<DatosReservaPage />} />
 
             <Route path="/cu05" element={<EstadoHabitacionesPage />} />
+
+            <Route path="/cu07" element={<FacturarPage />} />
+            <Route path="/cu03" element={<BuscarResponsablePage />} />
+            <Route path="/cu12" element={<AltaResponsablePage />} />
+            <Route path="/cu13" element={<ModificarResponsablePage />} />
+            <Route path="/cu13/:id" element={<ModificarResponsablePage />} />
 
             <Route path="/cu09" element={<AltaHuespedPage />} />
 

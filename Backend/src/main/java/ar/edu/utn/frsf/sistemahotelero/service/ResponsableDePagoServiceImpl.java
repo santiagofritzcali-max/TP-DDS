@@ -2,14 +2,18 @@ package ar.edu.utn.frsf.sistemahotelero.service;
 
 import ar.edu.utn.frsf.sistemahotelero.dao.FacturaDAO;
 import ar.edu.utn.frsf.sistemahotelero.dao.ResponsableDePagoDAO;
+import ar.edu.utn.frsf.sistemahotelero.dao.HuespedDAO;
 import ar.edu.utn.frsf.sistemahotelero.dto.DireccionRequest;
 import ar.edu.utn.frsf.sistemahotelero.dto.DireccionResponse;
 import ar.edu.utn.frsf.sistemahotelero.dto.ResponsablePagoRequestDTO;
 import ar.edu.utn.frsf.sistemahotelero.dto.ResponsablePagoResponseDTO;
 import ar.edu.utn.frsf.sistemahotelero.excepciones.ReglaNegocioException;
 import ar.edu.utn.frsf.sistemahotelero.model.Direccion;
+import ar.edu.utn.frsf.sistemahotelero.model.Huesped;
+import ar.edu.utn.frsf.sistemahotelero.model.PersonaFisica;
 import ar.edu.utn.frsf.sistemahotelero.model.PersonaJuridica;
 import ar.edu.utn.frsf.sistemahotelero.model.ResponsableDePago;
+import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.HuespedId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +29,7 @@ public class ResponsableDePagoServiceImpl implements ResponsableDePagoService {
 
     private final ResponsableDePagoDAO responsableDAO;
     private final FacturaDAO facturaDAO;
+    private final HuespedDAO huespedDAO;
 
     @Override
     @Transactional(readOnly = true)
@@ -51,13 +56,18 @@ public class ResponsableDePagoServiceImpl implements ResponsableDePagoService {
     @Override
     @Transactional
     public ResponsablePagoResponseDTO crear(ResponsablePagoRequestDTO request) {
-        validarCuitUnico(request.getCuit(), null);
+        validarCuitUnicoSiCorresponde(request.getCuit(), null);
 
-        PersonaJuridica responsable = new PersonaJuridica();
-        mapDatosBasicos(responsable, request);
-        responsable.setDireccion(crearOactualizarDireccion(null, request.getDireccion()));
-
-        ResponsableDePago guardado = responsableDAO.save(responsable);
+        ResponsableDePago guardado;
+        if (request.getHuespedTipoDoc() != null && request.getHuespedNroDoc() != null) {
+            guardado = crearResponsableFisico(request);
+        } else {
+            PersonaJuridica responsable = new PersonaJuridica();
+            mapDatosBasicosJuridico(responsable, request);
+            responsable.setDireccion(crearOactualizarDireccion(null, request.getDireccion()));
+            guardado = responsableDAO.save(responsable);
+        }
+        sincronizarCuitHuesped(request);
         return toResponse(guardado);
     }
 
@@ -67,17 +77,18 @@ public class ResponsableDePagoServiceImpl implements ResponsableDePagoService {
         ResponsableDePago existente = responsableDAO.findById(id)
                 .orElseThrow(() -> new ReglaNegocioException("Responsable de pago no encontrado"));
 
-        validarCuitUnico(request.getCuit(), id);
+        validarCuitUnicoSiCorresponde(request.getCuit(), id);
 
         if (!(existente instanceof PersonaJuridica responsable)) {
             throw new ReglaNegocioException("Solo se admiten responsables juridicos para estos casos de uso");
         }
 
-        mapDatosBasicos(responsable, request);
+        mapDatosBasicosJuridico(responsable, request);
         Direccion direccion = crearOactualizarDireccion(responsable.getDireccion(), request.getDireccion());
         responsable.setDireccion(direccion);
 
         ResponsableDePago guardado = responsableDAO.save(responsable);
+        sincronizarCuitHuesped(request);
         return toResponse(guardado);
     }
 
@@ -102,7 +113,23 @@ public class ResponsableDePagoServiceImpl implements ResponsableDePagoService {
         responsableDAO.delete(responsable);
     }
 
-    private void mapDatosBasicos(PersonaJuridica responsable, ResponsablePagoRequestDTO request) {
+    private ResponsableDePago crearResponsableFisico(ResponsablePagoRequestDTO request) {
+        HuespedId id = new HuespedId(request.getHuespedNroDoc(), request.getHuespedTipoDoc());
+        Huesped huesped = huespedDAO.findById(id)
+                .orElseThrow(() -> new ReglaNegocioException("No se encontro el huesped para asociar como responsable"));
+
+        PersonaFisica pf = new PersonaFisica();
+        pf.setNroDoc(huesped.getNroDoc());
+        pf.setTipoDoc(huesped.getTipoDoc());
+        pf.setHuesped(huesped);
+        pf.setCuit(request.getCuit()); // puede ser null si es ConsumidorFinal sin CUIT
+        pf.setPosicionIVA(request.getPosicionIVA());
+        pf.setNombreOrazonSocial(huesped.getApellido() + ", " + huesped.getNombre());
+
+        return responsableDAO.save(pf);
+    }
+
+    private void mapDatosBasicosJuridico(PersonaJuridica responsable, ResponsablePagoRequestDTO request) {
         responsable.setCuit(request.getCuit());
         responsable.setPosicionIVA(request.getPosicionIVA());
         responsable.setRazonSocial(request.getRazonSocial());
@@ -155,7 +182,10 @@ public class ResponsableDePagoServiceImpl implements ResponsableDePagoService {
         return dto;
     }
 
-    private void validarCuitUnico(String cuit, Long idAExcluir) {
+    private void validarCuitUnicoSiCorresponde(String cuit, Long idAExcluir) {
+        // Para PF sin CUIT (Consumidor Final) no validamos
+        if (cuit == null || cuit.isBlank()) return;
+
         boolean existe;
         if (idAExcluir == null) {
             existe = responsableDAO.existsByCuit(cuit);
@@ -165,6 +195,19 @@ public class ResponsableDePagoServiceImpl implements ResponsableDePagoService {
         if (existe) {
             throw new ReglaNegocioException("El CUIT ya existe en el sistema");
         }
+    }
+
+    private void sincronizarCuitHuesped(ResponsablePagoRequestDTO request) {
+        if (request.getHuespedTipoDoc() == null || request.getHuespedNroDoc() == null) return;
+        HuespedId id = new HuespedId(request.getHuespedNroDoc(), request.getHuespedTipoDoc());
+        huespedDAO.findById(id).ifPresent(h -> {
+            h.setCuit(request.getCuit());
+            // si el responsable tiene posicion IVA, aprovechamos y la propagamos
+            if (request.getPosicionIVA() != null) {
+                h.setPosicionIVA(request.getPosicionIVA());
+            }
+            huespedDAO.save(h);
+        });
     }
 
     private String normalize(String valor) {

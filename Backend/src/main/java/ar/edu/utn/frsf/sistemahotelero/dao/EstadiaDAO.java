@@ -48,6 +48,16 @@ public interface EstadiaDAO extends CrudRepository<Estadia, Long> {
             @Param("numeroHabitacion") Integer numeroHabitacion,
             @Param("fechaEgreso") LocalDate fechaEgreso);
     
+    @Query("""
+            SELECT e
+            FROM Estadia e
+            WHERE e.habitacion.id.nroHabitacion = :numeroHabitacion
+              AND :fecha BETWEEN e.fechaIngreso AND e.fechaEgreso
+           """)
+    Optional<Estadia> findByHabitacionAndFechaDentroDelRango(
+            @Param("numeroHabitacion") Integer numeroHabitacion,
+            @Param("fecha") LocalDate fecha);
+    
     
     @Query("""
            SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END

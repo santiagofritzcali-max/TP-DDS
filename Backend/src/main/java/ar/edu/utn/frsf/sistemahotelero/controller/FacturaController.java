@@ -5,11 +5,13 @@ import ar.edu.utn.frsf.sistemahotelero.dto.*;
 import ar.edu.utn.frsf.sistemahotelero.service.*;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/facturacion")
 @RequiredArgsConstructor
@@ -20,10 +22,10 @@ public class FacturaController {
     @GetMapping("/ocupantes")
     public BuscarOcupantesResponseDTO buscarOcupantes(
             @RequestParam Integer numeroHabitacion,
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaEgreso) {
+            @RequestParam String fechaEgreso) {
 
-        return facturaService.buscarOcupantes(numeroHabitacion, fechaEgreso);
+        LocalDate fecha = parseFechaEgreso(fechaEgreso);
+        return facturaService.buscarOcupantes(numeroHabitacion, fecha);
     }
 
     @PostMapping("/previsualizacion")
@@ -36,5 +38,26 @@ public class FacturaController {
     public FacturaGeneradaDTO generarFactura(
             @RequestBody CrearFacturaRequestDTO request) {
         return facturaService.generarFactura(request);
+    }
+
+    private LocalDate parseFechaEgreso(String raw) {
+        if (raw == null || raw.isBlank()) return null;
+
+        String trimmed = raw.trim();
+
+        DateTimeFormatter[] formatters = new DateTimeFormatter[]{
+                DateTimeFormatter.ISO_LOCAL_DATE,
+                DateTimeFormatter.ofPattern("dd/MM/yyyy"),
+                DateTimeFormatter.ofPattern("d/M/yyyy")
+        };
+
+        for (DateTimeFormatter f : formatters) {
+            try {
+                return LocalDate.parse(trimmed, f);
+            } catch (DateTimeParseException ignored) {
+                // probamos el siguiente formato
+            }
+        }
+        return null;
     }
 }

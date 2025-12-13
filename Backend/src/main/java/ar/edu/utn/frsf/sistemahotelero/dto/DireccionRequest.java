@@ -1,66 +1,47 @@
 package ar.edu.utn.frsf.sistemahotelero.dto;
 
 import ar.edu.utn.frsf.sistemahotelero.validaciones.ValidPiso;
-import jakarta.validation.constraints.*;
-import lombok.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Data  
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class DireccionRequest {
-    
+
     @NotBlank(message = "La calle es obligatoria")
-    @Pattern(
-        regexp = "^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$",
-        message = "La calle solo puede contener letras"
-    )
+    @Pattern(regexp = "^[A-Za-z0-9 .-]+$", message = "La calle solo puede contener letras, numeros, espacio o .-")
     private String calle;
-    
-    @NotBlank(message = "El número es obligatorio")
-    @Pattern(
-        regexp = "^[0-9]+$",
-        message = "El número solo puede contener números"
-    )
+
+    @NotBlank(message = "El numero es obligatorio")
+    @Pattern(regexp = "^[0-9]+$", message = "El numero solo puede contener numeros")
     private String numero;
-    
-    
+
     private String departamento;
-    
+
     @ValidPiso
     private String piso;
-    
-    @NotBlank(message = "El código postal es obligatorio")
-    @Pattern(
-        regexp = "^[0-9]+$",
-        message = "El código postal solo puede contener números"
-    )
+
+    @NotBlank(message = "El codigo postal es obligatorio")
+    @Pattern(regexp = "^[0-9]+$", message = "El codigo postal solo puede contener numeros")
     private String codigoPostal;
-    
+
     @NotBlank(message = "La localidad es obligatoria")
-    @Pattern(
-        regexp = "^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$",
-        message = "La localidad solo puede contener letras"
-    )
+    @Pattern(regexp = "^[A-Za-z .-]+$", message = "La localidad solo puede contener letras, espacio o .-")
     private String localidad;
-    
+
     @NotBlank(message = "La ciudad es obligatoria")
-    @Pattern(
-        regexp = "^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$",
-        message = "La ciudad solo puede contener letras"
-    )
+    @Pattern(regexp = "^[A-Za-z .-]+$", message = "La ciudad solo puede contener letras, espacio o .-")
     private String ciudad;
-    
+
     @NotBlank(message = "La provincia es obligatoria")
-    @Pattern(
-        regexp = "^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$",
-        message = "La provincia solo puede contener letras"
-    )
+    @Pattern(regexp = "^[A-Za-z .-]+$", message = "La provincia solo puede contener letras, espacio o .-")
     private String provincia;
-    
-    @NotBlank(message = "El país es obligatorio")
-    @Pattern(
-        regexp = "^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$",
-        message = "El país solo puede contener letras"
-    )
+
+    @NotBlank(message = "El pais es obligatorio")
+    @Pattern(regexp = "^[A-Za-z .-]+$", message = "El pais solo puede contener letras, espacio o .-")
     private String pais;
 }

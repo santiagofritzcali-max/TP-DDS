@@ -1,6 +1,7 @@
 package ar.edu.utn.frsf.sistemahotelero.dto;
 
 import ar.edu.utn.frsf.sistemahotelero.enums.PosicionIVA;
+import ar.edu.utn.frsf.sistemahotelero.enums.TipoDocumento;
 import ar.edu.utn.frsf.sistemahotelero.validaciones.ValidCuit;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -13,7 +14,7 @@ public class ResponsablePagoRequestDTO {
     @NotBlank(message = "La razon social es obligatoria")
     private String razonSocial;
 
-    @NotBlank(message = "El CUIT es obligatorio")
+    // CUIT obligatorio salvo PF Consumidor Final (sin CUIT)
     @ValidCuit
     private String cuit;
 
@@ -26,5 +27,8 @@ public class ResponsablePagoRequestDTO {
     @Valid
     @NotNull(message = "La direccion es obligatoria")
     private DireccionRequest direccion;
-}
 
+    // Datos opcionales del huesped para sincronizar CUIT
+    private TipoDocumento huespedTipoDoc;
+    private String huespedNroDoc;
+}

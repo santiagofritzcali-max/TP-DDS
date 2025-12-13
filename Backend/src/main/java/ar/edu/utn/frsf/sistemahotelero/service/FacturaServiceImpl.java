@@ -9,6 +9,7 @@ import ar.edu.utn.frsf.sistemahotelero.excepciones.DatosBusquedaFacturacionExcep
 import ar.edu.utn.frsf.sistemahotelero.excepciones.PersonaMenorDeEdadException;
 import ar.edu.utn.frsf.sistemahotelero.model.*;
 import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.HuespedId;
+import ar.edu.utn.frsf.sistemahotelero.enums.PosicionIVA;
 import ar.edu.utn.frsf.sistemahotelero.util.FacturaFactory;
 
 import java.math.BigDecimal;
@@ -54,7 +55,8 @@ public class FacturaServiceImpl implements FacturaService {
         }
 
         Estadia estadia = estadiaDAO
-                .findByHabitacionAndFechaEgreso(numeroHabitacion, fechaEgreso)
+                .findByHabitacionAndFechaDentroDelRango(numeroHabitacion, fechaEgreso)
+                .or(() -> estadiaDAO.findByHabitacionAndFechaEgreso(numeroHabitacion, fechaEgreso))
                 .orElseThrow(() -> new DatosBusquedaFacturacionException(
                         List.of("La habitacion indicada no se encuentra ocupada en la fecha de salida informada.")));
 
@@ -210,9 +212,16 @@ public class FacturaServiceImpl implements FacturaService {
                 throw new PersonaMenorDeEdadException();
             }
 
-            return responsableDAO.findByCuit(h.getCuit())
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "No se encontro Responsable de Pago para el huesped seleccionado"));
+            // Si tiene CUIT, buscamos por CUIT; si no, buscamos PF por doc (ConsumidorFinal)
+            if (h.getCuit() != null && !h.getCuit().isBlank()) {
+                return responsableDAO.findByCuit(h.getCuit())
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                "No se encontro Responsable de Pago para el huesped seleccionado"));
+            } else {
+                return responsableDAO.findByTipoDocAndNroDoc(h.getTipoDoc(), h.getNroDoc())
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                "No se encontro Responsable de Pago para el huesped seleccionado"));
+            }
         }
 
         throw new IllegalArgumentException("Debe indicar un huesped responsable o un CUIT de tercero");
@@ -280,4 +289,3 @@ public class FacturaServiceImpl implements FacturaService {
         return responsable.getNombreOrazonSocial();
     }
 }
-

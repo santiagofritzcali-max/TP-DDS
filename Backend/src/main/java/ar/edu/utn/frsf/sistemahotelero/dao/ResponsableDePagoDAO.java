@@ -24,4 +24,13 @@ public interface ResponsableDePagoDAO extends CrudRepository<ResponsableDePago, 
               AND (:cuit IS NULL OR r.cuit LIKE CONCAT('%', :cuit, '%'))
            """)
     List<ResponsableDePago> buscarPorCriterios(@Param("razonSocial") String razonSocial, @Param("cuit") String cuit);
+
+    @Query("""
+            SELECT r
+            FROM ResponsableDePago r
+            WHERE r.tipoDoc = :tipoDoc
+              AND r.nroDoc = :nroDoc
+           """)
+    Optional<ResponsableDePago> findByTipoDocAndNroDoc(@Param("tipoDoc") ar.edu.utn.frsf.sistemahotelero.enums.TipoDocumento tipoDoc,
+                                                       @Param("nroDoc") String nroDoc);
 }
