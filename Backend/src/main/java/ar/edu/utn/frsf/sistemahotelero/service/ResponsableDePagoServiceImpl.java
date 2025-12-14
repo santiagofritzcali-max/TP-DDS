@@ -38,17 +38,19 @@ public class ResponsableDePagoServiceImpl implements ResponsableDePagoService {
         String c = normalize(cuit);
 
         List<ResponsableDePago> encontrados;
-        if (rs == null && c == null) {
+        if (rs == null) {
             encontrados = StreamSupport
                     .stream(responsableDAO.findAll().spliterator(), false)
                     .collect(Collectors.toList());
         } else {
-            encontrados = responsableDAO.buscarPorCriterios(rs, c);
+            encontrados = responsableDAO.buscarPorCriterios(rs);
         }
 
         List<ResponsablePagoResponseDTO> resultado = new ArrayList<>();
         for (ResponsableDePago r : encontrados) {
-            resultado.add(toResponse(r));
+            if (c == null || matchesCuit(r, c)) {
+                resultado.add(toResponse(r));
+            }
         }
         return resultado;
     }
@@ -126,7 +128,6 @@ public class ResponsableDePagoServiceImpl implements ResponsableDePagoService {
         pf.setNroDoc(huesped.getNroDoc());
         pf.setTipoDoc(huesped.getTipoDoc());
         pf.setHuesped(huesped);
-        pf.setCuit(request.getCuit()); // puede ser null si es ConsumidorFinal sin CUIT
         pf.setPosicionIVA(request.getPosicionIVA());
         pf.setNombreOrazonSocial(huesped.getApellido() + ", " + huesped.getNombre());
 
@@ -187,21 +188,26 @@ public class ResponsableDePagoServiceImpl implements ResponsableDePagoService {
     }
 
     private void validarCuitUnicoSiCorresponde(String cuit, Long idAExcluir) {
-        // Para PF sin CUIT (Consumidor Final) no validamos
         if (cuit == null || cuit.isBlank()) return;
 
         String norm = normalizeCuit(cuit);
-        boolean existe;
+
+        boolean existePJ;
         if (idAExcluir == null) {
-            existe = responsableDAO.existsByCuit(cuit)
+            existePJ = responsableDAO.existsByCuit(cuit)
                     || responsableDAO.findByCuitNormalized(norm).isPresent();
         } else {
-            existe = responsableDAO.existsByCuitAndIdNot(cuit, idAExcluir)
+            existePJ = responsableDAO.existsByCuitAndIdNot(cuit, idAExcluir)
                     || responsableDAO.findByCuitNormalized(norm)
                     .filter(r -> !r.getId().equals(idAExcluir))
                     .isPresent();
         }
-        if (existe) {
+
+        var optPF = responsableDAO.findPersonaFisicaByCuitNormalized(norm);
+        boolean existePF = optPF.isPresent()
+                && (idAExcluir == null || !optPF.get().getId().equals(idAExcluir));
+
+        if (existePJ || existePF) {
             throw new ReglaNegocioException("El CUIT ya existe en el sistema");
         }
     }
@@ -228,5 +234,13 @@ public class ResponsableDePagoServiceImpl implements ResponsableDePagoService {
     private String normalizeCuit(String cuit) {
         if (cuit == null) return "";
         return cuit.replaceAll("[^0-9]", "");
+    }
+
+    private boolean matchesCuit(ResponsableDePago responsable, String cuit) {
+        if (cuit == null) return true;
+        String norm = normalizeCuit(cuit);
+        String rc = responsable.getCuit();
+        if (rc == null) return false;
+        return normalizeCuit(rc).contains(norm);
     }
 }

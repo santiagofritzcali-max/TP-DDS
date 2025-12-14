@@ -1,4 +1,3 @@
-// service/impl/FacturaServiceImpl.java
 package ar.edu.utn.frsf.sistemahotelero.service;
 
 import ar.edu.utn.frsf.sistemahotelero.dao.*;
@@ -9,7 +8,6 @@ import ar.edu.utn.frsf.sistemahotelero.excepciones.DatosBusquedaFacturacionExcep
 import ar.edu.utn.frsf.sistemahotelero.excepciones.PersonaMenorDeEdadException;
 import ar.edu.utn.frsf.sistemahotelero.model.*;
 import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.HuespedId;
-import ar.edu.utn.frsf.sistemahotelero.enums.PosicionIVA;
 import ar.edu.utn.frsf.sistemahotelero.util.FacturaFactory;
 
 import java.math.BigDecimal;
@@ -19,12 +17,11 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class FacturaServiceImpl implements FacturaService {
 
     private final EstadiaDAO estadiaDAO;
@@ -32,6 +29,19 @@ public class FacturaServiceImpl implements FacturaService {
     private final FacturaDAO facturaDAO;
     private final HuespedDAO huespedDAO;
     private final ResponsableDePagoDAO responsableDAO;
+
+    @Autowired
+    public FacturaServiceImpl(EstadiaDAO estadiaDAO,
+                              ServicioDAO servicioDAO,
+                              FacturaDAO facturaDAO,
+                              HuespedDAO huespedDAO,
+                              ResponsableDePagoDAO responsableDAO) {
+        this.estadiaDAO = estadiaDAO;
+        this.servicioDAO = servicioDAO;
+        this.facturaDAO = facturaDAO;
+        this.huespedDAO = huespedDAO;
+        this.responsableDAO = responsableDAO;
+    }
 
     // -------- Paso 1-4: Buscar ocupantes --------
 
@@ -196,7 +206,10 @@ public class FacturaServiceImpl implements FacturaService {
     private ResponsableDePago obtenerResponsable(PrepararFacturaRequestDTO request) {
 
         if (request.getCuitTercero() != null && !request.getCuitTercero().isBlank()) {
-            return responsableDAO.findByCuit(request.getCuitTercero())
+            String cuit = request.getCuitTercero();
+            String norm = normalizeCuit(cuit);
+            return responsableDAO.findByCuit(cuit).map(r -> (ResponsableDePago) r)
+                    .or(() -> responsableDAO.findPersonaFisicaByCuitNormalized(norm).map(r -> (ResponsableDePago) r))
                     .orElseThrow(() -> new IllegalArgumentException(
                             "No se encontro un responsable de pago con ese CUIT"));
         }
@@ -216,12 +229,13 @@ public class FacturaServiceImpl implements FacturaService {
             if (h.getCuit() != null && !h.getCuit().isBlank()) {
                 String norm = normalizeCuit(h.getCuit());
                 return responsableDAO.findByCuit(h.getCuit())
-                        .or(() -> responsableDAO.findByCuitNormalized(norm))
-                        .or(() -> responsableDAO.findByTipoDocAndNroDoc(h.getTipoDoc(), h.getNroDoc()))
+                        .map(r -> (ResponsableDePago) r)
+                        .or(() -> responsableDAO.findPersonaFisicaByCuitNormalized(norm).map(r -> (ResponsableDePago) r))
+                        .or(() -> responsableDAO.findByTipoDocAndNroDoc(h.getTipoDoc(), h.getNroDoc()).map(r -> (ResponsableDePago) r))
                         .orElseThrow(() -> new IllegalArgumentException(
                                 "No se encontro Responsable de Pago para el huesped seleccionado"));
             } else {
-                return responsableDAO.findByTipoDocAndNroDoc(h.getTipoDoc(), h.getNroDoc())
+                return responsableDAO.findByTipoDocAndNroDoc(h.getTipoDoc(), h.getNroDoc()).map(r -> (ResponsableDePago) r)
                         .orElseThrow(() -> new IllegalArgumentException(
                                 "No se encontro Responsable de Pago para el huesped seleccionado"));
             }

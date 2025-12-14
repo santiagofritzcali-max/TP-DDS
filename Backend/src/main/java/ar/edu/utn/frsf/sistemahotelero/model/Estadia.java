@@ -49,7 +49,9 @@ public class Estadia {
     )
     private List<Huesped> huespedes;
     
+    @OneToMany(mappedBy = "estadia", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Servicio> servicios;
+    
     @OneToMany
     private List<Factura> facturas;
 }
-

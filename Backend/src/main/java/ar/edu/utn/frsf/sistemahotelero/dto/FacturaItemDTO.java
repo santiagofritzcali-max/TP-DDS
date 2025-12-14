@@ -1,4 +1,3 @@
-// dto/facturacion/FacturaItemDTO.java
 package ar.edu.utn.frsf.sistemahotelero.dto;
 
 import lombok.Data;

@@ -2,8 +2,6 @@ package ar.edu.utn.frsf.sistemahotelero.model;
 
 import ar.edu.utn.frsf.sistemahotelero.enums.PosicionIVA;
 import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.Enumerated;
@@ -20,8 +18,7 @@ import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "G17_responsable_pago")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "tipo_persona", discriminatorType = DiscriminatorType.STRING)
+@Inheritance(strategy = InheritanceType.JOINED)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -31,12 +28,16 @@ public abstract class ResponsableDePago {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; 
 
-    @Column(unique = true)
-    private String cuit;
-
     @Column(name = "nombre_razon_social")
     private String nombreOrazonSocial;
 
     @Enumerated(EnumType.STRING)
     private PosicionIVA posicionIVA;
+
+    /**
+     * Cada subtipo define cuit segA-on corresponda (PJ: campo propio, PF: desde Huesped o nulo).
+     */
+    public String getCuit() {
+        return null;
+    }
 }

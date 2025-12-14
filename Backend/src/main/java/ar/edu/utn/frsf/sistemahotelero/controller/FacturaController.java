@@ -8,16 +8,20 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/api/facturacion")
-@RequiredArgsConstructor
 public class FacturaController {
 
     private final FacturaService facturaService;
+
+    @Autowired
+    public FacturaController(FacturaService facturaService) {
+        this.facturaService = facturaService;
+    }
 
     @GetMapping("/ocupantes")
     public BuscarOcupantesResponseDTO buscarOcupantes(

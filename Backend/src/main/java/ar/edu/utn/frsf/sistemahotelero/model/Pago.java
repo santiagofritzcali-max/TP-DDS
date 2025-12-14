@@ -1,5 +1,6 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -35,6 +36,6 @@ public class Pago {
     @OneToOne(mappedBy = "pago")
     private Factura factura;  
     
-    @OneToMany(mappedBy = "pago")
+    @OneToMany(mappedBy = "pago", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MedioPago> mediosDePago;
 }

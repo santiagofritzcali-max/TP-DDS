@@ -10,10 +10,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import java.math.BigDecimal;
-import java.util.Date;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -25,19 +22,16 @@ import lombok.ToString;
 @Setter
 @ToString(exclude = "pago")
 public abstract class MedioPago {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idMedioPago")
-    private Long idMedioPago;  
-    
+    private Long idMedioPago;
+
     @ManyToOne
     @JoinColumn(name = "idPago", referencedColumnName = "idPago")
     private Pago pago;
 
+    @Column(precision = 38, scale = 2)
     private BigDecimal monto;
-
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date fecha;
-
 }
