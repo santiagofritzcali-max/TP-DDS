@@ -67,12 +67,19 @@ const IngresarPagoPage = () => {
     setErrorModal(null);
     setErrorHabitacion(null);
 
-    if (!numeroHabitacion) {
+    const habValue = numeroHabitacion?.toString().trim() || "";
+
+    if (!habValue) {
       setErrorHabitacion("El campo Numero de habitacion es requerido.");
       return;
     }
 
-    const nro = parseInt(numeroHabitacion, 10);
+    if (!/^[0-9]+$/.test(habValue)) {
+      setErrorHabitacion("El campo Numero de habitacion debe ser numerico entero y mayor a 0.");
+      return;
+    }
+
+    const nro = parseInt(habValue, 10);
     if (isNaN(nro) || nro <= 0) {
       setErrorHabitacion("El campo Numero de habitacion debe ser numerico y mayor a 0.");
       return;

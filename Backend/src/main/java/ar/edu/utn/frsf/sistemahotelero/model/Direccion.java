@@ -1,7 +1,6 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
 import ar.edu.utn.frsf.sistemahotelero.dto.*;
-import ar.edu.utn.frsf.sistemahotelero.enums.TipoDocumento;
 import jakarta.persistence.*;
 import lombok.*;
 

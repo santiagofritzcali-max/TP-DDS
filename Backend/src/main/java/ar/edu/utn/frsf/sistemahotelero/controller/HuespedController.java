@@ -24,13 +24,6 @@ public class HuespedController {
     @Autowired
     private GestorHuesped gestorHuesped;
 
- /*   // Endpoint para obtener todos los huespedes
-    @GetMapping
-    public ResponseEntity<List<HuespedResponse>> obtenerTodosLosHuespedes() {
-        List<HuespedResponse> huespedes = gestorHuesped.obtenerTodosLosHuespedes();
-        return ResponseEntity.ok(huespedes);
-    }*/
-
     // Endpoint para dar de alta un nuevo huesped
     @PostMapping
     public ResponseEntity<HuespedResponse> darAltaHuesped(@Valid @RequestBody HuespedRequest huespedRequest) {
