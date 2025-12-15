@@ -391,11 +391,24 @@ const FacturarPage = () => {
     setSeleccionResponsable(null);
     setCuitTercero("");
     setError(null);
+    setFieldErrors({});
     setStep("buscar");
     setPreview(null);
     setItemsSeleccionados([]);
     setFacturaFinal(null);
     setMostrandoResultados(false);
+    setPreviewPendiente(null);
+    setPendingSeleccion(null);
+    setConfirmResponsable(null);
+    setErrorModal(null);
+    setAltaModal(null);
+    setSuccessModal(null);
+    setGenerando(false);
+  };
+
+  const handleCancelarBusqueda = () => {
+    resetTodo();
+    navigate("/");
   };
 
   const renderBusqueda = () => (
@@ -440,7 +453,7 @@ const FacturarPage = () => {
         {error && <div className="error-inline">{error}</div>}
 
         <div className="actions-row">
-          <button className="btn btn-secondary" type="button" onClick={resetTodo}>
+          <button className="btn btn-secondary" type="button" onClick={handleCancelarBusqueda}>
             Cancelar
           </button>
           <button
