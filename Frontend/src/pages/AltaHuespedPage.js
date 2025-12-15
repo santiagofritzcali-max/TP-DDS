@@ -202,6 +202,7 @@ const handleConfirm = () => {
 
 const handleClose = () => {
   setModalExito(false); 
+  navigate('/');
 };
 
  const classInput = (hasError) => (hasError ? 'input inputError' : 'input');
