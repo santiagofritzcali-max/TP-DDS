@@ -38,6 +38,11 @@ public class PersonaJuridica extends ResponsableDePago {
     private Direccion direccion;
 
     @Override
+    public String getCuit() {
+        return cuit;
+    }
+
+    @Override
     public String getNombreOrazonSocial() {
         return razonSocial;
     }

@@ -209,6 +209,7 @@ public class FacturaServiceImpl implements FacturaService {
             String cuit = request.getCuitTercero();
             String norm = normalizeCuit(cuit);
             return responsableDAO.findByCuit(cuit).map(r -> (ResponsableDePago) r)
+                    .or(() -> responsableDAO.findByCuitNormalized(norm).map(r -> (ResponsableDePago) r))
                     .or(() -> responsableDAO.findPersonaFisicaByCuitNormalized(norm).map(r -> (ResponsableDePago) r))
                     .orElseThrow(() -> new IllegalArgumentException(
                             "No se encontro un responsable de pago con ese CUIT"));
@@ -230,6 +231,7 @@ public class FacturaServiceImpl implements FacturaService {
                 String norm = normalizeCuit(h.getCuit());
                 return responsableDAO.findByCuit(h.getCuit())
                         .map(r -> (ResponsableDePago) r)
+                        .or(() -> responsableDAO.findByCuitNormalized(norm).map(r -> (ResponsableDePago) r))
                         .or(() -> responsableDAO.findPersonaFisicaByCuitNormalized(norm).map(r -> (ResponsableDePago) r))
                         .or(() -> responsableDAO.findByTipoDocAndNroDoc(h.getTipoDoc(), h.getNroDoc()).map(r -> (ResponsableDePago) r))
                         .orElseThrow(() -> new IllegalArgumentException(

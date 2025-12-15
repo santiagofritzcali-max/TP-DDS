@@ -37,6 +37,14 @@ public class ResponsableDePagoServiceImpl implements ResponsableDePagoService {
         String rs = normalize(razonSocial);
         String c = normalize(cuit);
 
+        // Si llega CUIT, buscamos directamente en Persona Juridica (clave primaria para terceros)
+        if (c != null) {
+            String norm = normalizeCuit(c);
+            return responsableDAO.findByCuitNormalized(norm)
+                    .map(r -> List.of(toResponse(r)))
+                    .orElseGet(ArrayList::new);
+        }
+
         List<ResponsableDePago> encontrados;
         if (rs == null) {
             encontrados = StreamSupport

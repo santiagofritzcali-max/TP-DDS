@@ -36,6 +36,13 @@ const HomePage = () => {
 
         <button
           className="home-cu-btn"
+          onClick={() => navigate("/cu07")}
+        >
+          Ejecutar CU 07
+        </button>
+
+        <button
+          className="home-cu-btn"
           onClick={() => navigate("/cu09")}
         >
           Ejecutar CU 09 
