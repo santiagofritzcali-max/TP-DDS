@@ -88,7 +88,8 @@ const AltaResponsablePage = () => {
   const validar = () => {
     const errs = {};
     if (!form.razonSocial) errs.razonSocial = "Requerido";
-    if (!form.cuit) errs.cuit = "Requerido";
+    // CUIT solo obligatorio si no es Consumidor Final
+    if (!form.cuit && form.posicionIVA !== "ConsumidorFinal") errs.cuit = "Requerido";
     if (!form.posicionIVA) errs.posicionIVA = "Requerido";
     if (!form.telefono) errs.telefono = "Requerido";
     ["calle", "numero", "codigoPostal", "localidad", "ciudad", "provincia", "pais"].forEach((f) => {
@@ -135,11 +136,12 @@ const AltaResponsablePage = () => {
           </label>
 
           <label className="field-label">
-            CUIT <span className="required">*</span>
+            CUIT {form.posicionIVA !== "ConsumidorFinal" && <span className="required">*</span>}
             <input
               type="text"
               value={form.cuit}
               onChange={(e) => handleChange("cuit", e.target.value)}
+              placeholder="XX-XXXXXXXX-X"
             />
             {errores.cuit && <span className="error-inline">{errores.cuit}</span>}
           </label>

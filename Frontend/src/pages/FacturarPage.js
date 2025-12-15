@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/facturacionStyle.css";
 import "../styles/ui.css";
@@ -32,6 +32,21 @@ const FacturarPage = () => {
   const [errorModal, setErrorModal] = useState(null);
   const [altaModal, setAltaModal] = useState(null); // {message, prefill}
   const [successModal, setSuccessModal] = useState(null);
+  const [mostrandoResultados, setMostrandoResultados] = useState(false);
+
+  const normalizeCuitDigits = (raw = "") => raw.replace(/\D/g, "").slice(0, 11);
+  const formatCuit = (digits = "") => {
+    if (digits.length < 11) return digits;
+    return `${digits.slice(0, 2)}-${digits.slice(2, 10)}-${digits.slice(10, 11)}`;
+  };
+
+  const dedupeItems = (items = []) => {
+    const map = new Map();
+    items.forEach((it) => {
+      if (it?.id && !map.has(it.id)) map.set(it.id, it);
+    });
+    return Array.from(map.values());
+  };
 
   useEffect(() => {
     const reintentar = location.state?.reintentar;
@@ -57,12 +72,12 @@ const FacturarPage = () => {
     setSeleccionResponsable(null);
     setPreview(null);
     setFacturaFinal(null);
+    setMostrandoResultados(false);
 
     if (!numeroHabitacion || !fechaEgreso) {
-      setError("Complete Nro. de habitaciÃ³n y fecha de salida.");
+      setError("Complete Nro. de habitación y fecha de salida.");
       return;
     }
-
     const nro = parseInt(numeroHabitacion, 10);
     const nroHabitacionBase = isNaN(nro) ? numeroHabitacion : (nro % 100 || nro);
     const fechaBusqueda = fechaEgreso.includes("T") ? fechaEgreso.split("T")[0] : fechaEgreso;
@@ -73,6 +88,7 @@ const FacturarPage = () => {
       fechaBusqueda
     );
     setBuscando(false);
+    setMostrandoResultados(true);
 
     if (!ok) {
       setErrorModal(err || "No se pudo buscar ocupantes.");
@@ -96,10 +112,16 @@ const FacturarPage = () => {
 
   const handleSeleccionHuesped = (huespedId) => {
     setSeleccionResponsable({ tipo: "huesped", value: huespedId });
+    setCuitTercero("");
   };
 
-  const handleSeleccionTercero = () => {
-    setSeleccionResponsable({ tipo: "tercero", value: cuitTercero });
+  const handleSeleccionTercero = (checked) => {
+    if (!checked) {
+      setSeleccionResponsable(null);
+      setCuitTercero("");
+      return;
+    }
+    setSeleccionResponsable({ tipo: "tercero", value: formatCuit(cuitTercero) });
   };
 
   const handlePrevisualizar = async () => {
@@ -117,7 +139,7 @@ const FacturarPage = () => {
           : null,
       cuitTercero:
         seleccionResponsable.tipo === "tercero"
-          ? cuitTercero || seleccionResponsable.value
+          ? formatCuit(cuitTercero) || seleccionResponsable.value
           : null,
     };
 
@@ -198,7 +220,7 @@ const FacturarPage = () => {
     item?.tipo === "ESTADIA" || !item?.descripcion?.includes("*");
 
   const validarItemsSeleccionados = () => {
-    const items = preview?.items || [];
+    const items = dedupeItems(preview?.items || []);
     const requeridos = items.filter(esItemObligatorio);
     const faltaRequerido = requeridos.some((i) => !itemsSeleccionados.includes(i.id));
     if (faltaRequerido) {
@@ -246,20 +268,21 @@ const FacturarPage = () => {
     setPreview(null);
     setItemsSeleccionados([]);
     setFacturaFinal(null);
+    setMostrandoResultados(false);
   };
 
-  const renderBusqueda = () => (
+      const renderBusqueda = () => (
     <div className="factura-page">
       <section className="factura-panel left">
         <h2>Generar check out</h2>
 
         <label className="field-label">
-          Nro. de habitaciÃ³n <span className="required">*</span>
+          Nro. de habitación <span className="required">*</span>
           <input
             type="number"
             value={numeroHabitacion}
             onChange={(e) => setNumeroHabitacion(e.target.value)}
-            placeholder="Nro. de habitaciÃ³n"
+            placeholder="Nro. de habitación"
           />
         </label>
 
@@ -290,74 +313,84 @@ const FacturarPage = () => {
         </div>
       </section>
 
-      <section className="factura-panel right">
-        <h2>Resultados de bÃºsqueda</h2>
+      {mostrandoResultados && (
+        <section className="factura-panel right">
+          <h2>Resultados de búsqueda</h2>
 
-        {ocupantes.length === 0 ? (
-          <p className="muted">No hay ocupantes cargados.</p>
-        ) : (
-          <ul className="lista-ocupantes">
-            {ocupantes.map((o, idx) => (
-              <li key={idx} className="ocupante-item">
-                <label className="radio-line">
-                  <input
-                    type="radio"
-                    name="responsable"
-                    checked={
-                      seleccionResponsable?.tipo === "huesped" &&
-                      seleccionResponsable.value?.nroDoc === o.huespedId.nroDoc &&
-                      seleccionResponsable.value?.tipoDoc === o.huespedId.tipoDoc
-                    }
-                    onChange={() => handleSeleccionHuesped(o.huespedId)}
-                  />
-                  <span>
-                    {o.nombreCompleto} - {o.nroDocumento} ({o.tipoDocumento})
-                  </span>
-                </label>
-              </li>
-            ))}
-          </ul>
-        )}
+          {ocupantes.length === 0 ? (
+            <p className="muted">No hay ocupantes cargados.</p>
+          ) : (
+            <ul className="lista-ocupantes">
+              {ocupantes.map((o, idx) => (
+                <li key={idx} className="ocupante-item">
+                  <label className="radio-line">
+                    <input
+                      type="radio"
+                      name="responsable"
+                      checked={
+                        seleccionResponsable?.tipo === "huesped" &&
+                        seleccionResponsable.value?.nroDoc === o.huespedId.nroDoc &&
+                        seleccionResponsable.value?.tipoDoc === o.huespedId.tipoDoc
+                      }
+                      onChange={() => handleSeleccionHuesped(o.huespedId)}
+                    />
+                    <span>
+                      {o.nombreCompleto} - {o.nroDocumento} ({o.tipoDocumento})
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          )}
 
-        <div className="tercero-row">
-          <label className="radio-line">
-            <input
-              type="radio"
-              name="responsable"
-              checked={seleccionResponsable?.tipo === "tercero"}
-              onChange={handleSeleccionTercero}
-            />
-            <span>Facturar a nombre de un tercero</span>
-          </label>
-          <input
-            type="text"
-            placeholder="CUIT"
-            value={cuitTercero}
-            onChange={(e) => {
-              setCuitTercero(e.target.value);
-              setSeleccionResponsable({ tipo: "tercero", value: e.target.value });
-            }}
-          />
-        </div>
+          {estadiaId && (
+            <div className="tercero-row">
+              <label className="radio-line">
+                <input
+                  type="checkbox"
+                  checked={seleccionResponsable?.tipo === "tercero"}
+                  onChange={(e) => {
+                    handleSeleccionTercero(e.target.checked);
+                  }}
+                />
+                <span>Facturar a nombre de un tercero</span>
+              </label>
+              {seleccionResponsable?.tipo === "tercero" && (
+                <input
+                  type="text"
+                  placeholder="CUIT"
+                  value={formatCuit(cuitTercero)}
+                  inputMode="numeric"
+                  pattern="\d{2}-?\d{8}-?\d{1}"
+                  title="Formato esperado: XX-XXXXXXXX-X"
+                  onChange={(e) => {
+                    const digits = normalizeCuitDigits(e.target.value);
+                    setCuitTercero(digits);
+                    setSeleccionResponsable({ tipo: "tercero", value: formatCuit(digits) });
+                  }}
+                />
+              )}
+            </div>
+          )}
 
-        <div className="actions-row right-align">
-          <button
-            className="btn btn-primary"
-            type="button"
-            onClick={handlePrevisualizar}
-            disabled={!estadiaId}
-          >
-            Siguiente
-          </button>
-        </div>
-      </section>
+          <div className="actions-row right-align">
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={handlePrevisualizar}
+              disabled={!estadiaId}
+            >
+              Siguiente
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   );
-
-  const renderPreview = () => (
+const renderPreview = () => (
     <div className="factura-page">
       {(() => {
-        const items = preview?.items || [];
+        const items = dedupeItems(preview?.items || []);
         const seleccionados = items.filter((i) => itemsSeleccionados.includes(i.id));
         const totalEstadia = seleccionados
           .filter((i) => i.tipo === "ESTADIA")
@@ -373,15 +406,22 @@ const FacturarPage = () => {
         return (
           <>
             <section className="factura-panel left">
-              <div className="responsable-box">
-                <div className="avatar-placeholder" />
-                <div>
-                  <p className="label">Persona responsable</p>
-                  <p className="responsable-text">
-                    {preview?.responsable?.nombreOrazonSocial} - {preview?.responsable?.cuit}
-                  </p>
-                  <p className="muted small">IVA: {preview?.responsable?.posicionIVA}</p>
+              <div className="factura-header">
+                <div className="responsable-box">
+                  <div className="avatar-placeholder" />
+                  <div>
+                    <p className="label">Persona responsable</p>
+                    <p className="responsable-text">
+                      {preview?.responsable?.nombreOrazonSocial} - {preview?.responsable?.cuit}
+                    </p>
+                    <p className="muted small">IVA: {preview?.responsable?.posicionIVA}</p>
+                  </div>
                 </div>
+                <img
+                  src="/data/logo-hotel-premier.png"
+                  alt="Hotel Premier"
+                  className="factura-logo"
+                />
               </div>
 
               <hr />
@@ -435,7 +475,7 @@ const FacturarPage = () => {
 
         <div className="actions-row right-align">
           <button className="btn btn-primary" type="button" onClick={handleImprimir} disabled={generando}>
-            {generando ? "Generando..." : "Imprimir"}
+            Imprimir
           </button>
         </div>
             </section>
@@ -530,3 +570,13 @@ const FacturarPage = () => {
 };
 
 export default FacturarPage;
+
+
+
+
+
+
+
+
+
+

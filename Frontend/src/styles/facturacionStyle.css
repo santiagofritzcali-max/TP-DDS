@@ -26,6 +26,20 @@
   color: #444;
 }
 
+.factura-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.factura-logo {
+  height: 72px;
+  width: auto;
+  object-fit: contain;
+}
+
 .field-label {
   display: flex;
   flex-direction: column;
@@ -163,3 +177,27 @@ hr {
   }
 }
 
+@media print {
+  .topBar {
+    display: none !important;
+  }
+
+  .app-root,
+  .app-main,
+  body,
+  html {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  .factura-wrapper {
+    padding: 0;
+    background: #fff;
+  }
+
+  .factura-page {
+    box-shadow: none;
+    border-radius: 0;
+  }
+}
