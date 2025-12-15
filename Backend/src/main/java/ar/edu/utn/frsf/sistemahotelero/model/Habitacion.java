@@ -4,6 +4,7 @@ import ar.edu.utn.frsf.sistemahotelero.enums.*;
 import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.HabitacionId;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Check;
 
 import java.math.BigDecimal;
 
@@ -14,6 +15,7 @@ import java.math.BigDecimal;
     name = "tipo_de_habitacion",
     discriminatorType = DiscriminatorType.STRING
 )
+@Check(constraints = "tipo_de_habitacion IN ('INDIVIDUAL_ESTANDAR','DOBLE_ESTANDAR','DOBLE_SUPERIOR','SUITE_DOBLE','SUPERIOR_FAMILY')")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 public abstract class Habitacion {

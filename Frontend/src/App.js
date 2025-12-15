@@ -16,6 +16,7 @@ import FacturarPage from "./pages/FacturarPage";
 import BuscarResponsablePage from "./pages/BuscarResponsablePage";
 import AltaResponsablePage from "./pages/AltaResponsablePage";
 import ModificarResponsablePage from "./pages/ModificarResponsablePage";
+import IngresarPagoPage from "./pages/IngresarPagoPage";
 
 import "./App.css";
 
@@ -49,6 +50,7 @@ function App() {
             <Route path="/cu10" element={<ModificarHuespedPage />} />
 
             <Route path="/cu15" element={<OcuparHabitacionPage />} />
+            <Route path="/cu16" element={<IngresarPagoPage />} />
           </Routes>
         </main>
       </div>

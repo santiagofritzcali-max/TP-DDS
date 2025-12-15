@@ -34,9 +34,6 @@ public abstract class ResponsableDePago {
     @Enumerated(EnumType.STRING)
     private PosicionIVA posicionIVA;
 
-    /**
-     * Cada subtipo define cuit segA-on corresponda (PJ: campo propio, PF: desde Huesped o nulo).
-     */
     public String getCuit() {
         return null;
     }

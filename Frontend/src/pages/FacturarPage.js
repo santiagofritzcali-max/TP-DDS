@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/facturacionStyle.css";
 import "../styles/ui.css";
@@ -59,15 +59,17 @@ const FacturarPage = () => {
     setFacturaFinal(null);
 
     if (!numeroHabitacion || !fechaEgreso) {
-      setError("Complete Nro. de habitación y fecha de salida.");
+      setError("Complete Nro. de habitaciÃ³n y fecha de salida.");
       return;
     }
 
+    const nro = parseInt(numeroHabitacion, 10);
+    const nroHabitacionBase = isNaN(nro) ? numeroHabitacion : (nro % 100 || nro);
     const fechaBusqueda = fechaEgreso.includes("T") ? fechaEgreso.split("T")[0] : fechaEgreso;
 
     setBuscando(true);
     const { ok, data, error: err } = await buscarOcupantes(
-      numeroHabitacion,
+      nroHabitacionBase,
       fechaBusqueda
     );
     setBuscando(false);
@@ -164,7 +166,7 @@ const FacturarPage = () => {
               };
             }
           } catch (_) {
-            // si falla la bAºsqueda, seguimos con los datos que tenemos
+            // si falla la bAÂºsqueda, seguimos con los datos que tenemos
           }
         }
         setAltaModal({
@@ -254,12 +256,12 @@ const FacturarPage = () => {
         <h2>Generar check out</h2>
 
         <label className="field-label">
-          Nro. de habitación <span className="required">*</span>
+          Nro. de habitaciÃ³n <span className="required">*</span>
           <input
             type="number"
             value={numeroHabitacion}
             onChange={(e) => setNumeroHabitacion(e.target.value)}
-            placeholder="Nro. de habitación"
+            placeholder="Nro. de habitaciÃ³n"
           />
         </label>
 
@@ -291,7 +293,7 @@ const FacturarPage = () => {
       </section>
 
       <section className="factura-panel right">
-        <h2>Resultados de búsqueda</h2>
+        <h2>Resultados de bÃºsqueda</h2>
 
         {ocupantes.length === 0 ? (
           <p className="muted">No hay ocupantes cargados.</p>
