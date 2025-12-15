@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class DireccionRequest {
 
     @NotBlank(message = "La calle es obligatoria")
-    @Pattern(regexp = "^[A-Za-z0-9 .-]+$", message = "La calle solo puede contener letras, numeros, espacio o .-")
+    @Pattern(regexp = "^[\\p{L}0-9 .-]+$", message = "La calle solo puede contener letras, numeros, espacio o .-")
     private String calle;
 
     @NotBlank(message = "El numero es obligatorio")
@@ -30,18 +30,18 @@ public class DireccionRequest {
     private String codigoPostal;
 
     @NotBlank(message = "La localidad es obligatoria")
-    @Pattern(regexp = "^[A-Za-z .-]+$", message = "La localidad solo puede contener letras, espacio o .-")
+    @Pattern(regexp = "^[\\p{L} .-]+$", message = "La localidad solo puede contener letras, espacio o .-")
     private String localidad;
 
     @NotBlank(message = "La ciudad es obligatoria")
-    @Pattern(regexp = "^[A-Za-z .-]+$", message = "La ciudad solo puede contener letras, espacio o .-")
+    @Pattern(regexp = "^[\\p{L} .-]+$", message = "La ciudad solo puede contener letras, espacio o .-")
     private String ciudad;
 
     @NotBlank(message = "La provincia es obligatoria")
-    @Pattern(regexp = "^[A-Za-z .-]+$", message = "La provincia solo puede contener letras, espacio o .-")
+    @Pattern(regexp = "^[\\p{L} .-]+$", message = "La provincia solo puede contener letras, espacio o .-")
     private String provincia;
 
     @NotBlank(message = "El pais es obligatorio")
-    @Pattern(regexp = "^[A-Za-z .-]+$", message = "El pais solo puede contener letras, espacio o .-")
+    @Pattern(regexp = "^[\\p{L} .-]+$", message = "El pais solo puede contener letras, espacio o .-")
     private String pais;
 }
