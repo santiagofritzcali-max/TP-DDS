@@ -27,6 +27,7 @@ const FacturarPage = () => {
   const [preview, setPreview] = useState(null);
   const [itemsSeleccionados, setItemsSeleccionados] = useState([]);
   const [generando, setGenerando] = useState(false);
+  const [previsualizando, setPrevisualizando] = useState(false);
   const [facturaFinal, setFacturaFinal] = useState(null);
   const [pendingSeleccion, setPendingSeleccion] = useState(null); // {tipoDoc, nroDoc}
   const [previewPendiente, setPreviewPendiente] = useState(null); // guardamos previsualización a la espera de confirmación
@@ -119,7 +120,14 @@ const FacturarPage = () => {
     setMostrandoResultados(true);
 
     if (!ok) {
-      setErrorModal(err || "No se pudo buscar ocupantes.");
+      const lower = (err || "").toLowerCase();
+      let mensaje = err || "No se pudo buscar ocupantes.";
+      if (lower.includes("no se encuentra") || lower.includes("no existe estad")) {
+        mensaje = `No existe estadía en la habitación ${numeroHabitacion}`;
+      } else if (lower.includes("errores en los datos de búsqueda")) {
+        mensaje = `No existe estadía en la habitación ${numeroHabitacion}`;
+      }
+      setErrorModal(mensaje);
       return;
     }
 
@@ -304,7 +312,12 @@ const FacturarPage = () => {
          : null,
     };
 
-    await doPrevisualizacion(payload, forzarConfirmDespuesDePreview);
+    setPrevisualizando(true);
+    try {
+      await doPrevisualizacion(payload, forzarConfirmDespuesDePreview);
+    } finally {
+      setPrevisualizando(false);
+    }
   };
 
 
@@ -325,15 +338,20 @@ const FacturarPage = () => {
     };
 
     setConfirmResponsable(null);
-    if (previewPendiente) {
-      setPreview(previewPendiente);
-      setItemsSeleccionados(
-        (previewPendiente.items || []).filter((i) => i.incluido).map((i) => i.id)
-      );
-      setStep("preview");
-      setPreviewPendiente(null);
-    } else {
-      await doPrevisualizacion(payload);
+    setPrevisualizando(true);
+    try {
+      if (previewPendiente) {
+        setPreview(previewPendiente);
+        setItemsSeleccionados(
+          (previewPendiente.items || []).filter((i) => i.incluido).map((i) => i.id)
+        );
+        setStep("preview");
+        setPreviewPendiente(null);
+      } else {
+        await doPrevisualizacion(payload);
+      }
+    } finally {
+      setPrevisualizando(false);
     }
   };
 
@@ -369,13 +387,14 @@ const FacturarPage = () => {
     };
     const { ok, data, error: err } = await generarFactura(payload);
     setGenerando(false);
+    setPrevisualizando(false);
     if (!ok) {
       setErrorModal(err || "No se pudo generar la factura.");
       return;
     }
     setFacturaFinal(data);
     setSuccessModal(
-      `Factura NA? ${data.numero || data.facturaId} generada correctamente.`
+      `Factura Numero ${data.facturaId} generada correctamente.`
     );
     window.print();
   };
@@ -532,9 +551,9 @@ const FacturarPage = () => {
               className="btn btn-primary"
               type="button"
               onClick={handlePrevisualizar}
-              disabled={!estadiaId}
+              disabled={!estadiaId || previsualizando}
             >
-              Siguiente
+              {previsualizando ? "Buscando..." : "Siguiente"}
             </button>
           </div>
         </section>
