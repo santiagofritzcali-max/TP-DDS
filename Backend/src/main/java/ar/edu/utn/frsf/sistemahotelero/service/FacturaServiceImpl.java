@@ -4,6 +4,7 @@ import ar.edu.utn.frsf.sistemahotelero.dao.*;
 import ar.edu.utn.frsf.sistemahotelero.dto.*;
 import ar.edu.utn.frsf.sistemahotelero.enums.PosicionIVA;
 import ar.edu.utn.frsf.sistemahotelero.enums.TipoFact;
+import ar.edu.utn.frsf.sistemahotelero.enums.EstadiaEstado;
 import ar.edu.utn.frsf.sistemahotelero.excepciones.DatosBusquedaFacturacionException;
 import ar.edu.utn.frsf.sistemahotelero.excepciones.PersonaMenorDeEdadException;
 import ar.edu.utn.frsf.sistemahotelero.model.*;
@@ -65,8 +66,8 @@ public class FacturaServiceImpl implements FacturaService {
         }
 
         Estadia estadia = estadiaDAO
-                .findByHabitacionAndFechaDentroDelRango(numeroHabitacion, fechaEgreso)
-                .or(() -> estadiaDAO.findByHabitacionAndFechaEgreso(numeroHabitacion, fechaEgreso))
+                .findByHabitacionAndFechaDentroDelRango(numeroHabitacion, fechaEgreso, EstadiaEstado.ACTIVA)
+                .or(() -> estadiaDAO.findByHabitacionAndFechaEgreso(numeroHabitacion, fechaEgreso, EstadiaEstado.ACTIVA))
                 .orElseThrow(() -> new DatosBusquedaFacturacionException(
                         List.of("La habitacion indicada no se encuentra ocupada en la fecha de salida informada.")));
 

@@ -9,6 +9,8 @@ import ar.edu.utn.frsf.sistemahotelero.dto.EstadiaOcuparResponse;
 import ar.edu.utn.frsf.sistemahotelero.dto.HuespedIdDTO;
 import ar.edu.utn.frsf.sistemahotelero.dto.ReservaHabitacionRequest;
 import ar.edu.utn.frsf.sistemahotelero.enums.EstadoHabitacion;
+import ar.edu.utn.frsf.sistemahotelero.enums.EstadiaEstado;
+import ar.edu.utn.frsf.sistemahotelero.enums.ReservaEstado;
 import ar.edu.utn.frsf.sistemahotelero.excepciones.ReglaNegocioException;
 import ar.edu.utn.frsf.sistemahotelero.model.Estadia;
 import ar.edu.utn.frsf.sistemahotelero.model.Habitacion;
@@ -94,6 +96,7 @@ public class GestorReservaImpl implements GestorReserva {
             r.setNombre(nombre);
             r.setApellido(apellido);
             r.setTelefono(telefono);
+            r.setEstado(ReservaEstado.RESERVADA);
 
             Reserva guardada = reservaDAO.save(r);
             reservasCreadas.add(guardada);
@@ -129,7 +132,7 @@ public class GestorReservaImpl implements GestorReserva {
 
         //Verificar solapamiento de estadías
         List<Estadia> solapadas
-                = estadiaDAO.buscarPorHabitacionYRangoFechas(habitacion, desde, hasta);
+                = estadiaDAO.buscarPorHabitacionYRangoFechas(habitacion, desde, hasta, EstadiaEstado.ACTIVA);
 
         if (!solapadas.isEmpty()) {
             throw new ReglaNegocioException(
@@ -139,7 +142,7 @@ public class GestorReservaImpl implements GestorReserva {
 
         //Verificar reservas en ese rango
         List<Reserva> reservas
-                = reservaDAO.buscarPorHabitacionYRangoFechas(habitacion, desde, hasta);
+                = reservaDAO.buscarPorHabitacionYRangoFechas(habitacion, desde, hasta, ReservaEstado.RESERVADA);
 
         if (!reservas.isEmpty() && !request.isOcuparIgualSiReservada()) {
             Reserva reservaConflicto = reservas.get(0);
@@ -184,6 +187,13 @@ public class GestorReservaImpl implements GestorReserva {
         estadia.setHabitacion(habitacion);
         estadia.setReserva(reservaAsociada);
         estadia.setHuespedes(huespedes);
+        estadia.setEstado(EstadiaEstado.ACTIVA);
+
+        // Si usamos una reserva vigente, la marcamos como ocupada
+        if (reservaAsociada != null) {
+            reservaAsociada.setEstado(ReservaEstado.OCUPADA);
+            reservaDAO.save(reservaAsociada);
+        }
 
         //Actualizar estado de la habitación a OCUPADA
         habitacion.setEstado(EstadoHabitacion.Ocupada);
@@ -234,8 +244,8 @@ public class GestorReservaImpl implements GestorReserva {
         String nom = null;
         if (nombre != null && !nombre.isBlank()) nom = nombre.trim();
         
-        if(nom == null)return reservaDAO.buscarPorApellido(apell);
-        else return reservaDAO.buscarPorApellidoYNombre(apell, nom);
+        if(nom == null)return reservaDAO.buscarPorApellido(apell, ReservaEstado.RESERVADA);
+        else return reservaDAO.buscarPorApellidoYNombre(apell, nom, ReservaEstado.RESERVADA);
     }
 
     @Override
@@ -258,8 +268,9 @@ public class GestorReservaImpl implements GestorReserva {
         //Validar si la reserva puede cancelarse, PATRON STRATEGY
         for (Reserva r : reservas)politicaCancelacion.validarCancelacion(r);
         
-        //Cancelo las reservas
-        reservaDAO.deleteAll(reservas);
+        //Cancelo las reservas marcando estado
+        reservas.forEach(r -> r.setEstado(ReservaEstado.CANCELADA));
+        reservaDAO.saveAll(reservas);
         
         return reservas;
     }

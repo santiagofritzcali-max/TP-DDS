@@ -167,11 +167,20 @@ const EstadoHabitacionPage = () => {
     setErroresFechas({});
 
     const errs = {};
-    if (!fechaDesde) errs.desde = "El campo Desde no puede quedar vacío.";
-    if (!fechaHasta) errs.hasta = "El campo Hasta no puede quedar vacío.";
+    if (!fechaDesde) errs.desde = "El campo Desde no puede quedar vacio.";
+    if (!fechaHasta) errs.hasta = "El campo Hasta no puede quedar vacio.";
     if (Object.keys(errs).length > 0) {
       setErroresFechas(errs);
       setErrorFechas("");
+      return;
+    }
+
+    const hoyIso = new Date().toISOString().slice(0, 10);
+    if (fechaDesde < hoyIso) {
+      const msg = "No se puede ocupar con fechas anteriores a hoy.";
+      setErroresFechas({ desde: msg });
+      setErrorFechas("");
+      setFechaPopup({ open: true, message: msg });
       return;
     }
 
@@ -215,8 +224,17 @@ const EstadoHabitacionPage = () => {
 
       const cols = habitaciones.map((h) => {
         const id = h.id ?? h.habitacionId ?? h.key ?? h;
-        const numero = h.numero ?? h.nro ?? h.label ?? String(id);
-        const display = String(numero);
+        const numeroBase =
+          h.numero ??
+          h.nro ??
+          h.nroHabitacion ??
+          h.label ??
+          (typeof id === "object" && id.nroHabitacion != null ? id.nroHabitacion : String(id));
+
+        // Solo mostramos la parte numérica final (ej: "8-808" -> "808")
+        const raw = String(numeroBase || "");
+        const numeroSolo = (raw.match(/(\d+)$/) || [raw])[1] || raw;
+        const display = numeroSolo;
 
         return { id: keyToString(id), display };
       });

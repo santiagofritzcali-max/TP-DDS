@@ -11,4 +11,6 @@ public interface FacturaDAO extends CrudRepository<Factura, Long> {
     boolean existsByResponsableDePagoId(Long responsableId);
 
     List<Factura> findByEstadiaHabitacionIdNroHabitacionAndPagoIsNull(Integer numeroHabitacion);
+
+    boolean existsByEstadiaIdAndPagoIsNull(Long estadiaId);
 }

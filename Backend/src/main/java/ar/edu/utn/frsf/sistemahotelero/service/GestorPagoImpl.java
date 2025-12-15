@@ -151,9 +151,15 @@ public class GestorPagoImpl implements GestorPago {
         if (estadia == null || estadia.getHabitacion() == null) {
             return;
         }
-        Habitacion habitacion = estadia.getHabitacion();
-        habitacion.setEstado(EstadoHabitacion.Disponible);
-        habitacionDAO.save(habitacion);
+        boolean sinPendientes = estadia.getId() != null
+                && !facturaDAO.existsByEstadiaIdAndPagoIsNull(estadia.getId());
+
+        if (sinPendientes) {
+            estadia.setEstado(ar.edu.utn.frsf.sistemahotelero.enums.EstadiaEstado.FINALIZADA);
+            Habitacion habitacion = estadia.getHabitacion();
+            habitacion.setEstado(EstadoHabitacion.Disponible);
+            habitacionDAO.save(habitacion);
+        }
     }
 
     private String nombreResponsable(ResponsableDePago responsable) {

@@ -6,6 +6,8 @@ import ar.edu.utn.frsf.sistemahotelero.dao.ReservaDAO;
 import ar.edu.utn.frsf.sistemahotelero.dto.EstadoHabitacionesResponse;
 import ar.edu.utn.frsf.sistemahotelero.dto.EstadoHabitacionesResponse.*;
 import ar.edu.utn.frsf.sistemahotelero.enums.EstadoHabitacion;
+import ar.edu.utn.frsf.sistemahotelero.enums.ReservaEstado;
+import ar.edu.utn.frsf.sistemahotelero.enums.EstadiaEstado;
 import ar.edu.utn.frsf.sistemahotelero.model.Estadia;
 import ar.edu.utn.frsf.sistemahotelero.model.Habitacion;
 import ar.edu.utn.frsf.sistemahotelero.model.Reserva;
@@ -54,9 +56,9 @@ public class EstadoHabitacionesService {
         for (Habitacion h : habitaciones) {
             HabitacionId id = h.getId(); // requiere @EmbeddedId en Habitacion
             reservasPorHab.put(id,
-                    safeList(reservaDAO.buscarPorHabitacionYRangoFechas(h, desde, hasta)));
+                    safeList(reservaDAO.buscarPorHabitacionYRangoFechas(h, desde, hasta, ReservaEstado.RESERVADA)));
             estadiasPorHab.put(id,
-                    safeList(estadiaDAO.buscarPorHabitacionYRangoFechas(h, desde, hasta)));
+                    safeList(estadiaDAO.buscarPorHabitacionYRangoFechas(h, desde, hasta, EstadiaEstado.ACTIVA)));
         }
 
         // 4) Grupos por tipo (para el front)

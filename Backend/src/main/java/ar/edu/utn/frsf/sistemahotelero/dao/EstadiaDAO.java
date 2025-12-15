@@ -1,5 +1,6 @@
 package ar.edu.utn.frsf.sistemahotelero.dao;
 
+import ar.edu.utn.frsf.sistemahotelero.enums.EstadiaEstado;
 import ar.edu.utn.frsf.sistemahotelero.enums.TipoDocumento;
 import ar.edu.utn.frsf.sistemahotelero.model.Estadia;
 import ar.edu.utn.frsf.sistemahotelero.model.Habitacion;
@@ -18,45 +19,53 @@ public interface EstadiaDAO extends CrudRepository<Estadia, Long> {
             SELECT e
             FROM Estadia e
             WHERE e.habitacion = :habitacion
+              AND e.estado = :estado
               AND e.fechaIngreso < :hasta
               AND e.fechaEgreso  > :desde
            """)
     List<Estadia> buscarPorHabitacionYRangoFechas(
             @Param("habitacion") Habitacion habitacion,
             @Param("desde") LocalDate desde,
-            @Param("hasta") LocalDate hasta
+            @Param("hasta") LocalDate hasta,
+            @Param("estado") EstadiaEstado estado
     );
     
         @Query("""
             SELECT e
             FROM Estadia e
-            WHERE e.fechaIngreso < :hasta
+            WHERE e.estado = :estado
+              AND e.fechaIngreso < :hasta
               AND e.fechaEgreso  > :desde
            """)
         
         List<Estadia> findSolapadas(
                 @Param("desde") LocalDate desde, 
-                @Param("hasta") LocalDate hasta);
+                @Param("hasta") LocalDate hasta,
+                @Param("estado") EstadiaEstado estado);
         
     @Query("""
             SELECT e
             FROM Estadia e
             WHERE e.habitacion.id.nroHabitacion = :numeroHabitacion
+              AND e.estado = :estado
               AND e.fechaEgreso = :fechaEgreso
            """)
     Optional<Estadia> findByHabitacionAndFechaEgreso(
             @Param("numeroHabitacion") Integer numeroHabitacion,
-            @Param("fechaEgreso") LocalDate fechaEgreso);
+            @Param("fechaEgreso") LocalDate fechaEgreso,
+            @Param("estado") EstadiaEstado estado);
     
     @Query("""
             SELECT e
             FROM Estadia e
             WHERE e.habitacion.id.nroHabitacion = :numeroHabitacion
+              AND e.estado = :estado
               AND :fecha BETWEEN e.fechaIngreso AND e.fechaEgreso
            """)
     Optional<Estadia> findByHabitacionAndFechaDentroDelRango(
             @Param("numeroHabitacion") Integer numeroHabitacion,
-            @Param("fecha") LocalDate fecha);
+            @Param("fecha") LocalDate fecha,
+            @Param("estado") EstadiaEstado estado);
     
     
     @Query("""

@@ -1,5 +1,6 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
+import ar.edu.utn.frsf.sistemahotelero.enums.ReservaEstado;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
@@ -35,6 +36,10 @@ public class Reserva {
     @Column(name = "telefono", length = 30)
     private String telefono;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", nullable = false, length = 20)
+    private ReservaEstado estado;
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumns({
         @JoinColumn(name = "nro_piso", referencedColumnName = "nro_piso", nullable = false),
@@ -42,5 +47,11 @@ public class Reserva {
     })
     private Habitacion habitacion;
 
+    @PrePersist
+    public void prePersist() {
+        if (estado == null) {
+            estado = ReservaEstado.RESERVADA;
+        }
+    }
 
 }

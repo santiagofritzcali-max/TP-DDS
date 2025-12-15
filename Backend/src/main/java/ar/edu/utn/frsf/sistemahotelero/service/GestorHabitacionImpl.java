@@ -5,6 +5,7 @@ import ar.edu.utn.frsf.sistemahotelero.dao.ReservaDAO;
 import ar.edu.utn.frsf.sistemahotelero.enums.EstadoHabitacion;
 import ar.edu.utn.frsf.sistemahotelero.model.Habitacion;
 import ar.edu.utn.frsf.sistemahotelero.model.Reserva;
+import ar.edu.utn.frsf.sistemahotelero.enums.ReservaEstado;
 import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.HabitacionId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,7 +46,7 @@ public class GestorHabitacionImpl implements GestorHabitacion {
         if (inicio == null || fin == null) throw new IllegalArgumentException("Fechas obligatorias.");
         if (fin.isBefore(inicio)) throw new IllegalArgumentException("Fin < inicio.");
 
-        List<Reserva> solapadas = reservaDAO.buscarPorHabitacionYRangoFechas(habitacion, inicio, fin);
+        List<Reserva> solapadas = reservaDAO.buscarPorHabitacionYRangoFechas(habitacion, inicio, fin, ReservaEstado.RESERVADA);
         return solapadas.isEmpty();
     }
 }

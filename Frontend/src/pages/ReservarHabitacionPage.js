@@ -1,11 +1,11 @@
-﻿// src/pages/ReservarHabitacionPage.js
+// src/pages/ReservarHabitacionPage.js
 import React, { useState, useMemo } from "react";
 import "../styles/reservarHabitacionStyle.css";
 import "../styles/ui.css";
 import { buscarDisponibilidad } from "../services/reservaService";
 import { validarRangoFechas } from "../validators/validarReservaHabitacion";
 import { useNavigate } from "react-router-dom";
-import PopupHabitacionNoDisponible from "../components/PopupHabitacionNoDisponible"; // ðŸ‘ˆ NUEVO
+import PopupHabitacionNoDisponible from "../components/PopupHabitacionNoDisponible"; // NUEVO
 import { parseDdMmYyyy, formatDateFromObj } from "../utils/date";
 import { ROOM_TYPES_BY_NUMBER, PRETTY_ROOM_TYPE } from "../constants/roomTypes";
 import FechaInvalidaPopup from "../components/FechaInvalidaPopup";
@@ -32,7 +32,7 @@ const ReservarHabitacionPage = () => {
   const [showFechasPopup, setShowFechasPopup] = useState(false);
   const [mensajeFechasPopup, setMensajeFechasPopup] = useState("");
 
-  // ðŸ‘‡ NUEVO: estado para popup
+  
   const [showNoDispPopup, setShowNoDispPopup] = useState(false);
   const [rangoNoDisp, setRangoNoDisp] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -51,7 +51,10 @@ const ReservarHabitacionPage = () => {
       if (!map.has(tipo)) {
         map.set(tipo, []);
       }
-      map.get(tipo).push(col);
+      const raw = String(col.nro ?? col.numero ?? "");
+      const match = raw.match(/(\d+)$/);
+      const nroDisplay = match ? match[1] : raw;
+      map.get(tipo).push({ ...col, nroDisplay });
     });
 
     return Array.from(map.entries()).map(([tipo, cols]) => ({
@@ -72,11 +75,20 @@ const ReservarHabitacionPage = () => {
     setMensajeFechasPopup("");
 
     const errs = {};
-    if (!fechaDesde) errs.desde = "El campo Desde no puede quedar vacÃ­o.";
-    if (!fechaHasta) errs.hasta = "El campo Hasta no puede quedar vacÃ­o.";
+    if (!fechaDesde) errs.desde = "El campo Desde no puede quedar vacio.";
+    if (!fechaHasta) errs.hasta = "El campo Hasta no puede quedar vacio.";
 
     if (Object.keys(errs).length > 0) {
       setErroresFechas(errs);
+      return;
+    }
+
+    const hoyIso = new Date().toISOString().slice(0, 10);
+    if (fechaDesde < hoyIso) {
+      const msg = "No se puede reservar fechas anteriores a hoy.";
+      setErrorFechas(msg);
+      setMensajeFechasPopup(msg);
+      setShowFechasPopup(true);
       return;
     }
 
@@ -112,17 +124,17 @@ const ReservarHabitacionPage = () => {
     } catch (err) {
       console.error(err);
       setMensajeSinHabitaciones(
-        "OcurriÃ³ un error al buscar la disponibilidad."
+        "Ocurrió un error al buscar la disponibilidad."
       );
     }
     setBuscando(false);
   };
 
   // -------------------------------------------------------------------
-  // Helpers de selecciÃ³n / estado
+  // Helpers de selección / estado
   // -------------------------------------------------------------------
 
-  // ðŸ‘‰ NUEVO: ahora permitimos seleccionar cualquier estado
+
   const toggleCell = (fecha, nro /*, estado */) => {
     const key = `${fecha}-${nro}`;
     const yaSeleccionada = selectedCells.some(
@@ -162,7 +174,7 @@ const ReservarHabitacionPage = () => {
   };
 
   // -------------------------------------------------------------------
-  // ORDENAMIENTO BÃSICO POR FECHA Y HABITACIÃ“N (celdas individuales)
+  // ORDENAMIENTO BÁSICO POR FECHA Y HABITACIÓN (celdas individuales)
   // -------------------------------------------------------------------
   const habitacionesOrdenadas = useMemo(() => {
     return [...selectedCells].sort((a, b) => {
@@ -173,7 +185,7 @@ const ReservarHabitacionPage = () => {
   }, [selectedCells]);
 
   // -------------------------------------------------------------------
-  // AGRUPAR POR HABITACIÃ“N + RANGOS CONSECUTIVOS DE FECHAS
+  // AGRUPAR POR HABITACIÓN + RANGOS CONSECUTIVOS DE FECHAS
   // Resultado: [{ nro, fechaIngreso, fechaEgreso }]
   // -------------------------------------------------------------------
   const reservasAgrupadas = useMemo(() => {
@@ -251,7 +263,6 @@ const ReservarHabitacionPage = () => {
 
     if (fechasNoDisp.length === 0) return null;
 
-    // Fechas Ãºnicas ordenadas
     const ordenadas = [...new Set(fechasNoDisp)].sort((f1, f2) => {
       const d1 = parseDdMmYyyy(f1);
       const d2 = parseDdMmYyyy(f2);
@@ -261,7 +272,7 @@ const ReservarHabitacionPage = () => {
     return {
       desde: ordenadas[0],
       hasta: ordenadas[ordenadas.length - 1],
-      cantidad: ordenadas.length, // ðŸ‘ˆ cantidad de fechas no disponibles
+      cantidad: ordenadas.length, 
     };
   };
 
@@ -298,7 +309,7 @@ const ReservarHabitacionPage = () => {
     });
   };
 
-  // ðŸ‘ˆ NUEVO: cerrar popup -> limpiar selecciÃ³n
+
   const handleCloseNoDispPopup = () => {
     setShowNoDispPopup(false);
     setSelectedCells([]); // limpia grilla y panel derecho
@@ -410,7 +421,7 @@ const ReservarHabitacionPage = () => {
                   {/* Encabezado igual a CU05 */}
                   <tr>
                     <th className="col-dia" rowSpan={2}>
-                      DÃ­as de
+                     Días de
                     </th>
 
                     {gruposColumnas.length > 0 ? (
@@ -428,7 +439,7 @@ const ReservarHabitacionPage = () => {
                     {gruposColumnas.length > 0 &&
                       gruposColumnas.flatMap((g) =>
                         g.cols.map((col) => (
-                          <th key={col.nro}>{col.nro}</th>
+                          <th key={col.nro}>{col.nroDisplay || col.nro}</th>
                         ))
                       )}
                   </tr>
@@ -558,7 +569,7 @@ const ReservarHabitacionPage = () => {
         </aside>
       </main>
 
-      {/* POPUP DE HABITACIÃ“N NO DISPONIBLE */}
+      {/* POPUP DE HABITACIÓN NO DISPONIBLE */}
       {showNoDispPopup && (
         <PopupHabitacionNoDisponible
           rango={rangoNoDisp}   
@@ -617,8 +628,6 @@ const ReservarHabitacionPage = () => {
 };
 
 export default ReservarHabitacionPage;
-
-
 
 
 

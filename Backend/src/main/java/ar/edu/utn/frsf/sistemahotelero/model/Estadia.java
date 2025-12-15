@@ -1,5 +1,6 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
+import ar.edu.utn.frsf.sistemahotelero.enums.EstadiaEstado;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
@@ -25,6 +26,10 @@ public class Estadia {
 
     @Column(name = "fecha_egreso", nullable = false)
     private LocalDate fechaEgreso;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado", nullable = false, length = 20)
+    private EstadiaEstado estado;
 
     @ManyToOne(optional = false)
     @JoinColumns({
@@ -54,4 +59,11 @@ public class Estadia {
     
     @OneToMany
     private List<Factura> facturas;
+
+    @PrePersist
+    public void prePersist() {
+        if (estado == null) {
+            estado = EstadiaEstado.ACTIVA;
+        }
+    }
 }
