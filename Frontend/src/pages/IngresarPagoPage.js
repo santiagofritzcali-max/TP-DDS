@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import "../styles/facturacionStyle.css";
 import "../styles/ui.css";
 import "../styles/responsableStyle.css";
@@ -7,8 +7,8 @@ import Modal from "../components/Modal";
 
 const tipoMedioOptions = [
   { value: "EFECTIVO", label: "Efectivo" },
-  { value: "TARJETA_DEBITO", label: "Tarjeta Débito" },
-  { value: "TARJETA_CREDITO", label: "Tarjeta Crédito" },
+  { value: "TARJETA_DEBITO", label: "Tarjeta Debito" },
+  { value: "TARJETA_CREDITO", label: "Tarjeta Credito" },
   { value: "CHEQUE", label: "Cheque" },
   { value: "MONEDA_EXTRANJERA", label: "Moneda Extranjera" },
 ];
@@ -31,8 +31,17 @@ const medioInicial = {
   fechaCobro: "",
 };
 
+const isLetters = (val) => !!val && /^[A-Za-z\s]+$/.test(val.trim());
+const isDigits = (val) => !!val && /^[0-9]+$/.test(val.trim());
+const isPositiveNumber = (val) => {
+  if (val === null || val === undefined) return false;
+  const num = parseFloat(val);
+  return !isNaN(num) && num > 0;
+};
+
 const IngresarPagoPage = () => {
   const [numeroHabitacion, setNumeroHabitacion] = useState("");
+  const [errorHabitacion, setErrorHabitacion] = useState(null);
   const [pendientes, setPendientes] = useState([]);
   const [buscando, setBuscando] = useState(false);
   const [errorModal, setErrorModal] = useState(null);
@@ -42,12 +51,12 @@ const IngresarPagoPage = () => {
   const [medioForm, setMedioForm] = useState(medioInicial);
   const [medios, setMedios] = useState([]);
   const [enviando, setEnviando] = useState(false);
+  const [errorsMedio, setErrorsMedio] = useState({});
 
   const totalFactura = seleccionFactura?.total || 0;
 
   const acumulado = useMemo(
-    () =>
-      medios.reduce((acc, m) => acc + (parseFloat(m.monto) || 0), 0),
+    () => medios.reduce((acc, m) => acc + (parseFloat(m.monto) || 0), 0),
     [medios]
   );
 
@@ -56,12 +65,20 @@ const IngresarPagoPage = () => {
 
   const handleBuscar = async () => {
     setErrorModal(null);
+    setErrorHabitacion(null);
+
     if (!numeroHabitacion) {
-      setErrorModal("Ingrese un número de habitación.");
+      setErrorHabitacion("El campo Numero de habitacion es requerido.");
       return;
     }
+
     const nro = parseInt(numeroHabitacion, 10);
-    const nroHabitacionBase = isNaN(nro) ? numeroHabitacion : nro;
+    if (isNaN(nro) || nro <= 0) {
+      setErrorHabitacion("El campo Numero de habitacion debe ser numerico y mayor a 0.");
+      return;
+    }
+
+    const nroHabitacionBase = nro;
     setBuscando(true);
     const { ok, data, error } = await listarFacturasPendientes(nroHabitacionBase);
     setBuscando(false);
@@ -73,44 +90,94 @@ const IngresarPagoPage = () => {
     setSeleccionFactura(null);
     setMedios([]);
   };
+
   const handleAgregarMedio = () => {
-    const errores = [];
-    const montoNum = parseFloat(medioForm.monto);
-    if (!medioForm.monto || isNaN(montoNum) || montoNum <= 0) {
-      errores.push("Ingrese un monto válido para el medio de pago.");
+    const errores = {};
+    const montoVal = medioForm.monto?.toString().trim();
+    if (!montoVal) {
+      errores.monto = "El campo Monto es requerido.";
+    } else if (!isPositiveNumber(montoVal)) {
+      errores.monto = "El campo Monto debe ser numerico y mayor a 0.";
     }
     switch (medioForm.tipo) {
       case "MONEDA_EXTRANJERA":
-        if (!medioForm.tipoMoneda) errores.push("Seleccione el tipo de moneda extranjera.");
-        if (!medioForm.cotizacion || parseFloat(medioForm.cotizacion) <= 0) errores.push("Ingrese la cotización de la moneda extranjera.");
+        if (!medioForm.tipoMoneda?.toString().trim()) {
+          errores.tipoMoneda = "El campo Tipo de moneda es requerido.";
+        }
+        if (!medioForm.cotizacion?.toString().trim()) {
+          errores.cotizacion = "El campo Cotizacion es requerido.";
+        } else if (!isPositiveNumber(medioForm.cotizacion)) {
+          errores.cotizacion = "El campo Cotizacion debe ser numerico y mayor a 0.";
+        }
         break;
       case "CHEQUE":
-        if (!medioForm.nroCheque) errores.push("Ingrese el número de cheque.");
-        if (!medioForm.nombrePropietario) errores.push("Ingrese el nombre del propietario del cheque.");
-        if (!medioForm.banco) errores.push("Seleccione el banco del cheque.");
-        if (!medioForm.plazo) errores.push("Ingrese el plazo del cheque.");
-        if (!medioForm.fechaCobro) errores.push("Ingrese la fecha de cobro del cheque.");
+        if (!medioForm.nroCheque?.toString().trim()) {
+          errores.nroCheque = "El campo Nro Cheque es requerido.";
+        } else if (!isDigits(medioForm.nroCheque)) {
+          errores.nroCheque = "El campo Nro Cheque debe ser numerico.";
+        }
+        if (!medioForm.nombrePropietario?.toString().trim()) {
+          errores.nombrePropietario = "El campo Nombre propietario es requerido.";
+        } else if (!isLetters(medioForm.nombrePropietario)) {
+          errores.nombrePropietario = "El campo Nombre propietario solo acepta letras.";
+        }
+        if (!medioForm.banco?.toString().trim()) {
+          errores.banco = "El campo Banco es requerido.";
+        }
+        if (!medioForm.plazo?.toString().trim()) {
+          errores.plazo = "El campo Plazo es requerido.";
+        }
+        if (!medioForm.fechaCobro?.toString().trim()) {
+          errores.fechaCobro = "El campo Fecha cobro es requerido.";
+        }
         break;
       case "TARJETA_DEBITO":
       case "TARJETA_CREDITO":
-        if (!medioForm.nombre) errores.push("Ingrese el nombre del titular de la tarjeta.");
-        if (!medioForm.apellido) errores.push("Ingrese el apellido del titular de la tarjeta.");
-        if (!medioForm.codigo) errores.push("Ingrese el código de la tarjeta.");
-        if (!medioForm.nroTarjeta) errores.push("Ingrese el número de la tarjeta.");
-        if (!medioForm.fechaVencimiento) errores.push("Ingrese la fecha de vencimiento.");
-        if (medioForm.tipo === "TARJETA_CREDITO" && !medioForm.cuotas) errores.push("Ingrese las cuotas para la tarjeta de crédito.");
+        if (!medioForm.nombre?.toString().trim()) {
+          errores.nombre = "El campo Nombre es requerido.";
+        } else if (!isLetters(medioForm.nombre)) {
+          errores.nombre = "El campo Nombre solo acepta letras.";
+        }
+        if (!medioForm.apellido?.toString().trim()) {
+          errores.apellido = "El campo Apellido es requerido.";
+        } else if (!isLetters(medioForm.apellido)) {
+          errores.apellido = "El campo Apellido solo acepta letras.";
+        }
+        if (!medioForm.codigo?.toString().trim()) {
+          errores.codigo = "El campo Codigo es requerido.";
+        } else if (!isDigits(medioForm.codigo)) {
+          errores.codigo = "El campo Codigo debe ser numerico.";
+        }
+        if (!medioForm.nroTarjeta?.toString().trim()) {
+          errores.nroTarjeta = "El campo Nro Tarjeta es requerido.";
+        } else if (!isDigits(medioForm.nroTarjeta)) {
+          errores.nroTarjeta = "El campo Nro Tarjeta debe ser numerico.";
+        }
+        if (!medioForm.fechaVencimiento?.toString().trim()) {
+          errores.fechaVencimiento = "El campo Fecha vencimiento es requerido.";
+        }
+        if (medioForm.tipo === "TARJETA_CREDITO") {
+          if (!medioForm.cuotas?.toString().trim()) {
+            errores.cuotas = "El campo Cuotas es requerido.";
+          } else if (!isDigits(medioForm.cuotas) || parseInt(medioForm.cuotas, 10) <= 0) {
+            errores.cuotas = "El campo Cuotas debe ser numerico y mayor a 0.";
+          }
+        }
         break;
       default:
         break;
     }
-    if (errores.length > 0) {
-      setErrorModal(errores.join(" "));
+    if (Object.keys(errores).length > 0) {
+      setErrorsMedio(errores);
       return;
     }
+    setErrorsMedio({});
     const medioAGuardar = { ...medioForm };
     setMedios((prev) => [...prev, medioAGuardar]);
     setMedioForm({ ...medioInicial, tipo: medioForm.tipo });
+    setErrorsMedio({});
   };
+
   const handleRegistrarPago = async () => {
     if (!seleccionFactura) {
       setErrorModal("Seleccione una factura pendiente.");
@@ -165,119 +232,223 @@ const IngresarPagoPage = () => {
       case "TARJETA_DEBITO":
       case "TARJETA_CREDITO":
         return (
-          <>
-            <label className="field-label">
-              Nombre
-              <input
-                value={medioForm.nombre}
-                onChange={(e) => setMedioForm({ ...medioForm, nombre: e.target.value })}
-              />
-            </label>
-            <label className="field-label">
-              Apellido
-              <input
-                value={medioForm.apellido}
-                onChange={(e) => setMedioForm({ ...medioForm, apellido: e.target.value })}
-              />
-            </label>
-            <label className="field-label">
-              Código
-              <input
-                type="number"
-                value={medioForm.codigo}
-                onChange={(e) => setMedioForm({ ...medioForm, codigo: e.target.value })}
-              />
-            </label>
-            <label className="field-label">
-              Nro Tarjeta
-              <input
-                value={medioForm.nroTarjeta}
-                onChange={(e) => setMedioForm({ ...medioForm, nroTarjeta: e.target.value })}
-              />
-            </label>
-            <label className="field-label">
-              Fecha vencimiento
-              <input
-                type="date"
-                value={medioForm.fechaVencimiento}
-                onChange={(e) => setMedioForm({ ...medioForm, fechaVencimiento: e.target.value })}
-              />
-            </label>
-            {medioForm.tipo === "TARJETA_CREDITO" && (
+            <>
               <label className="field-label">
-                Cuotas
+                <span>
+                  Nombre <span style={{ color: "#c62828" }}>*</span>
+                </span>
+                <input
+                  value={medioForm.nombre}
+                  onChange={(e) => setMedioForm({ ...medioForm, nombre: e.target.value })}
+                  style={errorsMedio.nombre ? { borderColor: "#c62828" } : undefined}
+                />
+                {errorsMedio.nombre && (
+                  <div className="error-inline" style={{ marginTop: "4px" }}>
+                    {errorsMedio.nombre}
+                  </div>
+                )}
+              </label>
+              <label className="field-label">
+                <span>
+                  Apellido <span style={{ color: "#c62828" }}>*</span>
+                </span>
+                <input
+                  value={medioForm.apellido}
+                  onChange={(e) => setMedioForm({ ...medioForm, apellido: e.target.value })}
+                  style={errorsMedio.apellido ? { borderColor: "#c62828" } : undefined}
+                />
+                {errorsMedio.apellido && (
+                  <div className="error-inline" style={{ marginTop: "4px" }}>
+                    {errorsMedio.apellido}
+                  </div>
+                )}
+              </label>
+              <label className="field-label">
+                <span>
+                  Codigo <span style={{ color: "#c62828" }}>*</span>
+                </span>
                 <input
                   type="number"
-                  value={medioForm.cuotas}
-                  onChange={(e) => setMedioForm({ ...medioForm, cuotas: e.target.value })}
+                  value={medioForm.codigo}
+                  onChange={(e) => setMedioForm({ ...medioForm, codigo: e.target.value })}
+                  style={errorsMedio.codigo ? { borderColor: "#c62828" } : undefined}
                 />
+                {errorsMedio.codigo && (
+                  <div className="error-inline" style={{ marginTop: "4px" }}>
+                    {errorsMedio.codigo}
+                  </div>
+                )}
               </label>
-            )}
-          </>
-        );
-      case "CHEQUE":
-        return (
-          <>
-            <label className="field-label">
-              Nro Cheque
-              <input
-                value={medioForm.nroCheque}
-                onChange={(e) => setMedioForm({ ...medioForm, nroCheque: e.target.value })}
-              />
-            </label>
-            <label className="field-label">
-              Nombre propietario
-              <input
-                value={medioForm.nombrePropietario}
-                onChange={(e) => setMedioForm({ ...medioForm, nombrePropietario: e.target.value })}
-              />
-            </label>
-            <label className="field-label">
-              Banco
-              <input
-                value={medioForm.banco}
-                onChange={(e) => setMedioForm({ ...medioForm, banco: e.target.value })}
-              />
-            </label>
-            <label className="field-label">
-              Plazo
-              <input
-                value={medioForm.plazo}
-                onChange={(e) => setMedioForm({ ...medioForm, plazo: e.target.value })}
-              />
-            </label>
-            <label className="field-label">
-              Fecha cobro
-              <input
-                type="date"
-                value={medioForm.fechaCobro}
-                onChange={(e) => setMedioForm({ ...medioForm, fechaCobro: e.target.value })}
-              />
-            </label>
-          </>
-        );
-      case "MONEDA_EXTRANJERA":
-        return (
-          <>
-            <label className="field-label">
-              Tipo de moneda
-              <input
-                value={medioForm.tipoMoneda}
-                onChange={(e) => setMedioForm({ ...medioForm, tipoMoneda: e.target.value })}
-              />
-            </label>
-            <label className="field-label">
-              Cotización
-              <input
-                type="number"
-                value={medioForm.cotizacion}
-                onChange={(e) => setMedioForm({ ...medioForm, cotizacion: e.target.value })}
-              />
-            </label>
-          </>
-        );
-      default:
-        return null;
+              <label className="field-label">
+                <span>
+                  Nro Tarjeta <span style={{ color: "#c62828" }}>*</span>
+                </span>
+                <input
+                  value={medioForm.nroTarjeta}
+                  onChange={(e) => setMedioForm({ ...medioForm, nroTarjeta: e.target.value })}
+                  style={errorsMedio.nroTarjeta ? { borderColor: "#c62828" } : undefined}
+                />
+                {errorsMedio.nroTarjeta && (
+                  <div className="error-inline" style={{ marginTop: "4px" }}>
+                    {errorsMedio.nroTarjeta}
+                  </div>
+                )}
+              </label>
+              <label className="field-label">
+                <span>
+                  Fecha vencimiento <span style={{ color: "#c62828" }}>*</span>
+                </span>
+                <input
+                  type="date"
+                  value={medioForm.fechaVencimiento}
+                  onChange={(e) => setMedioForm({ ...medioForm, fechaVencimiento: e.target.value })}
+                  style={errorsMedio.fechaVencimiento ? { borderColor: "#c62828" } : undefined}
+                />
+                {errorsMedio.fechaVencimiento && (
+                  <div className="error-inline" style={{ marginTop: "4px" }}>
+                    {errorsMedio.fechaVencimiento}
+                  </div>
+                )}
+              </label>
+              {medioForm.tipo === "TARJETA_CREDITO" && (
+                <label className="field-label">
+                  <span>
+                    Cuotas <span style={{ color: "#c62828" }}>*</span>
+                  </span>
+                  <input
+                    type="number"
+                    value={medioForm.cuotas}
+                    onChange={(e) => setMedioForm({ ...medioForm, cuotas: e.target.value })}
+                    style={errorsMedio.cuotas ? { borderColor: "#c62828" } : undefined}
+                  />
+                  {errorsMedio.cuotas && (
+                    <div className="error-inline" style={{ marginTop: "4px" }}>
+                      {errorsMedio.cuotas}
+                    </div>
+                  )}
+                </label>
+              )}
+            </>
+          );
+        case "CHEQUE":
+          return (
+            <>
+              <label className="field-label">
+                <span>
+                  Nro Cheque <span style={{ color: "#c62828" }}>*</span>
+                </span>
+                <input
+                  value={medioForm.nroCheque}
+                  onChange={(e) => setMedioForm({ ...medioForm, nroCheque: e.target.value })}
+                  style={errorsMedio.nroCheque ? { borderColor: "#c62828" } : undefined}
+                />
+                {errorsMedio.nroCheque && (
+                  <div className="error-inline" style={{ marginTop: "4px" }}>
+                    {errorsMedio.nroCheque}
+                  </div>
+                )}
+              </label>
+              <label className="field-label">
+                <span>
+                  Nombre propietario <span style={{ color: "#c62828" }}>*</span>
+                </span>
+                <input
+                  value={medioForm.nombrePropietario}
+                  onChange={(e) => setMedioForm({ ...medioForm, nombrePropietario: e.target.value })}
+                  style={errorsMedio.nombrePropietario ? { borderColor: "#c62828" } : undefined}
+                />
+                {errorsMedio.nombrePropietario && (
+                  <div className="error-inline" style={{ marginTop: "4px" }}>
+                    {errorsMedio.nombrePropietario}
+                  </div>
+                )}
+              </label>
+              <label className="field-label">
+                <span>
+                  Banco <span style={{ color: "#c62828" }}>*</span>
+                </span>
+                <input
+                  value={medioForm.banco}
+                  onChange={(e) => setMedioForm({ ...medioForm, banco: e.target.value })}
+                  style={errorsMedio.banco ? { borderColor: "#c62828" } : undefined}
+                />
+                {errorsMedio.banco && (
+                  <div className="error-inline" style={{ marginTop: "4px" }}>
+                    {errorsMedio.banco}
+                  </div>
+                )}
+              </label>
+              <label className="field-label">
+                <span>
+                  Plazo <span style={{ color: "#c62828" }}>*</span>
+                </span>
+                <input
+                  value={medioForm.plazo}
+                  onChange={(e) => setMedioForm({ ...medioForm, plazo: e.target.value })}
+                  style={errorsMedio.plazo ? { borderColor: "#c62828" } : undefined}
+                />
+                {errorsMedio.plazo && (
+                  <div className="error-inline" style={{ marginTop: "4px" }}>
+                    {errorsMedio.plazo}
+                  </div>
+                )}
+              </label>
+              <label className="field-label">
+                <span>
+                  Fecha cobro <span style={{ color: "#c62828" }}>*</span>
+                </span>
+                <input
+                  type="date"
+                  value={medioForm.fechaCobro}
+                  onChange={(e) => setMedioForm({ ...medioForm, fechaCobro: e.target.value })}
+                  style={errorsMedio.fechaCobro ? { borderColor: "#c62828" } : undefined}
+                />
+                {errorsMedio.fechaCobro && (
+                  <div className="error-inline" style={{ marginTop: "4px" }}>
+                    {errorsMedio.fechaCobro}
+                  </div>
+                )}
+              </label>
+            </>
+          );
+        case "MONEDA_EXTRANJERA":
+          return (
+            <>
+              <label className="field-label">
+                <span>
+                  Tipo de moneda <span style={{ color: "#c62828" }}>*</span>
+                </span>
+                <input
+                  value={medioForm.tipoMoneda}
+                  onChange={(e) => setMedioForm({ ...medioForm, tipoMoneda: e.target.value })}
+                  style={errorsMedio.tipoMoneda ? { borderColor: "#c62828" } : undefined}
+                />
+                {errorsMedio.tipoMoneda && (
+                  <div className="error-inline" style={{ marginTop: "4px" }}>
+                    {errorsMedio.tipoMoneda}
+                  </div>
+                )}
+              </label>
+              <label className="field-label">
+                <span>
+                  Cotizacion <span style={{ color: "#c62828" }}>*</span>
+                </span>
+                <input
+                  type="number"
+                  value={medioForm.cotizacion}
+                  onChange={(e) => setMedioForm({ ...medioForm, cotizacion: e.target.value })}
+                  style={errorsMedio.cotizacion ? { borderColor: "#c62828" } : undefined}
+                />
+                {errorsMedio.cotizacion && (
+                  <div className="error-inline" style={{ marginTop: "4px" }}>
+                    {errorsMedio.cotizacion}
+                  </div>
+                )}
+              </label>
+            </>
+          );
+        default:
+          return null;
     }
   };
 
@@ -287,14 +458,18 @@ const IngresarPagoPage = () => {
         <section className="factura-panel left">
           <h2>Ingresar pago</h2>
           <label className="field-label">
-            Nro de habitación
+            <span>
+              Nro de habitacion <span style={{ color: "#c62828" }}>*</span>
+            </span>
             <input
               type="number"
               value={numeroHabitacion}
               onChange={(e) => setNumeroHabitacion(e.target.value)}
               placeholder="Ej: 401"
+              style={errorHabitacion ? { borderColor: "#c62828" } : undefined}
             />
           </label>
+          {errorHabitacion && <div className="error-inline">{errorHabitacion}</div>}
           <div className="actions-row">
             <button className="btn btn-secondary" type="button" onClick={() => window.history.back()}>
               Volver
@@ -311,7 +486,7 @@ const IngresarPagoPage = () => {
 
           <h3>Facturas pendientes</h3>
           {pendientes.length === 0 ? (
-            <p className="muted small">No hay facturas pendientes para esta habitación.</p>
+            <p className="muted small">No hay facturas pendientes para esta habitacion.</p>
           ) : (
             <ul className="lista-ocupantes">
               {pendientes.map((f) => (
@@ -324,7 +499,8 @@ const IngresarPagoPage = () => {
                       onChange={() => setSeleccionFactura(f)}
                     />
                     <span>
-                      Nro Factura: {f.numeroFactura} - Total: ${f.total?.toFixed(2) || f.total} - Resp. Pago: {f.responsable}
+                      Nro Factura: {f.numeroFactura} - Total: ${f.total?.toFixed(2) || f.total} - Resp. Pago:{" "}
+                      {f.responsable}
                     </span>
                   </label>
                 </li>
@@ -347,7 +523,10 @@ const IngresarPagoPage = () => {
                   Medio
                   <select
                     value={medioForm.tipo}
-                    onChange={(e) => setMedioForm({ ...medioForm, tipo: e.target.value })}
+                    onChange={(e) => {
+                      setMedioForm({ ...medioForm, tipo: e.target.value });
+                      setErrorsMedio({});
+                    }}
                   >
                     {tipoMedioOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -358,12 +537,20 @@ const IngresarPagoPage = () => {
                 </label>
 
                 <label className="field-label">
-                  Monto
+                  <span>
+                    Monto <span style={{ color: "#c62828" }}>*</span>
+                  </span>
                   <input
                     type="number"
                     value={medioForm.monto}
                     onChange={(e) => setMedioForm({ ...medioForm, monto: e.target.value })}
+                    style={errorsMedio.monto ? { borderColor: "#c62828" } : undefined}
                   />
+                  {errorsMedio.monto && (
+                    <div className="error-inline" style={{ marginTop: "4px" }}>
+                      {errorsMedio.monto}
+                    </div>
+                  )}
                 </label>
 
                 {renderCamposMedio()}
@@ -380,12 +567,20 @@ const IngresarPagoPage = () => {
 
               <h4>Medios cargados</h4>
               {medios.length === 0 ? (
-                <p className="muted small">Aún no agregaste medios.</p>
+                <p className="muted small">Aun no agregaste medios.</p>
               ) : (
                 <ul className="lista-ocupantes">
                   {medios.map((m, idx) => (
                     <li key={idx} className="ocupante-item">
-                      <div style={{ display: "flex", justifyContent: "space-between", width: "100%", gap: "8px", alignItems: "center" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          width: "100%",
+                          gap: "8px",
+                          alignItems: "center",
+                        }}
+                      >
                         <div>
                           <strong>{m.tipo}</strong> - ${parseFloat(m.monto || 0).toFixed(2)}
                         </div>
@@ -464,4 +659,3 @@ const IngresarPagoPage = () => {
 };
 
 export default IngresarPagoPage;
-
