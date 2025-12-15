@@ -194,20 +194,18 @@ const FacturarPage = () => {
     );
   };
 
+  const esItemObligatorio = (item) =>
+    item?.tipo === "ESTADIA" || !item?.descripcion?.includes("*");
+
   const validarItemsSeleccionados = () => {
     const items = preview?.items || [];
-    const requeridos = items.filter((i) => i.tipo === "ESTADIA" || i.descripcion?.includes("*"));
+    const requeridos = items.filter(esItemObligatorio);
     const faltaRequerido = requeridos.some((i) => !itemsSeleccionados.includes(i.id));
     if (faltaRequerido) {
-      setErrorModal("Debe seleccionar los items obligatorios (estadia y consumos marcados).");
+      setErrorModal("Debe seleccionar los items obligatorios (marcados con *).");
       return false;
     }
     return true;
-  };
-
-  const handleConfirmarSeleccion = () => {
-    if (!preview) return;
-    validarItemsSeleccionados();
   };
 
   const handleImprimir = async () => {
@@ -398,25 +396,12 @@ const FacturarPage = () => {
                       onChange={() => toggleItem(item.id)}
                     />
                     <span>
-                      {item.descripcion} {item.descripcion?.includes("*") ? "" : <span className="required">*</span>}
+                      {item.descripcion} {esItemObligatorio(item) ? <span className="required">*</span> : null}
                     </span>
                   </label>
                 ))}
 
               </div>
-
-              <div className="actions-row">
-          <button className="btn btn-secondary" type="button" onClick={resetTodo}>
-            Cancelar
-          </button>
-          <button
-            className="btn btn-primary"
-            type="button"
-            onClick={handleConfirmarSeleccion}
-          >
-            Aceptar
-          </button>
-        </div>
       </section>
 
             <section className="factura-panel right">
