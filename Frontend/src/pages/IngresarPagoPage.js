@@ -7,8 +7,8 @@ import Modal from "../components/Modal";
 
 const tipoMedioOptions = [
   { value: "EFECTIVO", label: "Efectivo" },
-  { value: "TARJETA_DEBITO", label: "Tarjeta DÃ©bito" },
-  { value: "TARJETA_CREDITO", label: "Tarjeta CrÃ©dito" },
+  { value: "TARJETA_DEBITO", label: "Tarjeta Débito" },
+  { value: "TARJETA_CREDITO", label: "Tarjeta Crédito" },
   { value: "CHEQUE", label: "Cheque" },
   { value: "MONEDA_EXTRANJERA", label: "Moneda Extranjera" },
 ];
@@ -61,7 +61,7 @@ const IngresarPagoPage = () => {
       return;
     }
     const nro = parseInt(numeroHabitacion, 10);
-    const nroHabitacionBase = isNaN(nro) ? numeroHabitacion : (nro % 100 || nro);
+    const nroHabitacionBase = isNaN(nro) ? numeroHabitacion : nro;
     setBuscando(true);
     const { ok, data, error } = await listarFacturasPendientes(nroHabitacionBase);
     setBuscando(false);
@@ -74,15 +74,43 @@ const IngresarPagoPage = () => {
     setMedios([]);
   };
   const handleAgregarMedio = () => {
-    if (!medioForm.monto || parseFloat(medioForm.monto) <= 0) {
-      setErrorModal("Ingrese un monto vÃ¡lido para el medio de pago.");
+    const errores = [];
+    const montoNum = parseFloat(medioForm.monto);
+    if (!medioForm.monto || isNaN(montoNum) || montoNum <= 0) {
+      errores.push("Ingrese un monto válido para el medio de pago.");
+    }
+    switch (medioForm.tipo) {
+      case "MONEDA_EXTRANJERA":
+        if (!medioForm.tipoMoneda) errores.push("Seleccione el tipo de moneda extranjera.");
+        if (!medioForm.cotizacion || parseFloat(medioForm.cotizacion) <= 0) errores.push("Ingrese la cotización de la moneda extranjera.");
+        break;
+      case "CHEQUE":
+        if (!medioForm.nroCheque) errores.push("Ingrese el número de cheque.");
+        if (!medioForm.nombrePropietario) errores.push("Ingrese el nombre del propietario del cheque.");
+        if (!medioForm.banco) errores.push("Seleccione el banco del cheque.");
+        if (!medioForm.plazo) errores.push("Ingrese el plazo del cheque.");
+        if (!medioForm.fechaCobro) errores.push("Ingrese la fecha de cobro del cheque.");
+        break;
+      case "TARJETA_DEBITO":
+      case "TARJETA_CREDITO":
+        if (!medioForm.nombre) errores.push("Ingrese el nombre del titular de la tarjeta.");
+        if (!medioForm.apellido) errores.push("Ingrese el apellido del titular de la tarjeta.");
+        if (!medioForm.codigo) errores.push("Ingrese el código de la tarjeta.");
+        if (!medioForm.nroTarjeta) errores.push("Ingrese el número de la tarjeta.");
+        if (!medioForm.fechaVencimiento) errores.push("Ingrese la fecha de vencimiento.");
+        if (medioForm.tipo === "TARJETA_CREDITO" && !medioForm.cuotas) errores.push("Ingrese las cuotas para la tarjeta de crédito.");
+        break;
+      default:
+        break;
+    }
+    if (errores.length > 0) {
+      setErrorModal(errores.join(" "));
       return;
     }
     const medioAGuardar = { ...medioForm };
     setMedios((prev) => [...prev, medioAGuardar]);
-    setMedioForm({ ...medioInicial, tipo: medioForm.tipo }); // conserva tipo seleccionado
+    setMedioForm({ ...medioInicial, tipo: medioForm.tipo });
   };
-
   const handleRegistrarPago = async () => {
     if (!seleccionFactura) {
       setErrorModal("Seleccione una factura pendiente.");
@@ -153,7 +181,7 @@ const IngresarPagoPage = () => {
               />
             </label>
             <label className="field-label">
-              CÃ³digo
+              Código
               <input
                 type="number"
                 value={medioForm.codigo}
@@ -161,7 +189,7 @@ const IngresarPagoPage = () => {
               />
             </label>
             <label className="field-label">
-              NÂº Tarjeta
+              Nro Tarjeta
               <input
                 value={medioForm.nroTarjeta}
                 onChange={(e) => setMedioForm({ ...medioForm, nroTarjeta: e.target.value })}
@@ -191,7 +219,7 @@ const IngresarPagoPage = () => {
         return (
           <>
             <label className="field-label">
-              NÂº Cheque
+              Nro Cheque
               <input
                 value={medioForm.nroCheque}
                 onChange={(e) => setMedioForm({ ...medioForm, nroCheque: e.target.value })}
@@ -239,7 +267,7 @@ const IngresarPagoPage = () => {
               />
             </label>
             <label className="field-label">
-              CotizaciÃ³n
+              Cotización
               <input
                 type="number"
                 value={medioForm.cotizacion}
@@ -296,7 +324,7 @@ const IngresarPagoPage = () => {
                       onChange={() => setSeleccionFactura(f)}
                     />
                     <span>
-                      NÂº {f.numeroFactura} - Total ${f.total?.toFixed(2) || f.total} - Resp.: {f.responsable}
+                      Nro Factura: {f.numeroFactura} - Total: ${f.total?.toFixed(2) || f.total} - Resp. Pago: {f.responsable}
                     </span>
                   </label>
                 </li>
@@ -311,7 +339,7 @@ const IngresarPagoPage = () => {
           {seleccionFactura ? (
             <>
               <p className="muted small">
-                Factura NÂº {seleccionFactura.numeroFactura} | Total ${totalFactura.toFixed(2)}
+                Factura Nro {seleccionFactura.numeroFactura} | Total ${totalFactura.toFixed(2)}
               </p>
 
               <div className="form-grid">
@@ -352,7 +380,7 @@ const IngresarPagoPage = () => {
 
               <h4>Medios cargados</h4>
               {medios.length === 0 ? (
-                <p className="muted small">AÃºn no agregaste medios.</p>
+                <p className="muted small">Aún no agregaste medios.</p>
               ) : (
                 <ul className="lista-ocupantes">
                   {medios.map((m, idx) => (
@@ -436,3 +464,4 @@ const IngresarPagoPage = () => {
 };
 
 export default IngresarPagoPage;
+

@@ -226,9 +226,57 @@ public class GestorPagoImpl implements GestorPago {
         if (monto.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("El monto del medio de pago debe ser mayor que cero.");
         }
-        if (request.getTipo() == MedioPagoRequest.TipoMedioPago.MONEDA_EXTRANJERA) {
-            if (request.getCotizacion() == null || request.getCotizacion().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Debe informar la cotizacion de la moneda extranjera.");
+        switch (request.getTipo()) {
+            case MONEDA_EXTRANJERA -> {
+                if (request.getCotizacion() == null || request.getCotizacion().compareTo(BigDecimal.ZERO) <= 0) {
+                    throw new IllegalArgumentException("Debe informar la cotizacion de la moneda extranjera.");
+                }
+                if (request.getTipoMoneda() == null || request.getTipoMoneda().isBlank()) {
+                    throw new IllegalArgumentException("Debe informar el tipo de moneda extranjera.");
+                }
+            }
+            case CHEQUE -> {
+                if (request.getNroCheque() == null || request.getNroCheque().isBlank()) {
+                    throw new IllegalArgumentException("Debe informar el numero de cheque.");
+                }
+                if (request.getNombrePropietario() == null || request.getNombrePropietario().isBlank()) {
+                    throw new IllegalArgumentException("Debe informar el nombre del propietario del cheque.");
+                }
+                if (request.getBanco() == null || request.getBanco().isBlank()) {
+                    throw new IllegalArgumentException("Debe informar el banco del cheque.");
+                }
+                if (request.getPlazo() == null || request.getPlazo().isBlank()) {
+                    throw new IllegalArgumentException("Debe informar el plazo del cheque.");
+                }
+                if (request.getFechaCobro() == null) {
+                    throw new IllegalArgumentException("Debe informar la fecha de cobro del cheque.");
+                }
+            }
+            case TARJETA_CREDITO, TARJETA_DEBITO -> {
+                if (request.getNombre() == null || request.getNombre().isBlank()) {
+                    throw new IllegalArgumentException("Debe informar el nombre de la tarjeta.");
+                }
+                if (request.getApellido() == null || request.getApellido().isBlank()) {
+                    throw new IllegalArgumentException("Debe informar el apellido de la tarjeta.");
+                }
+                if (request.getCodigo() == null) {
+                    throw new IllegalArgumentException("Debe informar el codigo de la tarjeta.");
+                }
+                if (request.getNroTarjeta() == null || request.getNroTarjeta().isBlank()) {
+                    throw new IllegalArgumentException("Debe informar el numero de la tarjeta.");
+                }
+                if (request.getFechaVencimiento() == null) {
+                    throw new IllegalArgumentException("Debe informar la fecha de vencimiento de la tarjeta.");
+                }
+                if (request.getTipo() == MedioPagoRequest.TipoMedioPago.TARJETA_CREDITO && request.getCuotas() == null) {
+                    throw new IllegalArgumentException("Debe informar las cuotas para la tarjeta de credito.");
+                }
+            }
+            case EFECTIVO -> {
+                // sin validaciones adicionales
+            }
+            default -> {
+                // nada
             }
         }
     }

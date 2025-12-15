@@ -79,7 +79,7 @@ const FacturarPage = () => {
       return;
     }
     const nro = parseInt(numeroHabitacion, 10);
-    const nroHabitacionBase = isNaN(nro) ? numeroHabitacion : (nro % 100 || nro);
+    const nroHabitacionBase = isNaN(nro) ? numeroHabitacion : nro;
     const fechaBusqueda = fechaEgreso.includes("T") ? fechaEgreso.split("T")[0] : fechaEgreso;
 
     setBuscando(true);
