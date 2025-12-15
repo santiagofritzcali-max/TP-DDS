@@ -8,6 +8,7 @@ import {
   generarFactura,
 } from "../services/facturacionService";
 import { buscarHuespedes } from "../services/huespedService";
+import { buscarResponsables } from "../services/responsablePagoService";
 import Modal from "../components/Modal";
 
 const FacturarPage = () => {
@@ -33,12 +34,25 @@ const FacturarPage = () => {
   const [altaModal, setAltaModal] = useState(null); // {message, prefill}
   const [successModal, setSuccessModal] = useState(null);
   const [mostrandoResultados, setMostrandoResultados] = useState(false);
+  const [confirmResponsable, setConfirmResponsable] = useState(null); // {nombre, cuit, payloadOverride}
 
   const normalizeCuitDigits = (raw = "") => raw.replace(/\D/g, "").slice(0, 11);
   const formatCuit = (digits = "") => {
-    if (digits.length < 11) return digits;
+    if (digits.length !== 11) return digits;
     return `${digits.slice(0, 2)}-${digits.slice(2, 10)}-${digits.slice(10, 11)}`;
   };
+
+  const buscarResponsablePorCuit = async (digits, formatted) => {
+    const variantes = Array.from(new Set([digits, formatted, formatCuit(digits)].filter(Boolean)));
+    for (const c of variantes) {
+      try {
+        const resp = await buscarResponsables({ cuit: c });
+        if (resp.ok && Array.isArray(resp.data) && resp.data.length > 0) return resp.data[0];
+      } catch (_) { }
+    }
+    return null;
+  };
+
 
   const dedupeItems = (items = []) => {
     const map = new Map();
@@ -124,36 +138,18 @@ const FacturarPage = () => {
     setSeleccionResponsable({ tipo: "tercero", value: formatCuit(cuitTercero) });
   };
 
-  const handlePrevisualizar = async () => {
-    if (!estadiaId) return;
-    if (!seleccionResponsable) {
-      setError("Seleccione un responsable o ingrese un CUIT de tercero.");
-      return;
-    }
-
-    const payload = {
-      estadiaId,
-      huespedResponsable:
-        seleccionResponsable.tipo === "huesped"
-          ? seleccionResponsable.value
-          : null,
-      cuitTercero:
-        seleccionResponsable.tipo === "tercero"
-          ? formatCuit(cuitTercero) || seleccionResponsable.value
-          : null,
-    };
-
+  const doPrevisualizacion = async (payload) => {
     const { ok, data, error: err } = await prepararFactura(payload);
     if (!ok) {
       if (
-        seleccionResponsable?.tipo === "huesped" &&
+        payload.huespedResponsable &&
         typeof err === "string" &&
         err.toLowerCase().includes("responsable de pago")
       ) {
         const huespedSel = ocupantes.find(
           (o) =>
-            o.huespedId?.nroDoc === seleccionResponsable.value?.nroDoc &&
-            o.huespedId?.tipoDoc === seleccionResponsable.value?.tipoDoc
+            o.huespedId?.nroDoc === payload.huespedResponsable?.nroDoc &&
+            o.huespedId?.tipoDoc === payload.huespedResponsable?.tipoDoc
         );
         let prefill = {
           tipoDoc: huespedSel?.huespedId?.tipoDoc,
@@ -188,7 +184,7 @@ const FacturarPage = () => {
               };
             }
           } catch (_) {
-            // si falla la bAÂºsqueda, seguimos con los datos que tenemos
+            // si falla la búsqueda, seguimos con los datos que tenemos
           }
         }
         setAltaModal({
@@ -208,6 +204,87 @@ const FacturarPage = () => {
         .map((i) => i.id)
     );
     setStep("preview");
+  };
+
+  const handlePrevisualizar = async (omitirConfirmacionTercero = false) => {
+    if (!estadiaId) return;
+    if (!seleccionResponsable) {
+      setError("Seleccione un responsable o ingrese un CUIT de tercero.");
+      return;
+    }
+
+    let cuitNormalizado = cuitTercero;
+
+    if (seleccionResponsable.tipo === "tercero") {
+      const digits = normalizeCuitDigits(cuitTercero || seleccionResponsable.value);
+      cuitNormalizado = formatCuit(digits) || digits;
+
+      if (digits.length !== 11) {
+        setAltaModal({
+          message: "Ingrese un CUIT o dé de alta al responsable de pago.",
+          prefill: { cuit: "" },
+        });
+        return;
+      }
+
+      setCuitTercero(digits);
+      setSeleccionResponsable({ tipo: "tercero", value: cuitNormalizado });
+
+      if (!omitirConfirmacionTercero) {
+        const encontrado = await buscarResponsablePorCuit(digits, cuitNormalizado);
+        if (encontrado) {
+          const nombre =
+            encontrado.razonSocial ||
+            encontrado.nombreCompleto ||
+            [encontrado.apellido, encontrado.nombre].filter(Boolean).join(" ") ||
+            encontrado.cuit;
+          setConfirmResponsable({
+            nombre,
+            cuit: encontrado.cuit || cuitNormalizado,
+            payloadOverride: { cuitTercero: cuitNormalizado },
+          });
+          return; // detener aquí hasta aceptar
+        }
+        setAltaModal({
+          message: "No se encontró un responsable con ese CUIT. ¿Desea darlo de alta?",
+          prefill: { cuit: cuitNormalizado },
+        });
+        return;
+      }
+    }
+
+    const payload = {
+      estadiaId,
+      huespedResponsable:
+        seleccionResponsable.tipo === "huesped" ? seleccionResponsable.value : null,
+      cuitTercero:
+        seleccionResponsable.tipo === "tercero"
+         ? cuitNormalizado || seleccionResponsable.value
+         : null,
+    };
+
+    await doPrevisualizacion(payload);
+  };
+
+
+  const handleConfirmarResponsableExistente = async (aceptar) => {
+    if (!confirmResponsable) return;
+    if (!aceptar) {
+      setConfirmResponsable(null);
+      return;
+    }
+
+    const payload = {
+      estadiaId,
+      huespedResponsable:
+        seleccionResponsable?.tipo === "huesped"
+          ? seleccionResponsable.value
+          : null,
+      cuitTercero: confirmResponsable.payloadOverride?.cuitTercero || null,
+    };
+
+    setConfirmResponsable(null);
+    await doPrevisualizacion(payload);
   };
 
   const toggleItem = (id) => {
@@ -271,7 +348,7 @@ const FacturarPage = () => {
     setMostrandoResultados(false);
   };
 
-      const renderBusqueda = () => (
+  const renderBusqueda = () => (
     <div className="factura-page">
       <section className="factura-panel left">
         <h2>Generar check out</h2>
@@ -387,7 +464,7 @@ const FacturarPage = () => {
       )}
     </div>
   );
-const renderPreview = () => (
+  const renderPreview = () => (
     <div className="factura-page">
       {(() => {
         const items = dedupeItems(preview?.items || []);
@@ -442,7 +519,7 @@ const renderPreview = () => (
                 ))}
 
               </div>
-      </section>
+            </section>
 
             <section className="factura-panel right">
               <h2>Detalles de factura</h2>
@@ -473,11 +550,11 @@ const renderPreview = () => (
                 <strong>${total.toFixed(2)}</strong>
               </div>
 
-        <div className="actions-row right-align">
-          <button className="btn btn-primary" type="button" onClick={handleImprimir} disabled={generando}>
-            Imprimir
-          </button>
-        </div>
+              <div className="actions-row right-align">
+                <button className="btn btn-primary" type="button" onClick={handleImprimir} disabled={generando}>
+                  Imprimir
+                </button>
+              </div>
             </section>
           </>
         );
@@ -543,6 +620,24 @@ const renderPreview = () => (
       </Modal>
 
       <Modal
+        open={!!confirmResponsable}
+        title="CONFIRMAR RESPONSABLE"
+        variant="info"
+        onClose={() => setConfirmResponsable(null)}
+        actions={
+          <>
+            <button className="btn btn-secondary" onClick={() => handleConfirmarResponsableExistente(false)} type="button">Cancelar</button>
+            <button className="btn btn-primary" onClick={() => handleConfirmarResponsableExistente(true)} type="button">Aceptar</button>
+          </>
+        }
+      >
+        <p>Responsable hallado: <strong>{confirmResponsable?.nombre}</strong></p>
+        <p>CUIT: {confirmResponsable?.cuit}</p>
+        <p className="muted small">Si confirmás se usará este responsable para la factura.</p>
+      </Modal>
+
+
+      <Modal
         open={!!successModal}
         title="CONFIRMACION"
         variant="success"
@@ -570,9 +665,6 @@ const renderPreview = () => (
 };
 
 export default FacturarPage;
-
-
-
 
 
 
