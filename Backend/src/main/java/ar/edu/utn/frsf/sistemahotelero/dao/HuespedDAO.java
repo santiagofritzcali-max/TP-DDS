@@ -36,4 +36,16 @@ public interface HuespedDAO extends CrudRepository<Huesped, HuespedId> {
             @Param("nuevoNro") String nuevoNro
     );
     
+    
+    @Modifying
+    @Query("""
+       DELETE FROM Huesped h
+       WHERE h.tipoDoc = :tipoDoc
+         AND h.nroDoc = :nroDoc
+       """)
+    int deleteByDocumento(@Param("tipoDoc") TipoDocumento tipoDoc,
+            @Param("nroDoc") String nroDoc);
+
+    
+    
 }

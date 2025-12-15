@@ -124,7 +124,7 @@ public class GestorHuespedImpl implements GestorHuesped {
 
         return new HuespedResponse(huespedGuardado);
     }
- 
+    @Transactional
     @Override
     public HuespedResponse eliminarHuesped(String nroDoc, TipoDocumento tipoDoc) {
 
@@ -148,7 +148,11 @@ public class GestorHuespedImpl implements GestorHuesped {
         }
 
         // 4) Eliminar
-        huespedDAO.delete(huesped);
+        
+        int borrados = huespedDAO.deleteByDocumento(tipoDoc, nroDoc);
+        if (borrados == 0) {
+            throw new ReglaNegocioException("No se pudo eliminar el huésped");
+        }
 
         return new HuespedResponse(huesped);
     }
