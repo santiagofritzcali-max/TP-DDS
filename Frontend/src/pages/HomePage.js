@@ -17,63 +17,63 @@ const HomePage = () => {
           className="home-cu-btn"
           onClick={() => navigate("/cu02")}
         >
-          Ejecutar CU 02
+          Buscar Huésped
         </button>
 
         <button
           className="home-cu-btn"
           onClick={() => navigate("/cu04")}
         >
-          Ejecutar CU 04
+          Reservar Habitación
         </button>
 
         <button
           className="home-cu-btn"
           onClick={() => navigate('/cu05', { state: { modo: 'soloConsulta' } })}
         >
-          Ejecutar CU 05
+          Mostrar Estado de Habitaciones
         </button>
 
         <button
           className="home-cu-btn"
           onClick={() => navigate("/cu06")}
         >
-          Ejecutar CU 06
+          Cancelar Reserva
         </button>
 
         <button
           className="home-cu-btn"
           onClick={() => navigate("/cu07")}
         >
-          Ejecutar CU 07
+          Facturar
         </button>
 
         <button
           className="home-cu-btn"
           onClick={() => navigate("/cu09")}
         >
-          Ejecutar CU 09 
+          Dar Alta de Huésped 
         </button>
         
         <button
           className="home-cu-btn"
           onClick={() => navigate('/cu05', { state: { modo: 'desdeCU15' } })}
         >
-          Ejecutar CU 15
+           Ocupar Habitación
         </button>
 
         <button
           className="home-cu-btn"
           onClick={() => navigate("/cu16")}
         >
-          Ejecutar CU 16
+          Ingresar pago
         </button>
 
         <button
           className="home-cu-btn"
           onClick={() => navigate("/cu19")}
         >
-          Ejecutar CU 19
+          Ingresar nota de crédito
         </button>
       </div>
     </div>

@@ -21,10 +21,10 @@ const Navbar = () => {
 
           <span className="topBarSeparator">|</span>
 
-          <Link to="/cu06" className="topBarMenuLink">
-            Cancelar reserva
-          </Link>
-
+          <span className="topBarMenuLink disabled">
+            Reserva
+          </span>
+          
           <span className="topBarSeparator">|</span>
 
           <span className="topBarMenuLink disabled">
