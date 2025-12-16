@@ -196,6 +196,24 @@ const toIso = (valor, fallbackYear) => {
 };
 
 // ---------------------------------------------------------------------------
+// CU06 - Cancelar reservas
+// ---------------------------------------------------------------------------
+
+export async function buscarReservasPorApellido(apellido, nombre) {
+  const params = new URLSearchParams();
+  params.append("apellido", apellido || "");
+  if (nombre) params.append("nombre", nombre);
+  return apiRequest(`${RESERVAS_API}/buscar?${params.toString()}`);
+}
+
+export async function cancelarReservas(idsReservas = []) {
+  return apiRequest(`${RESERVAS_API}/cancelar`, {
+    method: "POST",
+    body: JSON.stringify({ idsReservas }),
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Consulta de disponibilidad (real) - CU-04 incluye CU-05
 // ---------------------------------------------------------------------------
 export const buscarDisponibilidad = async (fechaDesdeIso, fechaHastaIso) => {
