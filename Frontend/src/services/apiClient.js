@@ -3,14 +3,14 @@ const API_BASE_URL = "http://localhost:8080/api";
 const TOKEN_KEY = "authToken";
 
 export const setAuthToken = (token) => {
-  if (token) localStorage.setItem(TOKEN_KEY, token);
+  if (token) sessionStorage.setItem(TOKEN_KEY, token);
 };
 
 export const clearAuthToken = () => {
-  localStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
 };
 
-export const getAuthToken = () => localStorage.getItem(TOKEN_KEY);
+export const getAuthToken = () => sessionStorage.getItem(TOKEN_KEY);
 
 /**
  * Wrapper fetch que devuelve {status, ok, data, error}
