@@ -196,4 +196,58 @@ class GestorNotaCreditoImplTest {
         assertThatThrownBy(() -> service.generarNotaCredito(req))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void generarNotaCredito_facturaOtroResponsable() {
+        when(responsableDAO.findByCuit(anyString())).thenReturn(Optional.of(responsablePj));
+        Factura otra = new Factura();
+        otra.setIdFactura(11L);
+        // distinto responsable al que devuelve findByCuit (PJ)
+        otra.setResponsableDePago(responsablePf);
+        otra.setNumero(123);
+        otra.setTotal(BigDecimal.TEN);
+        otra.setTipo(TipoFact.B);
+        otra.setEstado(FacturaEstado.PENDIENTE);
+        when(facturaDAO.findById(11L)).thenReturn(Optional.of(otra));
+
+        RegistrarNotaCreditoRequest req = new RegistrarNotaCreditoRequest();
+        req.setCuit("20123456789");
+        req.setFacturaIds(List.of(11L));
+
+        assertThatThrownBy(() -> service.generarNotaCredito(req))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void generarNotaCredito_noLiberaHabitacionSiQuedanPendientes() {
+        when(responsableDAO.findByCuit(anyString())).thenReturn(Optional.of(responsablePj));
+        factura.setEstado(FacturaEstado.PENDIENTE);
+        factura.setResponsableDePago(responsablePj);
+        factura.setNumero(500);
+        factura.setTotal(BigDecimal.valueOf(200));
+        var hab = new ar.edu.utn.frsf.sistemahotelero.model.Habitacion(1, 101) {
+            @Override public ar.edu.utn.frsf.sistemahotelero.enums.TipoHabitacion getTipoHabitacion() { return null; }
+        };
+        var estadia = new ar.edu.utn.frsf.sistemahotelero.model.Estadia();
+        estadia.setId(99L);
+        estadia.setHabitacion(hab);
+        factura.setEstadia(estadia);
+
+        when(facturaDAO.findById(10L)).thenReturn(Optional.of(factura));
+        when(notaCreditoDAO.obtenerUltimoNumero()).thenReturn(5);
+        when(notaCreditoDAO.save(any())).thenAnswer(inv -> {
+            NotaCredito n = inv.getArgument(0);
+            n.setIdNotaCredito(10L);
+            return n;
+        });
+        when(facturaDAO.existsByEstadiaIdAndEstado(eq(99L), any())).thenReturn(true); // hay pendientes, no libera hab
+
+        RegistrarNotaCreditoRequest req = new RegistrarNotaCreditoRequest();
+        req.setCuit("20123456789");
+        req.setFacturaIds(List.of(10L));
+
+        service.generarNotaCredito(req);
+
+        verify(habitacionDAO, never()).save(any());
+    }
 }

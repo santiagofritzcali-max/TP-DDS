@@ -14,8 +14,10 @@ import ar.edu.utn.frsf.sistemahotelero.model.Factura;
 import ar.edu.utn.frsf.sistemahotelero.model.Habitacion;
 import ar.edu.utn.frsf.sistemahotelero.model.Pago;
 import ar.edu.utn.frsf.sistemahotelero.pkCompuestas.HabitacionId;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -296,6 +298,367 @@ class GestorPagoImplTest {
         var dto = service.registrarPago(req);
         assertThat(dto.getPagoId()).isEqualTo(88L);
         assertThat(dto.getEstadoFactura()).isEqualTo("PAGADA");
+    }
+
+    @Test
+    void registrarPago_errorFacturaSinTotal() {
+        Factura factura = new Factura();
+        factura.setIdFactura(7L);
+        factura.setNumero(9101);
+        factura.setTotal(null);
+        factura.setEstado(FacturaEstado.PENDIENTE);
+        when(facturaDAO.findById(7L)).thenReturn(Optional.of(factura));
+
+        RegistrarPagoRequest req = new RegistrarPagoRequest();
+        req.setFacturaId(7L);
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.EFECTIVO);
+        mp.setMonto(BigDecimal.ONE);
+        req.setMedios(List.of(mp));
+
+        assertThatThrownBy(() -> service.registrarPago(req))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void validarMedioPago_errorTarjetaDebitoSinNombre() {
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.TARJETA_DEBITO);
+        mp.setMonto(BigDecimal.TEN);
+        mp.setApellido("Apellido");
+        mp.setCodigo(123);
+        mp.setNroTarjeta("1234");
+        mp.setFechaVencimiento(LocalDate.now().plusDays(1));
+        assertThatThrownBy(() -> service.registrarPago(buildRequest(12L, mp)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validarMedioPago_errorMonedaExtranjeraSinTipoMoneda() {
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.MONEDA_EXTRANJERA);
+        mp.setMonto(BigDecimal.TEN);
+        mp.setCotizacion(BigDecimal.ONE);
+        // falta tipoMoneda
+        assertThatThrownBy(() -> service.registrarPago(buildRequest(13L, mp)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void registrarPago_facturaNoExiste() {
+        when(facturaDAO.findById(99L)).thenReturn(Optional.empty());
+        RegistrarPagoRequest req = new RegistrarPagoRequest();
+        req.setFacturaId(99L);
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.EFECTIVO);
+        mp.setMonto(BigDecimal.ONE);
+        req.setMedios(List.of(mp));
+        assertThatThrownBy(() -> service.registrarPago(req))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void registrarPago_errorMedioSinTipo() {
+        Factura factura = new Factura();
+        factura.setIdFactura(14L);
+        factura.setNumero(1111);
+        factura.setTotal(BigDecimal.ONE);
+        factura.setEstado(FacturaEstado.PENDIENTE);
+        when(facturaDAO.findById(14L)).thenReturn(Optional.of(factura));
+
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setMonto(BigDecimal.TEN);
+        RegistrarPagoRequest req = new RegistrarPagoRequest();
+        req.setFacturaId(14L);
+        req.setMedios(List.of(mp));
+
+        assertThatThrownBy(() -> service.registrarPago(req))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void registrarPago_errorMontoCero() {
+        Factura factura = new Factura();
+        factura.setIdFactura(15L);
+        factura.setNumero(2222);
+        factura.setTotal(BigDecimal.ONE);
+        factura.setEstado(FacturaEstado.PENDIENTE);
+        when(facturaDAO.findById(15L)).thenReturn(Optional.of(factura));
+
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.EFECTIVO);
+        mp.setMonto(BigDecimal.ZERO);
+        RegistrarPagoRequest req = new RegistrarPagoRequest();
+        req.setFacturaId(15L);
+        req.setMedios(List.of(mp));
+
+        assertThatThrownBy(() -> service.registrarPago(req))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void registrarPago_noLiberaHabitacionSiPendientes() {
+        Habitacion hab = new Habitacion(3, 301) {
+            @Override public ar.edu.utn.frsf.sistemahotelero.enums.TipoHabitacion getTipoHabitacion() { return null; }
+        };
+        Estadia estadia = new Estadia();
+        estadia.setId(40L);
+        estadia.setHabitacion(hab);
+
+        Factura factura = new Factura();
+        factura.setIdFactura(8L);
+        factura.setNumero(3333);
+        factura.setTotal(BigDecimal.ONE);
+        factura.setEstado(FacturaEstado.PENDIENTE);
+        factura.setEstadia(estadia);
+
+        when(facturaDAO.findById(8L)).thenReturn(Optional.of(factura));
+        when(pagoDAO.save(any(Pago.class))).thenAnswer(inv -> {
+            Pago p = inv.getArgument(0);
+            p.setIdPago(66L);
+            return p;
+        });
+        when(facturaDAO.existsByEstadiaIdAndEstado(40L, FacturaEstado.PENDIENTE)).thenReturn(true);
+
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.EFECTIVO);
+        mp.setMonto(BigDecimal.ONE);
+        RegistrarPagoRequest req = new RegistrarPagoRequest();
+        req.setFacturaId(8L);
+        req.setMedios(List.of(mp));
+
+        service.registrarPago(req);
+
+        verify(habitacionDAO, never()).save(any());
+    }
+
+    @Test
+    void registrarPago_sinEstadiaNoActualizaHabitacion() {
+        Factura factura = new Factura();
+        factura.setIdFactura(9L);
+        factura.setNumero(4444);
+        factura.setTotal(BigDecimal.TEN);
+        factura.setEstado(FacturaEstado.PENDIENTE);
+
+        when(facturaDAO.findById(9L)).thenReturn(Optional.of(factura));
+        when(pagoDAO.save(any(Pago.class))).thenAnswer(inv -> {
+            Pago p = inv.getArgument(0);
+            p.setIdPago(90L);
+            return p;
+        });
+
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.EFECTIVO);
+        mp.setMonto(BigDecimal.TEN);
+        RegistrarPagoRequest req = new RegistrarPagoRequest();
+        req.setFacturaId(9L);
+        req.setMedios(List.of(mp));
+
+        service.registrarPago(req);
+
+        verify(habitacionDAO, never()).save(any());
+    }
+
+    @Test
+    void validarMedioPago_chequeFaltaBanco() {
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.CHEQUE);
+        mp.setMonto(BigDecimal.TEN);
+        mp.setNroCheque("1");
+        mp.setNombrePropietario("Prop");
+        mp.setPlazo("30d");
+        mp.setFechaCobro(LocalDate.now().plusDays(1));
+        assertThatThrownBy(() -> service.registrarPago(buildRequest(16L, mp)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validarMedioPago_chequeFaltaPlazo() {
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.CHEQUE);
+        mp.setMonto(BigDecimal.TEN);
+        mp.setNroCheque("1");
+        mp.setNombrePropietario("Prop");
+        mp.setBanco("Banco");
+        mp.setFechaCobro(LocalDate.now().plusDays(1));
+        assertThatThrownBy(() -> service.registrarPago(buildRequest(17L, mp)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validarMedioPago_chequeFaltaFechaCobro() {
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.CHEQUE);
+        mp.setMonto(BigDecimal.TEN);
+        mp.setNroCheque("1");
+        mp.setNombrePropietario("Prop");
+        mp.setBanco("Banco");
+        mp.setPlazo("30d");
+        assertThatThrownBy(() -> service.registrarPago(buildRequest(18L, mp)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validarMedioPago_tarjetaFaltaApellido() {
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.TARJETA_DEBITO);
+        mp.setMonto(BigDecimal.ONE);
+        mp.setNombre("Nombre");
+        mp.setCodigo(123);
+        mp.setNroTarjeta("1234");
+        mp.setFechaVencimiento(LocalDate.now().plusDays(1));
+        assertThatThrownBy(() -> service.registrarPago(buildRequest(19L, mp)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validarMedioPago_tarjetaFaltaCodigo() {
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.TARJETA_DEBITO);
+        mp.setMonto(BigDecimal.ONE);
+        mp.setNombre("Nombre");
+        mp.setApellido("Ape");
+        mp.setNroTarjeta("1234");
+        mp.setFechaVencimiento(LocalDate.now().plusDays(1));
+        assertThatThrownBy(() -> service.registrarPago(buildRequest(20L, mp)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validarMedioPago_tarjetaFaltaNro() {
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.TARJETA_DEBITO);
+        mp.setMonto(BigDecimal.ONE);
+        mp.setNombre("Nombre");
+        mp.setApellido("Ape");
+        mp.setCodigo(111);
+        mp.setFechaVencimiento(LocalDate.now().plusDays(1));
+        assertThatThrownBy(() -> service.registrarPago(buildRequest(21L, mp)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validarMedioPago_tarjetaFaltaFecha() {
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.TARJETA_DEBITO);
+        mp.setMonto(BigDecimal.ONE);
+        mp.setNombre("Nombre");
+        mp.setApellido("Ape");
+        mp.setCodigo(111);
+        mp.setNroTarjeta("1234");
+        assertThatThrownBy(() -> service.registrarPago(buildRequest(22L, mp)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validarMedioPago_monedaCotizacionCero() {
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.MONEDA_EXTRANJERA);
+        mp.setMonto(BigDecimal.TEN);
+        mp.setTipoMoneda("USD");
+        mp.setCotizacion(BigDecimal.ZERO);
+        assertThatThrownBy(() -> service.registrarPago(buildRequest(23L, mp)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void registrarPago_tarjetaCreditoValida() {
+        Factura factura = new Factura();
+        factura.setIdFactura(24L);
+        factura.setNumero(5555);
+        factura.setTotal(BigDecimal.valueOf(50));
+        factura.setEstado(FacturaEstado.PENDIENTE);
+        when(facturaDAO.findById(24L)).thenReturn(Optional.of(factura));
+        when(pagoDAO.save(any(Pago.class))).thenAnswer(inv -> {
+            Pago p = inv.getArgument(0);
+            p.setIdPago(120L);
+            return p;
+        });
+
+        MedioPagoRequest mp = new MedioPagoRequest();
+        mp.setTipo(MedioPagoRequest.TipoMedioPago.TARJETA_CREDITO);
+        mp.setMonto(BigDecimal.valueOf(50));
+        mp.setNombre("Nombre");
+        mp.setApellido("Ape");
+        mp.setCodigo(111);
+        mp.setNroTarjeta("1234");
+        mp.setFechaVencimiento(LocalDate.now().plusDays(10));
+        mp.setCuotas(3);
+
+        RegistrarPagoRequest req = new RegistrarPagoRequest();
+        req.setFacturaId(24L);
+        req.setMedios(List.of(mp));
+
+        var dto = service.registrarPago(req);
+        assertThat(dto.getEstadoFactura()).isEqualTo("PAGADA");
+    }
+
+    @Test
+    void registrarPago_facturaNoPendiente() {
+        Factura factura = new Factura();
+        factura.setIdFactura(30L);
+        factura.setEstado(FacturaEstado.CANCELADA);
+        when(facturaDAO.findById(30L)).thenReturn(Optional.of(factura));
+
+        RegistrarPagoRequest req = new RegistrarPagoRequest();
+        req.setFacturaId(30L);
+        req.setMedios(List.of());
+
+        assertThatThrownBy(() -> service.registrarPago(req))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void registrarPago_requestNull() {
+        assertThatThrownBy(() -> service.registrarPago(null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void listarPendientes_numeroHabitacionInvalido() {
+        assertThatThrownBy(() -> service.listarFacturasPendientes(0))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void listarPendientes_fechaYResponsableNull() {
+        Factura f = new Factura();
+        f.setIdFactura(40L);
+        f.setNumero(8888);
+        f.setEstado(FacturaEstado.PENDIENTE);
+        f.setFechaEmision(null);
+        f.setTotal(BigDecimal.valueOf(10));
+        when(facturaDAO.findByEstadiaHabitacionIdNroHabitacionAndEstado(5, FacturaEstado.PENDIENTE))
+                .thenReturn(List.of(f));
+
+        var res = service.listarFacturasPendientes(5);
+        assertThat(res).hasSize(1);
+        assertThat(res.get(0).getFechaEmision()).isNull();
+        assertThat(res.get(0).getResponsable()).isNull();
+    }
+
+    @Test
+    void valorNoNulo_defaultBranch() throws Exception {
+        Method m = GestorPagoImpl.class.getDeclaredMethod("valorNoNulo", BigDecimal.class, BigDecimal.class);
+        m.setAccessible(true);
+        BigDecimal result = (BigDecimal) m.invoke(service, null, BigDecimal.TEN);
+        assertThat(result).isEqualTo(BigDecimal.TEN);
+    }
+
+    @Test
+    void toDate_nullBranch() throws Exception {
+        Method m = GestorPagoImpl.class.getDeclaredMethod("toDate", LocalDate.class);
+        m.setAccessible(true);
+        Date result = (Date) m.invoke(service, new Object[]{null});
+        assertThat(result).isNull();
+    }
+
+    @Test
+    void toLocalDate_nullBranch() throws Exception {
+        Method m = GestorPagoImpl.class.getDeclaredMethod("toLocalDate", Date.class);
+        m.setAccessible(true);
+        LocalDate result = (LocalDate) m.invoke(service, new Object[]{null});
+        assertThat(result).isNull();
     }
 
     private RegistrarPagoRequest buildRequest(Long facturaId, MedioPagoRequest mp) {

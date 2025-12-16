@@ -110,6 +110,17 @@ class GestorReservaImplTest {
     }
 
     @Test
+    void cancelarReservas_politicaRechaza() {
+        Reserva r = new Reserva();
+        r.setId(2L);
+        r.setEstado(ReservaEstado.RESERVADA);
+        when(reservaDAO.findAllById(anyIterable())).thenReturn(List.of(r));
+        doThrow(new ar.edu.utn.frsf.sistemahotelero.excepciones.ReglaNegocioException("No")).when(politicaCancelacion).validarCancelacion(any());
+        assertThatThrownBy(() -> service.cancelarReservas(List.of(2L)))
+                .isInstanceOf(ar.edu.utn.frsf.sistemahotelero.excepciones.ReglaNegocioException.class);
+    }
+
+    @Test
     void buscarReservas_errorApellidoVacio() {
         assertThatThrownBy(() -> service.buscarReservas(" ", "Nombre"))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -152,6 +163,14 @@ class GestorReservaImplTest {
         when(reservaDAO.findAllById(anyIterable())).thenReturn(List.of());
         assertThatThrownBy(() -> service.cancelarReservas(List.of(99L)))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void buscarReservas_soloApellido() {
+        Reserva r = new Reserva();
+        when(reservaDAO.buscarPorApellido(anyString(), any())).thenReturn(List.of(r));
+        var result = service.buscarReservas("Perez", null);
+        assertThat(result).hasSize(1);
     }
 
     @Test
@@ -230,5 +249,34 @@ class GestorReservaImplTest {
         req.setNroHabitacion(null);
         assertThatThrownBy(() -> service.ocuparHabitacion(req))
                 .isInstanceOf(ar.edu.utn.frsf.sistemahotelero.excepciones.ReglaNegocioException.class);
+    }
+
+    @Test
+    void ocuparHabitacion_reservadaYConfirmaIgual() {
+        EstadiaOcuparRequest req = new EstadiaOcuparRequest();
+        req.setNroPiso(1);
+        req.setNroHabitacion(101);
+        req.setFechaIngreso(LocalDate.now().plusDays(1));
+        req.setFechaEgreso(LocalDate.now().plusDays(2));
+        req.setOcuparIgualSiReservada(true);
+
+        Habitacion hab = new Habitacion(1, 101) {
+            @Override public ar.edu.utn.frsf.sistemahotelero.enums.TipoHabitacion getTipoHabitacion() { return null; }
+        };
+        when(habitacionDAO.findByIdNroPisoAndIdNroHabitacion(1, 101)).thenReturn(Optional.of(hab));
+        when(estadiaDAO.buscarPorHabitacionYRangoFechas(any(), any(), any(), any())).thenReturn(List.of());
+        Reserva reserva = new Reserva();
+        reserva.setId(60L);
+        when(reservaDAO.buscarPorHabitacionYRangoFechas(any(), any(), any(), any())).thenReturn(List.of(reserva));
+        when(estadiaDAO.save(any(Estadia.class))).thenAnswer(inv -> {
+            Estadia e = inv.getArgument(0);
+            e.setId(200L);
+            return e;
+        });
+
+        EstadiaOcuparResponse resp = service.ocuparHabitacion(req);
+        assertThat(resp.isRequiereConfirmacion()).isFalse();
+        assertThat(resp.getEstadiaId()).isEqualTo(200L);
+        verify(reservaDAO).save(any(Reserva.class)); // marcó ocupada
     }
 }
