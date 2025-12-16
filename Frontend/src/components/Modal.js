@@ -52,6 +52,20 @@ const Modal = ({
   };
 
   const variantClass = variant ? `modal-${variant}` : "";
+  const renderActions = () => {
+    if (actions === false) return null;
+    if (actions) return actions;
+    if (onClose) {
+      return (
+        <button type="button" className="btn btn-primary" onClick={onClose}>
+          Cerrar
+        </button>
+      );
+    }
+    return null;
+  };
+
+  const actionsContent = renderActions();
 
   return (
     <div
@@ -86,14 +100,7 @@ const Modal = ({
 
         <div className="modal-body">{children}</div>
 
-        <div className="modal-actions">
-          {actions ||
-            (onClose && (
-              <button type="button" className="btn btn-primary" onClick={onClose}>
-                Cerrar
-              </button>
-            ))}
-        </div>
+        {actionsContent ? <div className="modal-actions">{actionsContent}</div> : null}
       </div>
     </div>
   );

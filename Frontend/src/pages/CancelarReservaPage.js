@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/facturacionStyle.css";
 import "../styles/ui.css";
@@ -16,6 +16,7 @@ const formatTipoHabitacion = (tipo) => {
 
 const CancelarReservaPage = () => {
   const navigate = useNavigate();
+  const apellidoRef = useRef(null);
   const [apellido, setApellido] = useState("");
   const [nombre, setNombre] = useState("");
   const [errores, setErrores] = useState({});
@@ -30,7 +31,7 @@ const CancelarReservaPage = () => {
   const [cancelando, setCancelando] = useState(false);
   const [busquedaHecha, setBusquedaHecha] = useState(false);
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setApellido("");
     setNombre("");
     setErrores({});
@@ -44,7 +45,20 @@ const CancelarReservaPage = () => {
     setBuscando(false);
     setCancelando(false);
     setBusquedaHecha(false);
-  };
+  }, []);
+
+  const handleExitSuccess = useCallback(() => {
+    setExitoModal(false);
+    reset();
+    navigate("/");
+  }, [navigate, reset]);
+
+  useEffect(() => {
+    if (!exitoModal) return undefined;
+    const handleKey = () => handleExitSuccess();
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [exitoModal, handleExitSuccess]);
 
   const validar = () => {
     const errs = {};
@@ -52,6 +66,34 @@ const CancelarReservaPage = () => {
     setErrores(errs);
     return Object.keys(errs).length === 0;
   };
+
+const focusApellido = useCallback(() => {
+    if (apellidoRef.current) {
+      apellidoRef.current.focus({ preventScroll: true });
+    }
+  }, []);
+
+  const focusApellidoAsync = useCallback(() => {
+    // Intentamos foco inmediato, en el siguiente frame y en el siguiente tick, para evitar que el overlay lo bloquee.
+    focusApellido();
+    requestAnimationFrame(focusApellido);
+    setTimeout(focusApellido, 0);
+  }, [focusApellido]);
+
+  const shouldFocusAfterInfoClose = useRef(false);
+
+  const handleCloseInfo = useCallback(() => {
+    shouldFocusAfterInfoClose.current = true;
+    setInfoModal(null);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (infoModal === null && shouldFocusAfterInfoClose.current) {
+      shouldFocusAfterInfoClose.current = false;
+      // focus en el campo de Apellido al volver al paso de b£squeda
+      focusApellidoAsync();
+    }
+  }, [infoModal, focusApellidoAsync]);
 
   const handleBuscar = async () => {
     if (!validar()) return;
@@ -72,25 +114,25 @@ const CancelarReservaPage = () => {
         } else {
           setErrorModal(error || "No se pudo buscar reservas.");
         }
-        return;
+      } else {
+        const lista = Array.isArray(data)
+          ? data.map((item, idx) => ({
+              id: item.idReserva ?? item.id ?? idx,
+              apellido: item.apellido,
+              nombre: item.nombre,
+              numeroHabitacion: item.numeroHabitacion,
+              tipoHabitacion: item.tipoHabitacion,
+              fechaInicio: item.fechaInicio,
+              fechaFin: item.fechaFin,
+            }))
+          : [];
+        setReservas(lista);
+        hayResultados = lista.length > 0;
+        if (!hayResultados) {
+          setInfoModal("No existen reservas para los criterios de busqueda");
+        }
+        setBusquedaHecha(hayResultados);
       }
-      const lista = Array.isArray(data)
-        ? data.map((item, idx) => ({
-            id: item.idReserva ?? item.id ?? idx,
-            apellido: item.apellido,
-            nombre: item.nombre,
-            numeroHabitacion: item.numeroHabitacion,
-            tipoHabitacion: item.tipoHabitacion,
-            fechaInicio: item.fechaInicio,
-            fechaFin: item.fechaFin,
-          }))
-        : [];
-      setReservas(lista);
-      hayResultados = lista.length > 0;
-      if (!hayResultados) {
-        setInfoModal("No existen reservas para los criterios de busqueda");
-      }
-      setBusquedaHecha(hayResultados);
     } catch (e) {
       setErrorModal(e.message || "No se pudo buscar reservas.");
     } finally {
@@ -111,6 +153,12 @@ const CancelarReservaPage = () => {
     }
     setConfirmarModal(true);
   };
+
+  const handleCancelarConfirmacion = useCallback(() => {
+    setConfirmarModal(false);
+    reset();
+    navigate("/");
+  }, [navigate, reset]);
 
   const confirmarCancelacion = async () => {
     setConfirmarModal(false);
@@ -154,6 +202,7 @@ const CancelarReservaPage = () => {
             onChange={(e) => setApellido(e.target.value)}
             className={errores.apellido ? "input-error" : ""}
             placeholder="Apellido"
+            ref={apellidoRef}
           />
           {errores.apellido && <div className="error-inline">{errores.apellido}</div>}
         </label>
@@ -236,8 +285,8 @@ const CancelarReservaPage = () => {
         open={!!infoModal}
         title="AVISO"
         variant="info"
-        onClose={() => setInfoModal(null)}
-        actions={<button className="btn btn-primary" type="button" onClick={() => setInfoModal(null)}>Aceptar</button>}
+        onClose={handleCloseInfo}
+        actions={<button className="btn btn-primary" type="button" onClick={handleCloseInfo}>Aceptar</button>}
       >
         <p>{infoModal}</p>
       </Modal>
@@ -246,10 +295,10 @@ const CancelarReservaPage = () => {
         open={confirmarModal}
         title="CONFIRMAR"
         variant="warning"
-        onClose={() => setConfirmarModal(false)}
+        onClose={handleCancelarConfirmacion}
         actions={
           <>
-            <button className="btn btn-secondary" type="button" onClick={() => setConfirmarModal(false)}>Cancelar</button>
+            <button className="btn btn-secondary" type="button" onClick={handleCancelarConfirmacion}>Cancelar</button>
             <button className="btn btn-primary" type="button" onClick={confirmarCancelacion}>Aceptar</button>
           </>
         }
@@ -261,10 +310,12 @@ const CancelarReservaPage = () => {
         open={exitoModal}
         title="CONFIRMACION"
         variant="success"
-        onClose={() => { setExitoModal(false); reset(); }}
-        actions={<button className="btn btn-primary" type="button" onClick={() => { setExitoModal(false); reset(); }}>Aceptar</button>}
+        onClose={handleExitSuccess}
+        closeOnOverlay
+        actions={false}
       >
         <p>{mensajeExito || "Reservas canceladas."}</p>
+        <p className="muted small">Presione cualquier tecla o haga clic fuera para volver al inicio.</p>
       </Modal>
     </div>
   );

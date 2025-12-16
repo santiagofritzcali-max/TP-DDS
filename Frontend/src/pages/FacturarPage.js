@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/facturacionStyle.css";
 import "../styles/ui.css";
@@ -401,7 +401,7 @@ const FacturarPage = () => {
 
 
 
-  const resetTodo = () => {
+  const resetTodo = useCallback(() => {
     setNumeroHabitacion("");
     setFechaEgreso("");
     setBuscando(false);
@@ -423,7 +423,20 @@ const FacturarPage = () => {
     setAltaModal(null);
     setSuccessModal(null);
     setGenerando(false);
-  };
+  }, []);
+
+  const handleSuccessExit = useCallback(() => {
+    setSuccessModal(null);
+    resetTodo();
+    navigate("/");
+  }, [navigate, resetTodo]);
+
+  useEffect(() => {
+    if (!successModal) return undefined;
+    const handleKeyDown = () => handleSuccessExit();
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [successModal, handleSuccessExit]);
 
   const handleCancelarBusqueda = () => {
     resetTodo();
@@ -752,24 +765,15 @@ const FacturarPage = () => {
         open={!!successModal}
         title="CONFIRMACION"
         variant="success"
-        onClose={() => setSuccessModal(null)}
-        actions={
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              setSuccessModal(null);
-              resetTodo();
-            }}
-            type="button"
-          >
-            Aceptar
-          </button>
-        }
+        onClose={handleSuccessExit}
+        closeOnOverlay
+        actions={false}
       >
         <p>{successModal}</p>
         {facturaFinal && (
           <p className="muted small">ID interno: {facturaFinal.facturaId}</p>
         )}
+        <p className="muted small">Presione cualquier tecla para volver al inicio.</p>
       </Modal>
     </div>
   );
