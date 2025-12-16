@@ -5,7 +5,7 @@ import "../styles/ui.css";
 import { buscarDisponibilidad } from "../services/reservaService";
 import { validarRangoFechas } from "../validators/validarReservaHabitacion";
 import { useNavigate } from "react-router-dom";
-import PopupHabitacionNoDisponible from "../components/PopupHabitacionNoDisponible"; // NUEVO
+import PopupHabitacionNoDisponible from "../components/PopupHabitacionNoDisponible"; 
 import { parseDdMmYyyy, formatDateFromObj } from "../utils/date";
 import { ROOM_TYPES_BY_NUMBER, PRETTY_ROOM_TYPE } from "../constants/roomTypes";
 import FechaInvalidaPopup from "../components/FechaInvalidaPopup";

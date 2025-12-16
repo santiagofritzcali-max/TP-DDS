@@ -66,10 +66,6 @@ npm start
 - Abre `http://localhost:3000`.
 - El front consume `http://localhost:8080/api`; si cambias el backend, ajusta `src/services/apiClient.js` y `src/services/estadoHabitacionService.js`.
 
-### Tests frontend
-```bash
-npm test
-```
 
 ## Endpoints de ejemplo (base `http://localhost:8080/api`)
 - Para endpoints protegidos: autenticarse y enviar `Authorization: Bearer <token>`.

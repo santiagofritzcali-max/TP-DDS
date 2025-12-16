@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom"; // NUEVO
+import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/reservarHabitacionStyle.css";
 import '../styles/ui.css';
 import "../styles/FechaInvalidaPopup.css";
@@ -13,7 +13,7 @@ import { buildOcuparNavigationState } from "../utils/ocupacionState";
 
 
 
-// --- Modal simple (popup) --- // NUEVO
+// Modal simple (popup)
 const PopupModal = ({ open, title, children, actions, onClose, variant = "default", className = "" }) => {
   if (!open) return null;
 
@@ -120,14 +120,12 @@ const EstadoHabitacionPage = () => {
   const [loading, setLoading] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
-  // NUEVO: selección de habitación + días (solo cuando viene desde CU15)
+  // Selección de habitación + días (solo cuando viene desde CU15)
   const [seleccion, setSeleccion] = useState(null);
   // seleccion = { habitacionId, habitacionLabel, dias: [ "YYYY-MM-DD", ... ] }
 
-  // NUEVO: estado para popup
   const [popup, setPopup] = useState({ open: false, type: null, data: null });
 
-  // NUEVO: popup para fechas inválidas
   const [fechaPopup, setFechaPopup] = useState({ open: false, message: "" });
 
   const [seleccionExitosa, setSeleccionExitosa] = useState({
@@ -143,7 +141,6 @@ const EstadoHabitacionPage = () => {
 
   const cerrarFechaPopup = () => setFechaPopup({ open: false, message: "" });
 
-  // NUEVO: cancelar a pantalla principal
   const handleCancelar = () => {
     setShowCancelModal(true);
   };
@@ -164,7 +161,7 @@ const EstadoHabitacionPage = () => {
     e.preventDefault();
     setErrorFechas("");
     setMensaje("");
-    setSeleccion(null); // NUEVO: limpiar selección al buscar de nuevo
+    setSeleccion(null);
     setErroresFechas({});
 
     const errs = {};
@@ -272,14 +269,12 @@ const EstadoHabitacionPage = () => {
     return { grupos, columnOrder, rows };
   }, [gridData]);
 
-  // NUEVO: helper para saber si una celda está seleccionada
   const estaSeleccionada = (habitacionId, diaIso) => {
     if (!seleccion) return false;
     if (seleccion.habitacionId !== habitacionId) return false;
     return seleccion.dias.includes(diaIso);
   };
 
-  // NUEVO: click en celda (solo si viene desde CU15)
   const handleCellClick = (diaIso, habitacionId, habitacionLabel) => {
     if (!desdeCU15) return;
     if (!diaIso || !habitacionId) return;
@@ -310,14 +305,12 @@ const EstadoHabitacionPage = () => {
     });
   };
 
-  // NUEVO: rango seleccionado (min / max fecha)
   const rangoSeleccionado = useMemo(() => {
     if (!seleccion || !seleccion.dias || seleccion.dias.length === 0) return null;
     const ordenadas = [...seleccion.dias].sort();
     return { desde: ordenadas[0], hasta: ordenadas[ordenadas.length - 1] };
   }, [seleccion]);
 
-  // NUEVO: manejar "Continuar con ocupación (CU-15)"
   const handleContinuarCU15 = () => {
     if (!desdeCU15 || !normalized || !seleccion || !rangoSeleccionado) return;
 
@@ -421,7 +414,6 @@ const EstadoHabitacionPage = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [seleccionExitosa, navigate]);
 
-  // NUEVO: contenido del popup según tipo
   const buildPopupView = () => {
     if (!popup.open) return { open: false };
 
@@ -717,7 +709,6 @@ const EstadoHabitacionPage = () => {
 
             {mensaje && <p className="no-rooms-message">{mensaje}</p>}
 
-            {/* NUEVO: panel de selección sólo cuando viene desde CU15 */}
             {desdeCU15 && (
               <div className="seleccion-cu15-panel">
                 <button
@@ -744,7 +735,6 @@ const EstadoHabitacionPage = () => {
         </section>
       </main>
 
-      {/* NUEVO: popup para conflictos / mensajes del CU15 */}
       <PopupModal
         open={popupView.open}
         title={popupView.title}
