@@ -1,9 +1,9 @@
-export const DOC_TYPES = ["DNI", "LC", "PASAPORTE", "OTRO", "LE"];
+export const DOC_TYPES = ["DNI", "LE", "LC", "Pasaporte", "Otro"];
 
 export const DOC_TYPES_MAP = {
   DNI: "DNI",
-  LC: "LC",
-  PASAPORTE: "PASAPORTE",
-  OTRO: "OTRO",
   LE: "LE",
+  LC: "LC",
+  Pasaporte: "Pasaporte",
+  Otro: "Otro",
 };

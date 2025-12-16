@@ -43,12 +43,12 @@ const initialForm = {
 };
 
 const normalizeTipoDoc = (value) => {
-  if (!value) return '';
-  const upper = value.toUpperCase();
-  if (upper === 'PASAPORTE') return 'PASAPORTE';
-  if (upper === 'OTRO') return 'OTRO';
-  if (['DNI', 'LE', 'LC'].includes(upper)) return upper;
-  return value;
+    if (!value) return '';
+    const upper = value.toUpperCase();
+    if (upper === 'PASAPORTE') return 'Pasaporte';
+    if (upper === 'OTRO') return 'Otro';
+    if (['DNI', 'LE', 'LC'].includes(upper)) return upper;
+    return 'DNI';
 };
 
 export default function ModificarHuespedPage() {
