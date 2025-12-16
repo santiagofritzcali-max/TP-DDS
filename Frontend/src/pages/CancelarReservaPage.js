@@ -182,15 +182,6 @@ const focusApellido = useCallback(() => {
     }
   };
 
-  const columnas = [
-    { key: "apellido", label: "Apellido" },
-    { key: "nombre", label: "Nombre" },
-    { key: "numeroHabitacion", label: "Nro. Hab" },
-    { key: "tipoHabitacion", label: "Tipo Hab" },
-    { key: "fechaInicio", label: "Fecha inicio" },
-    { key: "fechaFin", label: "Fecha fin" },
-  ];
-
   return (
     <div className="factura-wrapper">
       <div className="factura-page">

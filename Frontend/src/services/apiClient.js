@@ -1,14 +1,28 @@
 const API_BASE_URL = "http://localhost:8080/api";
 
+const TOKEN_KEY = "authToken";
+
+export const setAuthToken = (token) => {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+};
+
+export const clearAuthToken = () => {
+  localStorage.removeItem(TOKEN_KEY);
+};
+
+export const getAuthToken = () => localStorage.getItem(TOKEN_KEY);
+
 /**
  * Wrapper fetch que devuelve {status, ok, data, error}
  */
 export async function apiRequest(path, options = {}) {
   const { headers = {}, ...rest } = options;
+  const token = getAuthToken();
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
     ...rest,

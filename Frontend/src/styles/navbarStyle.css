@@ -43,10 +43,26 @@
   text-decoration: none;
 }
 
+
 .topBarSeparator {
   color: #ccc;
   margin: 0 2px;
 }
+
+.asButtonLink {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #444;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.asButtonLink:hover {
+  text-decoration: underline;
+}
+
+
 
 /* Botón conserje */
 .btnSmallDark {
@@ -57,10 +73,25 @@
   color: #fff;
   cursor: default;
   font-size: 13px;
+  text-decoration: none;
 }
 
 /* Logo */
 .logoImage {
   height: 90px;
   width: auto;
+}
+
+.asLinkButton {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0 4px;
+  color: #444;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.asLinkButton:hover {
+  text-decoration: underline;
 }

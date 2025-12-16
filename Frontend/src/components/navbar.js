@@ -1,8 +1,20 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { logout, getAuthToken } from "../services/authService";
 import "../styles/navbarStyle.css";
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const token = getAuthToken();
+  const isLogged = !!token;
+
+  const handleLogout = () => {
+    logout();
+    navigate("/cu01");
+  };
+
+  const homePath = isLogged ? "/" : "/cu01";
+
   return (
     <header className="topBar">
       <div className="topBarLeft">
@@ -15,26 +27,37 @@ const Navbar = () => {
 
       <div className="topBarRight">
         <nav>
-          <Link to="/" className="topBarMenuLink">
+          <Link to={homePath} className="topBarMenuLink">
             Inicio
           </Link>
 
           <span className="topBarSeparator">|</span>
 
-          <span className="topBarMenuLink disabled">
-            Reserva
-          </span>
+          <span className="topBarMenuLink disabled">Reserva</span>
           
           <span className="topBarSeparator">|</span>
 
-          <span className="topBarMenuLink disabled">
-            Ayuda
-          </span>
+          <span className="topBarMenuLink disabled">Ayuda</span>
+
+          <span className="topBarSeparator">|</span>
+
+          {isLogged ? (
+            <button className="topBarMenuLink asLinkButton" type="button" onClick={handleLogout}>
+              Salir
+            </button>
+          ) : (
+            <Link to="/cu01" className="topBarMenuLink">
+              Iniciar Sesion
+            </Link>
+          )}
+
         </nav>
-        
-        <button className="btnSmallDark" type="button">
-          Conserje
-        </button>
+
+        {isLogged ? (
+          <span className="btnSmallDark">Conserje</span>
+        ):( 
+          null
+        )}
       </div>
     </header>
   );
