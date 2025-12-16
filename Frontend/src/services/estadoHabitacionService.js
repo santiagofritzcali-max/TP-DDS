@@ -1,3 +1,5 @@
+import { getAuthToken } from "./apiClient";
+
 const API_ROOT = "http://localhost:8080";
 const ESTADO_HAB_API = `${API_ROOT}/api/habitaciones/estado`;
 
@@ -33,9 +35,14 @@ export const obtenerEstadoHabitaciones = async (fechaDesdeIso, fechaHastaIso) =>
   const url = `${ESTADO_HAB_API}?${params.toString()}`;
   console.log("GET estado habitaciones:", url);
 
+  const token = getAuthToken();
+
   const response = await fetch(url, {
     method: "GET",
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   });
 
   if (!response.ok) {

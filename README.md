@@ -12,7 +12,7 @@ Proyecto full-stack: **Backend** en Spring Boot (Java 17, Maven) y **Frontend** 
 Ruta: `Backend/`
 
 ### DB y seed
-- No hay script de seed en el repositorio.
+- Seed opcional incluido: habilitar con la propiedad `app.seed.enabled=true` (por ejemplo `mvn spring-boot:run -Dapp.seed.enabled=true`). Si ya existen habitaciones no inserta duplicados.
 - La conexión a la base de datos se configura en  
   `src/main/resources/application.properties`.
 
