@@ -30,6 +30,7 @@ const CancelarReservaPage = () => {
   const [mensajeExito, setMensajeExito] = useState("");
   const [cancelando, setCancelando] = useState(false);
   const [busquedaHecha, setBusquedaHecha] = useState(false);
+  const [cancelModal, setCancelModal] = useState(false);
 
   const reset = useCallback(() => {
     setApellido("");
@@ -45,6 +46,7 @@ const CancelarReservaPage = () => {
     setBuscando(false);
     setCancelando(false);
     setBusquedaHecha(false);
+    setCancelModal(false);
   }, []);
 
   const handleExitSuccess = useCallback(() => {
@@ -218,7 +220,7 @@ const focusApellido = useCallback(() => {
           />
         </label>
         <div className="actions-row">
-          <button className="btn btn-secondary" type="button" onClick={() => { reset(); navigate("/"); }}>
+          <button className="btn btn-secondary" type="button" onClick={() => setCancelModal(true)}>
             Cancelar
           </button>
           <button
@@ -306,6 +308,33 @@ const focusApellido = useCallback(() => {
         }
       >
         <p>¿Desea cancelar las reservas seleccionadas?</p>
+      </Modal>
+
+      <Modal
+        open={cancelModal}
+        title="CANCELAR"
+        variant="success"
+        onClose={() => setCancelModal(false)}
+        actions={
+          <>
+            <button className="btn btn-secondary" type="button" onClick={() => setCancelModal(false)}>
+              No
+            </button>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={() => {
+                setCancelModal(false);
+                reset();
+                navigate("/");
+              }}
+            >
+              Sí
+            </button>
+          </>
+        }
+      >
+        <p>¿Desea cancelar la operación?</p>
       </Modal>
 
       <Modal
