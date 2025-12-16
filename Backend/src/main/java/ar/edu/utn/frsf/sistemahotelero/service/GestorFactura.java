@@ -5,7 +5,7 @@ import ar.edu.utn.frsf.sistemahotelero.dto.*;
 
 import java.time.LocalDate;
 
-public interface FacturaService {
+public interface GestorFactura {
 
     BuscarOcupantesResponseDTO buscarOcupantes(
             Integer numeroHabitacion,

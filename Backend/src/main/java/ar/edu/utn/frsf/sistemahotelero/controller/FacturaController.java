@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/facturacion")
 public class FacturaController {
 
-    private final FacturaService facturaService;
+    private final GestorFactura facturaService;
 
     @Autowired
-    public FacturaController(FacturaService facturaService) {
+    public FacturaController(GestorFactura facturaService) {
         this.facturaService = facturaService;
     }
 

@@ -57,15 +57,16 @@ public class GestorPagoImpl implements GestorPago {
 
         List<FacturaPendienteDTO> resultado = new ArrayList<>();
         for (Factura f : facturas) {
-            FacturaPendienteDTO dto = new FacturaPendienteDTO();
-            dto.setFacturaId(f.getIdFactura());
-            dto.setNumeroFactura(f.getNumero());
-            dto.setFechaEmision(toLocalDate(f.getFechaEmision()));
-            dto.setTotal(f.getTotal());
-            dto.setTipoFactura(f.getTipo() != null ? f.getTipo().name() : null);
-            dto.setEstadoPago("PENDIENTE");
-            dto.setResponsable(nombreResponsable(f.getResponsableDePago()));
-            dto.setNumeroHabitacion(numeroHabitacion); // ya proviene del filtro
+            FacturaPendienteDTO dto = FacturaPendienteDTO.builder()
+                    .facturaId(f.getIdFactura())
+                    .numeroFactura(f.getNumero())
+                    .fechaEmision(toLocalDate(f.getFechaEmision()))
+                    .total(f.getTotal())
+                    .tipoFactura(f.getTipo() != null ? f.getTipo().name() : null)
+                    .estadoPago("PENDIENTE")
+                    .responsable(nombreResponsable(f.getResponsableDePago()))
+                    .numeroHabitacion(numeroHabitacion)
+                    .build();
             resultado.add(dto);
         }
         return resultado;
@@ -130,22 +131,21 @@ public class GestorPagoImpl implements GestorPago {
             vuelto = BigDecimal.ZERO;
         }
 
-        PagoRegistradoDTO dto = new PagoRegistradoDTO();
-        dto.setPagoId(pago.getIdPago());
-        dto.setFacturaId(factura.getIdFactura());
-        dto.setNumeroFactura(factura.getNumero());
-        dto.setFechaPago(toLocalDate(pago.getFecha()));
-        dto.setTotalFactura(factura.getTotal());
-        dto.setMontoPagado(totalAplicado);
-        dto.setVuelto(vuelto);
-        dto.setEstadoFactura("PAGADA");
-        dto.setNumeroHabitacion(
-                factura.getEstadia() != null && factura.getEstadia().getHabitacion() != null
-                        ? factura.getEstadia().getHabitacion().getId().getNroHabitacion()
-                        : null
-        );
-
-        return dto;
+        return PagoRegistradoDTO.builder()
+                .pagoId(pago.getIdPago())
+                .facturaId(factura.getIdFactura())
+                .numeroFactura(factura.getNumero())
+                .fechaPago(toLocalDate(pago.getFecha()))
+                .totalFactura(factura.getTotal())
+                .montoPagado(totalAplicado)
+                .vuelto(vuelto)
+                .estadoFactura("PAGADA")
+                .numeroHabitacion(
+                        factura.getEstadia() != null && factura.getEstadia().getHabitacion() != null
+                                ? factura.getEstadia().getHabitacion().getId().getNroHabitacion()
+                                : null
+                )
+                .build();
     }
 
     private void actualizarEstadoHabitacion(Factura factura) {

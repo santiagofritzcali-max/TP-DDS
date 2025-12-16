@@ -99,12 +99,6 @@ public class GestorNotaCreditoImpl implements GestorNotaCredito {
 
         actualizarEstadoHabitacionSiCorresponde(facturas);
 
-        NotaCreditoGeneradaDTO dto = new NotaCreditoGeneradaDTO();
-        dto.setNotaCreditoId(guardada.getIdNotaCredito());
-        dto.setNumeroNotaCredito(guardada.getNumero());
-        dto.setFecha(toLocalDate(guardada.getFecha()));
-        dto.setResponsable(responsable.getNombreOrazonSocial());
-
         BigDecimal total = facturas.stream()
                 .map(Factura::getTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -115,17 +109,21 @@ public class GestorNotaCreditoImpl implements GestorNotaCredito {
 
         BigDecimal neto = total.subtract(iva);
 
-        dto.setTotal(total);
-        dto.setIva(iva);
-        dto.setNeto(neto);
-
         List<FacturaNotaCreditoDTO> factDtos = new ArrayList<>();
         for (Factura f : facturas) {
             factDtos.add(toDto(f));
         }
-        dto.setFacturas(factDtos);
 
-        return dto;
+        return NotaCreditoGeneradaDTO.builder()
+                .notaCreditoId(guardada.getIdNotaCredito())
+                .numeroNotaCredito(guardada.getNumero())
+                .fecha(toLocalDate(guardada.getFecha()))
+                .responsable(responsable.getNombreOrazonSocial())
+                .total(total)
+                .iva(iva)
+                .neto(neto)
+                .facturas(factDtos)
+                .build();
     }
 
     private ResponsableDePago buscarResponsable(String cuit, TipoDocumento tipoDoc, String nroDoc) {
@@ -144,16 +142,16 @@ public class GestorNotaCreditoImpl implements GestorNotaCredito {
     }
 
     private FacturaNotaCreditoDTO toDto(Factura f) {
-        FacturaNotaCreditoDTO dto = new FacturaNotaCreditoDTO();
-        dto.setFacturaId(f.getIdFactura());
-        dto.setNumeroFactura(f.getNumero());
-        dto.setFechaEmision(toLocalDate(f.getFechaEmision()));
-        dto.setTipoFactura(f.getTipo() != null ? f.getTipo().name() : null);
         BigDecimal iva = calcularIva(f);
-        dto.setIva(iva);
-        dto.setTotal(f.getTotal());
-        dto.setNeto(f.getTotal().subtract(iva));
-        return dto;
+        return FacturaNotaCreditoDTO.builder()
+                .facturaId(f.getIdFactura())
+                .numeroFactura(f.getNumero())
+                .fechaEmision(toLocalDate(f.getFechaEmision()))
+                .tipoFactura(f.getTipo() != null ? f.getTipo().name() : null)
+                .iva(iva)
+                .total(f.getTotal())
+                .neto(f.getTotal().subtract(iva))
+                .build();
     }
 
     private BigDecimal calcularIva(Factura f) {

@@ -110,6 +110,7 @@ const focusApellido = useCallback(() => {
       );
       if (!ok) {
         if (status === 404) {
+          setErrores({ apellido: "No existen reservas para el apellido ingresado" });
           setInfoModal("No existen reservas para los criterios de busqueda");
         } else {
           setErrorModal(error || "No se pudo buscar reservas.");
@@ -129,6 +130,7 @@ const focusApellido = useCallback(() => {
         setReservas(lista);
         hayResultados = lista.length > 0;
         if (!hayResultados) {
+          setErrores({ apellido: "No existen reservas para el Apellido ingresado" });
           setInfoModal("No existen reservas para los criterios de busqueda");
         }
         setBusquedaHecha(hayResultados);

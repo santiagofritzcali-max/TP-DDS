@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class FacturaServiceImpl implements FacturaService {
+public class GestorFacturaImpl implements GestorFactura {
 
     private final EstadiaDAO estadiaDAO;
     private final ServicioDAO servicioDAO;
@@ -32,7 +32,7 @@ public class FacturaServiceImpl implements FacturaService {
     private final ResponsableDePagoDAO responsableDAO;
 
     @Autowired
-    public FacturaServiceImpl(EstadiaDAO estadiaDAO,
+    public GestorFacturaImpl(EstadiaDAO estadiaDAO,
                               ServicioDAO servicioDAO,
                               FacturaDAO facturaDAO,
                               HuespedDAO huespedDAO,

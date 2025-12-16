@@ -2,12 +2,14 @@ package ar.edu.utn.frsf.sistemahotelero.dto;
 
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class EstadiaOcuparResponse {
 
     private Long estadiaId;
@@ -34,6 +36,7 @@ public class EstadiaOcuparResponse {
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
+    @Builder
     public static class ReservaInfo {
         private Long id;
         private LocalDate fechaInicio;
