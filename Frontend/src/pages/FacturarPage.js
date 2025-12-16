@@ -394,8 +394,8 @@ const FacturarPage = () => {
     }
     setFacturaFinal(data);
     setSuccessModal(
-      `Factura Numero ${data.facturaId} generada correctamente.`
-    );
+        `Factura Numero ${data.numero} generada correctamente.`
+      );
     window.print();
   };
 
@@ -768,7 +768,7 @@ const FacturarPage = () => {
       >
         <p>{successModal}</p>
         {facturaFinal && (
-          <p className="muted small">ID: {facturaFinal.facturaId}</p>
+          <p className="muted small">ID interno: {facturaFinal.facturaId}</p>
         )}
       </Modal>
     </div>

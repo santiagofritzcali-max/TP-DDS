@@ -8,6 +8,7 @@ import ar.edu.utn.frsf.sistemahotelero.dto.MedioPagoRequest;
 import ar.edu.utn.frsf.sistemahotelero.dto.PagoRegistradoDTO;
 import ar.edu.utn.frsf.sistemahotelero.dto.RegistrarPagoRequest;
 import ar.edu.utn.frsf.sistemahotelero.enums.EstadoHabitacion;
+import ar.edu.utn.frsf.sistemahotelero.enums.FacturaEstado;
 import ar.edu.utn.frsf.sistemahotelero.model.Cheque;
 import ar.edu.utn.frsf.sistemahotelero.model.Efectivo;
 import ar.edu.utn.frsf.sistemahotelero.model.Estadia;
@@ -52,7 +53,7 @@ public class GestorPagoImpl implements GestorPago {
         }
 
         List<Factura> facturas = facturaDAO
-                .findByEstadiaHabitacionIdNroHabitacionAndPagoIsNull(numeroHabitacion);
+                .findByEstadiaHabitacionIdNroHabitacionAndEstado(numeroHabitacion, FacturaEstado.PENDIENTE);
 
         List<FacturaPendienteDTO> resultado = new ArrayList<>();
         for (Factura f : facturas) {
@@ -80,8 +81,8 @@ public class GestorPagoImpl implements GestorPago {
         Factura factura = facturaDAO.findById(request.getFacturaId())
                 .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));
 
-        if (factura.getPago() != null) {
-            throw new IllegalStateException("La factura ya se encuentra pagada.");
+        if (factura.getEstado() != FacturaEstado.PENDIENTE) {
+            throw new IllegalStateException("La factura no está pendiente de pago.");
         }
 
         List<MedioPagoRequest> mediosRequest = request.getMedios();
@@ -119,6 +120,7 @@ public class GestorPagoImpl implements GestorPago {
         pago = pagoDAO.save(pago);
 
         factura.setPago(pago);
+        factura.setEstado(FacturaEstado.PAGADA);
         facturaDAO.save(factura);
 
         actualizarEstadoHabitacion(factura);
@@ -152,7 +154,7 @@ public class GestorPagoImpl implements GestorPago {
             return;
         }
         boolean sinPendientes = estadia.getId() != null
-                && !facturaDAO.existsByEstadiaIdAndPagoIsNull(estadia.getId());
+                && !facturaDAO.existsByEstadiaIdAndEstado(estadia.getId(), FacturaEstado.PENDIENTE);
 
         if (sinPendientes) {
             estadia.setEstado(ar.edu.utn.frsf.sistemahotelero.enums.EstadiaEstado.FINALIZADA);

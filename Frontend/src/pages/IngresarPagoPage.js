@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../styles/facturacionStyle.css";
 import "../styles/ui.css";
 import "../styles/responsableStyle.css";
@@ -40,12 +41,14 @@ const isPositiveNumber = (val) => {
 };
 
 const IngresarPagoPage = () => {
+  const navigate = useNavigate();
   const [numeroHabitacion, setNumeroHabitacion] = useState("");
   const [errorHabitacion, setErrorHabitacion] = useState(null);
   const [pendientes, setPendientes] = useState([]);
   const [buscando, setBuscando] = useState(false);
   const [errorModal, setErrorModal] = useState(null);
   const [successModal, setSuccessModal] = useState(null);
+  const [cancelModal, setCancelModal] = useState(false);
 
   const [seleccionFactura, setSeleccionFactura] = useState(null);
   const [medioForm, setMedioForm] = useState(medioInicial);
@@ -478,8 +481,8 @@ const IngresarPagoPage = () => {
           </label>
           {errorHabitacion && <div className="error-inline">{errorHabitacion}</div>}
           <div className="actions-row">
-            <button className="btn btn-secondary" type="button" onClick={() => window.history.back()}>
-              Volver
+            <button className="btn btn-secondary" type="button" onClick={() => setCancelModal(true)}>
+              Cancelar
             </button>
             <button
               className="btn btn-primary"
@@ -660,6 +663,32 @@ const IngresarPagoPage = () => {
         }
       >
         <p>{successModal}</p>
+      </Modal>
+
+      <Modal
+        open={cancelModal}
+        title="CANCELAR"
+        variant="success"
+        onClose={() => setCancelModal(false)}
+        actions={
+          <>
+            <button className="btn btn-secondary" onClick={() => setCancelModal(false)} type="button">
+              No
+            </button>
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                setCancelModal(false);
+                navigate("/");
+              }}
+              type="button"
+            >
+              Sí
+            </button>
+          </>
+        }
+      >
+        <p>¿Desea cancelar el registro de pago?</p>
       </Modal>
     </div>
   );

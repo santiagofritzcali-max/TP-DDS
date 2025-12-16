@@ -17,6 +17,7 @@ import BuscarResponsablePage from "./pages/BuscarResponsablePage";
 import AltaResponsablePage from "./pages/AltaResponsablePage";
 import ModificarResponsablePage from "./pages/ModificarResponsablePage";
 import IngresarPagoPage from "./pages/IngresarPagoPage";
+import IngresarNotaCreditoPage from "./pages/IngresarNotaCreditoPage";
 
 import "./App.css";
 
@@ -51,6 +52,7 @@ function App() {
 
             <Route path="/cu15" element={<OcuparHabitacionPage />} />
             <Route path="/cu16" element={<IngresarPagoPage />} />
+            <Route path="/cu19" element={<IngresarNotaCreditoPage />} />
           </Routes>
         </main>
       </div>

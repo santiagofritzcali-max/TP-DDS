@@ -1,5 +1,6 @@
 package ar.edu.utn.frsf.sistemahotelero.model;
 
+import ar.edu.utn.frsf.sistemahotelero.enums.FacturaEstado;
 import ar.edu.utn.frsf.sistemahotelero.enums.TipoFact;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -33,6 +34,10 @@ public class Factura {
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo")
     private TipoFact tipo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "estado")
+    private FacturaEstado estado = FacturaEstado.PENDIENTE;
 
     @ManyToOne
     @JoinColumn(name = "responsable_pago_id", referencedColumnName = "id")

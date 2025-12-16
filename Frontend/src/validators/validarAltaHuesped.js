@@ -1,6 +1,6 @@
 export const validarAltaHuesped = (form) => {
   const errs = {};
-  const soloLetras = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\s]+$/;
+  const soloLetras = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\\s]+$/;
   const soloNumeros = /^[0-9]+$/;
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
@@ -43,7 +43,9 @@ export const validarAltaHuesped = (form) => {
   else if (!soloLetras.test(nacionalidadTrim)) errs.nacionalidad = "La nacionalidad solo puede contener letras";
 
   const cuitTrim = form.cuit.trim();
-  if (cuitTrim && !/^\d{2}-\d{8}-\d{1}$/.test(cuitTrim)) {
+  if (form.posicionIVA === "ResponsableInscripto" && !cuitTrim) {
+    errs.cuit = "El CUIT es obligatorio para Responsable Inscripto";
+  } else if (cuitTrim && !/^\\d{2}-\\d{8}-\\d{1}$/.test(cuitTrim)) {
     errs.cuit = "El CUIT no tiene un formato válido (XX-XXXXXXXX-X)";
   }
 
@@ -53,7 +55,7 @@ export const validarAltaHuesped = (form) => {
   else if (!soloNumeros.test(telTrim)) errs.telefono = "El teléfono contiene caracteres inválidos";
 
   const emailTrim = form.email.trim();
-  if (emailTrim && !/\S+@\S+\.\S+/.test(emailTrim)) {
+  if (emailTrim && !/\\S+@\\S+\\.\\S+/.test(emailTrim)) {
     errs.email = "El correo electrónico no tiene un formato válido";
   }
 

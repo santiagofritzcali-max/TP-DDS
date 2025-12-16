@@ -1,14 +1,13 @@
 // util/FacturaFactory.java
 package ar.edu.utn.frsf.sistemahotelero.util;
 
-import ar.edu.utn.frsf.sistemahotelero.enums.TipoFact;
 import ar.edu.utn.frsf.sistemahotelero.enums.PosicionIVA;
+import ar.edu.utn.frsf.sistemahotelero.enums.TipoFact;
 import ar.edu.utn.frsf.sistemahotelero.model.Estadia;
 import ar.edu.utn.frsf.sistemahotelero.model.Factura;
 import ar.edu.utn.frsf.sistemahotelero.model.PersonaFisica;
 import ar.edu.utn.frsf.sistemahotelero.model.PersonaJuridica;
 import ar.edu.utn.frsf.sistemahotelero.model.ResponsableDePago;
-
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -21,12 +20,13 @@ public class FacturaFactory {
      * - fechaEmision = ahora
      * - tipo = A/B según la posición IVA del responsable
      * - total = total ya calculado
-     * - numero = 0 (o lo que decidas usar hasta implementar numeración)
+     * - numero = correlativo calculado afuera
      */
     public static Factura crearFactura(
             Estadia estadia,
             ResponsableDePago responsable,
-            BigDecimal total) {
+            BigDecimal total,
+            Integer numero) {
 
         Factura f = new Factura();
         f.setFechaEmision(new Date());
@@ -34,7 +34,7 @@ public class FacturaFactory {
         f.setResponsableDePago(responsable);
         f.setTipo(calcularTipo(responsable));
         f.setTotal(total);
-        f.setNumero(0); // si luego implementan numeración correlativa, cambian acá
+        f.setNumero(numero);
         return f;
     }
 

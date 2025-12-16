@@ -3,6 +3,8 @@
  */
 export const buildOcuparNavigationState = ({
   habitacionId,
+  nroPiso = null,
+  nroHabitacion = null,
   fechaIngreso,
   fechaEgreso,
   ocupaSobreReserva = false,
@@ -10,6 +12,8 @@ export const buildOcuparNavigationState = ({
 } = {}) => ({
   desdeCU15: true,
   numeroHabitacion: habitacionId,
+  nroPiso,
+  nroHabitacion,
   fechaIngreso,
   fechaEgreso,
   ocupaSobreReserva,
@@ -21,6 +25,8 @@ export const buildOcuparNavigationState = ({
  */
 export const parseOcuparNavigationState = (state = {}) => ({
   numeroHabitacion: state.numeroHabitacion || "",
+  nroPiso: state.nroPiso ?? null,
+  nroHabitacion: state.nroHabitacion ?? null,
   fechaIngreso: state.fechaIngreso || "",
   fechaEgreso: state.fechaEgreso || "",
   ocupaSobreReserva: state.ocupaSobreReserva || false,

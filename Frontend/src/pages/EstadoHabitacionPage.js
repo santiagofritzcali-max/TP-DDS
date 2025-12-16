@@ -6,6 +6,7 @@ import "../styles/FechaInvalidaPopup.css";
 import { PRETTY_ROOM_TYPE } from "../constants/roomTypes";
 import { obtenerEstadoHabitaciones } from "../services/estadoHabitacionService";
 import FechaInvalidaPopup from "../components/FechaInvalidaPopup";
+import Modal from "../components/Modal";
 import { formatDia } from "../utils/date";
 import { getReservaDescripcion } from "../utils/mappers";
 import { buildOcuparNavigationState } from "../utils/ocupacionState";
@@ -369,12 +370,27 @@ const EstadoHabitacionPage = () => {
     }
 
     // Caso 4: todas disponibles -> seguir sin conflicto
+    const col = normalized.columnOrder[habitacionIndex];
+    const idRaw = col.id;
+    let nroPiso = null;
+    let nroHabitacion = null;
+    if (typeof idRaw === "string" && idRaw.includes("-")) {
+      const [pStr, hStr] = idRaw.split("-");
+      const p = parseInt(pStr, 10);
+      const h = parseInt(hStr, 10);
+      if (!isNaN(p)) nroPiso = p;
+      if (!isNaN(h)) nroHabitacion = h;
+    } else if (typeof idRaw === "string" && /^[0-9]+$/.test(idRaw)) {
+      nroHabitacion = parseInt(idRaw, 10);
+    }
 
     setSeleccionExitosa({
       open: true,
       payload: {
         desdeCU15: true,
-        numeroHabitacion: seleccion.habitacionId,
+        numeroHabitacion: idRaw,
+        nroPiso,
+        nroHabitacion,
         fechaIngreso: rangoSeleccionado.desde,
         fechaEgreso: rangoSeleccionado.hasta,
         ocupaSobreReserva: false,
@@ -739,32 +755,24 @@ const EstadoHabitacionPage = () => {
         {popupView.body}
       </PopupModal>
 
-      {showCancelModal && (
-        <div className="modalOverlay">
-          <div className="modalContent modalCancel">
-            <div className="modalTitle modalCancelTitle">CANCELAR</div>
-            <div className="modalBody modalCancelBody">
-              <p>¿Desea cancelar la operación?</p>
-            </div>
-            <div className="modalButtons modalCancelButtons">
-              <button
-                className="modalButtonBase modalButtonSecondary"
-                onClick={handleCloseCancelModal}
-                type="button"
-              >
-                No
-              </button>
-              <button
-                className="modalButtonBase modalButtonPrimary"
-                onClick={handleConfirmCancel}
-                type="button"
-              >
-                Sí
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        open={showCancelModal}
+        title="CANCELAR"
+        variant="success"
+        onClose={handleCloseCancelModal}
+        actions={
+          <>
+            <button className="btn btn-secondary" onClick={handleCloseCancelModal} type="button">
+              No
+            </button>
+            <button className="btn btn-primary" onClick={handleConfirmCancel} type="button">
+              Sí
+            </button>
+          </>
+        }
+      >
+        <p>¿Desea cancelar la operación?</p>
+      </Modal>
 
       {seleccionExitosa.open && (
         <div className="modalOverlay">

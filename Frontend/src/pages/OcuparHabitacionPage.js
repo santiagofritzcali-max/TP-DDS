@@ -20,14 +20,19 @@ const OcuparHabitacionPage = () => {
   // Lo que viene desde CU05 (asumimos formato "piso-habitacion", ej. "2-301")
   const {
     numeroHabitacion = '',
+    nroPiso: nroPisoState = null,
+    nroHabitacion: nroHabitacionState = null,
     fechaIngreso = '',
     fechaEgreso = '',
     ocupaSobreReserva = false, // por si viene desde el popup de "ocupar igualmente"
     reservaInfo = null,
   } = parseOcuparNavigationState(location.state || {});
 
-  // Derivamos nroPiso y nroHabitacion (enteros) a partir del string "piso-hab"
+  // Derivamos nroPiso y nroHabitacion (enteros) a partir del string "piso-hab" si no vinieron explícitos
   const { nroPiso, nroHabitacion } = useMemo(() => {
+    if (nroPisoState != null && nroHabitacionState != null) {
+      return { nroPiso: nroPisoState, nroHabitacion: nroHabitacionState };
+    }
     if (typeof numeroHabitacion === 'string' && numeroHabitacion.includes('-')) {
       const [pisoStr, habStr] = numeroHabitacion.split('-');
       const piso = parseInt(pisoStr, 10);
@@ -36,8 +41,18 @@ const OcuparHabitacionPage = () => {
         return { nroPiso: piso, nroHabitacion: hab };
       }
     }
+    if (typeof numeroHabitacion === 'string' && /^[0-9]+$/.test(numeroHabitacion)) {
+      return { nroPiso: null, nroHabitacion: parseInt(numeroHabitacion, 10) };
+    }
     return { nroPiso: null, nroHabitacion: null };
-  }, [numeroHabitacion]);
+  }, [numeroHabitacion, nroPisoState, nroHabitacionState]);
+
+  const numeroHabDisplay = useMemo(() => {
+    if (numeroHabitacion) return numeroHabitacion;
+    if (nroPiso != null && nroHabitacion != null) return `${nroPiso}-${nroHabitacion}`;
+    if (nroHabitacion != null) return `${nroHabitacion}`;
+    return "-";
+  }, [numeroHabitacion, nroPiso, nroHabitacion]);
 
   // --- estados ---
   const [filtroNombre, setFiltroNombre] = useState('');
@@ -265,7 +280,7 @@ const OcuparHabitacionPage = () => {
       <div className="info-habitacion">
         <div>
           <span className="info-label">Número de habitación: </span>
-          <span className="info-value">{numeroHabitacion || '-'}</span>
+          <span className="info-value">{numeroHabDisplay}</span>
         </div>
         <div>
           <span className="info-label">Desde: </span>

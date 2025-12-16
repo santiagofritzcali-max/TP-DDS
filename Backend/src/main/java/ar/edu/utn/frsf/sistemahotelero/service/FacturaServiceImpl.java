@@ -175,8 +175,10 @@ public class FacturaServiceImpl implements FacturaService {
 
         BigDecimal total = BigDecimal.valueOf(totalSeleccionado);
 
+        Integer numeroFactura = generarNumeroFactura();
+
         // usamos la Factory con tu entidad Factura
-        Factura factura = FacturaFactory.crearFactura(estadia, responsable, total);
+        Factura factura = FacturaFactory.crearFactura(estadia, responsable, total, numeroFactura);
 
         Factura guardada = facturaDAO.save(factura);
 
@@ -312,5 +314,11 @@ public class FacturaServiceImpl implements FacturaService {
             return pj.getRazonSocial();
         }
         return responsable.getNombreOrazonSocial();
+    }
+
+    private Integer generarNumeroFactura() {
+        Integer ultimo = facturaDAO.obtenerUltimoNumero();
+        if (ultimo == null) ultimo = 0;
+        return ultimo + 1;
     }
 }
