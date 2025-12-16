@@ -16,14 +16,30 @@ Ruta: `Backend/`
   `jdbc:mysql://51.81.56.61:3306/sergioz_msanb2011` – user `sergioz_user` – pass `102lbdos4l7m`.
 
 
-### Correr el backend
+### Instalacion para el backend
+
 - VS Code (extensiones): Extension Pack for Java (Microsoft) y Spring Boot Extension Pack.
+- 
+## Nota sobre la "Extension Pack for Java"
+
+Si se utiliza **VS Code** con el **Java Extension Pack**, la extensión puede requerir **JDK 21 o superior** para ejecutarse.
+Esto **no cambia la versión del proyecto**, que utiliza **Java 17**.
+
+Es válido tener ambos JDK instalados:
+- Java 21 → para el IDE (VS Code)
+- Java 17 → para compilar y ejecutar el proyecto (Maven / Spring Boot)
+
+
+### Correr el backend en consola integrada
 - Comando:
   ```bash
   cd Backend
   mvn spring-boot:run
   ```
-- La API expone en `http://localhost:8080` con CORS para `http://localhost:3000`.
+
+### Correr el backend en consola externa
+mvnw.cmd spring-boot:run   # Windows
+./mvnw spring-boot:run   # Mac/Linux
 
 ### Tests backend
 ```bash
