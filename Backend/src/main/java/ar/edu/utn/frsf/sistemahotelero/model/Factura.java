@@ -24,7 +24,6 @@ public class Factura {
     @Column(name = "numero")
     private Integer numero;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "fecha_emision")
     private Date fechaEmision;
 

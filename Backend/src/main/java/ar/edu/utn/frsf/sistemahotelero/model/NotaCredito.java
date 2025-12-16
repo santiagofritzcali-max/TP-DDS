@@ -6,8 +6,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import java.util.Date;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -32,7 +30,6 @@ public class NotaCredito {
 
     private int numero;  
 
-    @Temporal(TemporalType.DATE)
     private Date fecha;
 
     // Una nota de crédito puede cancelar una o más facturas; cada factura puede tener 0..1 nota.

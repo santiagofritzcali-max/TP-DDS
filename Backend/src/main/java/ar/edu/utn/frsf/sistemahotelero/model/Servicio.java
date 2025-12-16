@@ -21,8 +21,7 @@ public class Servicio {
     private Long id;
 
     private String nombre;
-
-    @Temporal(TemporalType.TIMESTAMP)
+    
     private Date fecha;
 
     private String descripcion;

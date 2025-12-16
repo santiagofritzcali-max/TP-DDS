@@ -8,8 +8,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
@@ -28,7 +26,6 @@ public class Pago {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long idPago;
     
-    @Temporal(TemporalType.TIMESTAMP)
     private Date fecha;
     
     private BigDecimal monto;
