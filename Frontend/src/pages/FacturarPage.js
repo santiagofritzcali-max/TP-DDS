@@ -40,6 +40,7 @@ const FacturarPage = () => {
   const [successModal, setSuccessModal] = useState(null);
   const [mostrandoResultados, setMostrandoResultados] = useState(false);
   const [confirmResponsable, setConfirmResponsable] = useState(null); // {nombre, cuit, payloadOverride}
+  const [cancelModal, setCancelModal] = useState(false);
 
   const normalizeCuitDigits = (raw = "") => raw.replace(/\D/g, "").slice(0, 11);
   const formatCuit = (digits = "") => {
@@ -439,8 +440,7 @@ const FacturarPage = () => {
   }, [successModal, handleSuccessExit]);
 
   const handleCancelarBusqueda = () => {
-    resetTodo();
-    navigate("/");
+    setCancelModal(true);
   };
 
   const renderBusqueda = () => (
@@ -774,6 +774,33 @@ const FacturarPage = () => {
           <p className="muted small">ID interno: {facturaFinal.facturaId}</p>
         )}
         <p className="muted small">Presione cualquier tecla para volver al inicio.</p>
+      </Modal>
+
+      <Modal
+        open={cancelModal}
+        title="CANCELAR"
+        variant="success"
+        onClose={() => setCancelModal(false)}
+        actions={
+          <>
+            <button className="btn btn-secondary" type="button" onClick={() => setCancelModal(false)}>
+              No
+            </button>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={() => {
+                setCancelModal(false);
+                resetTodo();
+                navigate("/");
+              }}
+            >
+              Sí
+            </button>
+          </>
+        }
+      >
+        <p>¿Desea cancelar la operación?</p>
       </Modal>
     </div>
   );
