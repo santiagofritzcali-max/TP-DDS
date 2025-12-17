@@ -16,8 +16,8 @@ Ruta: `Backend/`
 - Configurar la conexion en `src/main/resources/application.properties`:
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/sistema_hotelero
-spring.datasource.username=USUARIO
-spring.datasource.password=PASSWORD
+spring.datasource.username=root
+spring.datasource.password=root
 ```
 - Seed opcional: habilitar con `app.seed.enabled=true` (por ejemplo `mvn spring-boot:run -Dapp.seed.enabled=true`).
 
@@ -291,10 +291,11 @@ npm start
 ```
 
 ### Nota de credito
+Antes de ejecutar este endpoint se debe de ocupar una habitacion y generar una factura
 - POST `http://localhost:8080/api/notas-credito`
 ```json
 {
-  "cuit": "20-30111222-3",
+  "cuit": null,
   "tipoDoc": "DNI",
   "nroDoc": 30111222,
   "facturaIds": [5]
