@@ -143,36 +143,36 @@ npm start
   "aceptarDuplicado": false
 }
 ```
-- GET `http://localhost:8080/api/huespedes/DNI/46040214/puede-eliminar`
-- GET `http://localhost:8080/api/huespedes/DNI/46150394/puede-eliminar`
+- GET `http://localhost:8080/api/huespedes/DNI/12345678/puede-eliminar`
+- GET `http://localhost:8080/api/huespedes/DNI/28999333/puede-eliminar`
 - DELETE `http://localhost:8080/api/huespedes/DNI/12345678`
 
 ### Reserva
 - POST `http://localhost:8080/api/reservas`
 ```json
 {
-  "nombre": "Sofia",
-  "apellido": "Perez",
-  "telefono": "1174198184",
+  "nombre": "Lucia",
+  "apellido": "Valle",
+  "telefono": "341-5554444",
   "reservas": [
     {
-      "numeroHabitacion": "2-3",
-      "fechaInicio": "2026-01-11",
-      "fechaFin": "2026-01-13"
+      "numeroHabitacion": "3-302",
+      "fechaInicio": "2026-01-05",
+      "fechaFin": "2026-01-08"
     },
     {
-      "numeroHabitacion": "4-1",
-      "fechaInicio": "2026-01-11",
-      "fechaFin": "2026-01-13"
+      "numeroHabitacion": "1-102",
+      "fechaInicio": "2026-01-05",
+      "fechaFin": "2026-01-08"
     }
   ]
 }
 ```
-- GET `http://localhost:8080/api/reservas/buscar?nombre=Sofia&apellido=Perez`
+- GET `http://localhost:8080/api/reservas/buscar?nombre=Lucia&apellido=Valle`
 - POST `http://localhost:8080/api/reservas/cancelar`
 ```json
 {
-  "idsReservas": [26, 27]
+  "idsReservas": [3, 4]
 }
 ```
 
@@ -183,13 +183,13 @@ npm start
 - POST `http://localhost:8080/api/estadias/ocupar`
 ```json
 {
-  "nroHabitacion": 3,
-  "nroPiso": 2,
+  "nroHabitacion": 101,
+  "nroPiso": 1,
   "fechaIngreso": "2026-01-10",
   "fechaEgreso": "2026-01-13",
   "huespedes": [
-    { "tipoDoc": "DNI", "nroDoc": "89099870" },
-    { "tipoDoc": "DNI", "nroDoc": "46040214" }
+    { "tipoDoc": "DNI", "nroDoc": "28999333" },
+    { "tipoDoc": "DNI", "nroDoc": "35123456" }
   ],
   "ocuparIgualSiReservada": false
 }
@@ -197,13 +197,13 @@ npm start
 
 ### Responsable de pago
 - GET `http://localhost:8080/api/responsables`
-- GET `http://localhost:8080/api/responsables?razonSocial=Gomez, Ana&cuit=20333444555`
-- GET `http://localhost:8080/api/responsables/401`
+- GET `http://localhost:8080/api/responsables?razonSocial=Gomez, Maria`
+- GET `http://localhost:8080/api/responsables/1`
 - POST `http://localhost:8080/api/responsables`
 ```json
 {
-  "razonSocial": "ACME SA",
-  "cuit": "30-12345678-9",
+  "razonSocial": "NUEVO RESP",
+  "cuit": "30-12345628-4",
   "posicionIVA": "ResponsableInscripto",
   "telefono": "+54 11 5555-5555",
   "direccion": {
@@ -219,11 +219,11 @@ npm start
   }
 }
 ```
-- PUT `http://localhost:8080/api/responsables/id`
+- PUT `http://localhost:8080/api/responsables/5`
 ```json
 {
-  "razonSocial": "ACME SA",
-  "cuit": "30-12345678-9",
+  "razonSocial": "RESP MODIFICADO",
+  "cuit": "30-12345628-4",
   "posicionIVA": "ResponsableInscripto",
   "telefono": "+54 11 5555-5555",
   "direccion": {
@@ -239,33 +239,33 @@ npm start
   }
 }
 ```
-- DELETE `http://localhost:8080/api/responsables/id`
+- DELETE `http://localhost:8080/api/responsables/5`
 
 ### Factura
-- GET `http://localhost:8080/api/facturacion/ocupantes?numeroHabitacion=101&fechaEgreso=2026-01-03`
+- GET `http://localhost:8080/api/facturacion/ocupantes?numeroHabitacion=101&fechaEgreso=2026-01-13`
 - POST `http://localhost:8080/api/facturacion/previsualizacion`
 ```json
 {
-  "estadiaId": 718,
-  "huespedResponsable": { "tipoDoc": "DNI", "nroDoc": "12345678" },
+  "estadiaId": 4,
+  "huespedResponsable": { "tipoDoc": "DNI", "nroDoc": "28999333" },
   "cuitTercero": null
 }
 ```
 - POST `http://localhost:8080/api/facturacion`
 ```json
 {
-  "estadiaId": 1,
-  "responsableId": 10,
+  "estadiaId": 4,
+  "responsableId": 2,
   "idsItemsSeleccionados": ["ESTADIA", "SERV-5", "SERV-9"]
 }
 ```
 
 ### Pago
-- GET `http://localhost:8080/api/pagos/pendientes?numeroHabitacion=808`
+- GET `http://localhost:8080/api/pagos/pendientes?numeroHabitacion=101`
 - POST `http://localhost:8080/api/pagos`
 ```json
 {
-  "facturaId": 25,
+  "facturaId": 4,
   "medios": [
     {
       "tipo": "EFECTIVO",
@@ -273,7 +273,7 @@ npm start
     },
     {
       "tipo": "TARJETA_CREDITO",
-      "monto": 15000,
+      "monto": 40000,
       "nombre": "Juan",
       "apellido": "Perez",
       "codigo": 123,
@@ -289,9 +289,9 @@ npm start
 - POST `http://localhost:8080/api/notas-credito`
 ```json
 {
-  "cuit": "30-12345678-9",
+  "cuit": "20-30111222-3",
   "tipoDoc": "DNI",
-  "nroDoc": "12345678",
-  "facturaIds": [25, 26]
+  "nroDoc": 30111222,
+  "facturaIds": [5]
 }
 ```
