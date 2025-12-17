@@ -73,13 +73,13 @@ public class DataSeedInitializer {
             Huesped juanPerez = huespedDAO.save(crearHuesped(
                     "30111222", TipoDocumento.DNI, "Perez", "Juan",
                     LocalDate.of(1985, 3, 10), "341-5551111", "juan.perez@example.com",
-                    "Analista de sistemas", "Argentina", "20-30111222-3", PosicionIVA.ResponsableInscripto,
+                    "Analista de sistemas", "Argentina", null, PosicionIVA.ConsumidorFinal,
                     new Direccion(null, "San Martin", "1234", "B", "4", "2000", "Rosario", "Rosario", "Santa Fe", "Argentina")));
 
             Huesped mariaGomez = huespedDAO.save(crearHuesped(
                     "28999333", TipoDocumento.DNI, "Gomez", "Maria",
                     LocalDate.of(1990, 7, 21), "341-5552222", "maria.gomez@example.com",
-                    "Arquitecta", "Argentina", "27-28999333-7", PosicionIVA.Monotributista,
+                    "Arquitecta", "Argentina", null, PosicionIVA.ConsumidorFinal,
                     new Direccion(null, "Mitre", "456", null, "2", "2000", "Rosario", "Rosario", "Santa Fe", "Argentina")));
 
             Huesped carlosSanchez = huespedDAO.save(crearHuesped(
@@ -111,14 +111,14 @@ public class DataSeedInitializer {
             respJuan.setHuesped(juanPerez);
             respJuan.setNroDoc(juanPerez.getNroDoc());
             respJuan.setTipoDoc(juanPerez.getTipoDoc());
-            respJuan.setPosicionIVA(PosicionIVA.ResponsableInscripto);
+            respJuan.setPosicionIVA(PosicionIVA.ConsumidorFinal);
             responsableDAO.save(respJuan);
 
             PersonaFisica respMaria = new PersonaFisica();
             respMaria.setHuesped(mariaGomez);
             respMaria.setNroDoc(mariaGomez.getNroDoc());
             respMaria.setTipoDoc(mariaGomez.getTipoDoc());
-            respMaria.setPosicionIVA(PosicionIVA.Monotributista);
+            respMaria.setPosicionIVA(PosicionIVA.ConsumidorFinal);
             responsableDAO.save(respMaria);
 
             PersonaJuridica respAcme = new PersonaJuridica();
