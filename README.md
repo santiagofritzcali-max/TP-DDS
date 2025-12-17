@@ -45,10 +45,15 @@ mvnw.cmd spring-boot:run   # Windows
 ./mvnw spring-boot:run   # Mac/Linux
 
 ### Tests backend
-```bash
-cd Backend
-mvn test
-```
+### Cómo correr los tests y ver cobertura
+1. Ubicarse en la carpeta Backend:
+   cd Backend
+
+2. Ejecutar tests con Maven Wrapper y generar el reporte JaCoCo:
+   .\mvnw.cmd clean test
+
+3. Abrir el reporte HTML de cobertura:
+   Backend\target\site\jacoco\index.html
 
 ## Frontend (React)
 Ruta: `Frontend/`

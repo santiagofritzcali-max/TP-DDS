@@ -1,7 +1,8 @@
 export const validarAltaHuesped = (form) => {
   const errs = {};
-  const soloLetras = /^[A-Za-zÁÉÍÓÚáéíóúÑñÜü\\s]+$/;
+  const soloLetras = /^[A-Za-zÁÉÍÓÚáéíóúÑñüÜ\s]+$/;
   const soloNumeros = /^[0-9]+$/;
+  const letrasYNumeros = /^[A-Za-z0-9]+$/;
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
 
@@ -18,7 +19,16 @@ export const validarAltaHuesped = (form) => {
 
   const nroDocTrim = form.nroDoc.trim();
   if (!nroDocTrim) errs.nroDoc = "El campo Nro. de documento es requerido";
-  else if (!soloNumeros.test(nroDocTrim)) errs.nroDoc = "El DNI debe contener solo números";
+  else {
+    const tipo = (form.tipoDoc || '').toUpperCase();
+    const esPasaporte = tipo === 'PASAPORTE';
+    const regex = esPasaporte ? letrasYNumeros : soloNumeros;
+    if (!regex.test(nroDocTrim)) {
+      errs.nroDoc = esPasaporte
+        ? "El pasaporte solo puede contener letras y números"
+        : "El Nro. de documento debe contener solo números";
+    }
+  }
 
   if (!form.fechaNacimiento) {
     errs.fechaNacimiento = "El campo Fecha de nacimiento es requerido";
@@ -45,17 +55,23 @@ export const validarAltaHuesped = (form) => {
   const cuitTrim = form.cuit.trim();
   if (form.posicionIVA === "ResponsableInscripto" && !cuitTrim) {
     errs.cuit = "El CUIT es obligatorio para Responsable Inscripto";
-  } else if (cuitTrim && !/^\\d{2}-\\d{8}-\\d{1}$/.test(cuitTrim)) {
+  } else if (
+    cuitTrim &&
+    !(/^[0-9]{2}-[0-9]{8}-[0-9]{1}$/.test(cuitTrim) || /^[0-9]{11}$/.test(cuitTrim))
+  ) {
     errs.cuit = "El CUIT no tiene un formato válido (XX-XXXXXXXX-X)";
   }
 
   // Contacto
   const telTrim = form.telefono.trim();
   if (!telTrim) errs.telefono = "El campo Teléfono es requerido";
-  else if (!soloNumeros.test(telTrim)) errs.telefono = "El teléfono contiene caracteres inválidos";
+  else {
+    const telRegex = /^[0-9]{3,4}-?[0-9]+$/; // admite guion opcional después de 3/4 dígitos
+    if (!telRegex.test(telTrim)) errs.telefono = "El teléfono contiene caracteres inválidos";
+  }
 
   const emailTrim = form.email.trim();
-  if (emailTrim && !/\\S+@\\S+\\.\\S+/.test(emailTrim)) {
+  if (emailTrim && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
     errs.email = "El correo electrónico no tiene un formato válido";
   }
 

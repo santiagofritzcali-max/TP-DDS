@@ -173,15 +173,6 @@ const EstadoHabitacionPage = () => {
       return;
     }
 
-    const hoyIso = new Date().toISOString().slice(0, 10);
-    if (fechaDesde < hoyIso) {
-      const msg = "No se puede ocupar con fechas anteriores a hoy.";
-      setErroresFechas({ desde: msg });
-      setErrorFechas("");
-      setFechaPopup({ open: true, message: msg });
-      return;
-    }
-
     if (fechaHasta < fechaDesde) {
       abrirFechaPopup("'Hasta' no puede ser anterior a 'Desde'.");
       return;

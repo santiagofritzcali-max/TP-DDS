@@ -2,7 +2,15 @@ import { apiRequest } from './apiClient';
 
 //PARA DAR DE ALTA HUESPED
 export async function crearHuesped(form, { aceptarDuplicado = false } = {}) {
-  const payload = aceptarDuplicado ? { ...form, aceptarDuplicado: true } : form;
+  const payload = aceptarDuplicado ? { ...form, aceptarDuplicado: true } : { ...form };
+
+  // Normaliza CUIT a XX-XXXXXXXX-X si vienen solo dígitos
+  if (payload.cuit) {
+    const digits = payload.cuit.replace(/[^0-9]/g, "");
+    if (digits.length === 11) {
+      payload.cuit = `${digits.slice(0, 2)}-${digits.slice(2, 10)}-${digits.slice(10)}`;
+    }
+  }
 
   const result = await apiRequest('/huespedes', {
     method: 'POST',
@@ -40,6 +48,13 @@ export async function actualizarHuesped(
   const payload = {
     ...form,
   };
+
+  if (payload.cuit) {
+    const digits = payload.cuit.replace(/[^0-9]/g, "");
+    if (digits.length === 11) {
+      payload.cuit = `${digits.slice(0, 2)}-${digits.slice(2, 10)}-${digits.slice(10)}`;
+    }
+  }
 
   if (aceptarDuplicado) {
     payload.aceptarDuplicado = true;

@@ -20,7 +20,7 @@
   min-width: 120px;
   padding: 10px 18px;
   font-size: 14px;
-  border-radius: 4px;
+  border-radius: 0;
   border: none;
   cursor: pointer;
   transition: transform 0.05s ease, box-shadow 0.1s ease;
@@ -55,22 +55,22 @@
 
 /* Compat: clases antiguas */
 .btnPrimary {
-  min-width: 120px;
-  padding: 10px 18px;
-  font-size: 14px;
-  border-radius: 4px;
-  border: none;
+    min-width: 120px;
+    padding: 10px 18px;
+    font-size: 14px;
+    border-radius: 0;
+    border: none;
   background-color: #333;
   color: #fff;
   cursor: pointer;
 }
 
 .btnSecondary {
-  min-width: 120px;
-  padding: 10px 18px;
-  font-size: 14px;
-  border-radius: 4px;
-  border: none;
+    min-width: 120px;
+    padding: 10px 18px;
+    font-size: 14px;
+    border-radius: 0;
+    border: none;
   background-color: #e0e0e0;
   color: #444;
   cursor: pointer;
@@ -189,6 +189,13 @@
   background-color: #000;
   color: #fff;
   border: none;
+  border-radius: 0;
+}
+
+.modalCancelButtons .modalButtonSecondary,
+.modalCancelButtons .btnSecondary,
+.modalCancelButtons .btnPrimary {
+  border-radius: 0;
 }
 
 .modalFechaError {

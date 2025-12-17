@@ -32,13 +32,21 @@
 }
 
 .btnSmallDark {
-  border-radius: 20px;
-  border: none;
-  padding: 6px 18px;
-  background-color: #333;
-  color: #fff;
-  cursor: pointer;
+    border-radius: 0;
+    border: none;
+    padding: 6px 18px;
+    background-color: #333;
+    color: #fff;
+    cursor: pointer;
   font-size: 13px;
+}
+
+/* Forzamos botones rectangulares en esta pantalla y modales asociados */
+.btnPrimary,
+.btnSecondary,
+.modalButtonBase,
+.acceptButton {
+  border-radius: 0 !important;
 }
 
 .page {
@@ -104,7 +112,7 @@
   min-width: 140px;
   padding: 10px 18px;
   font-size: 14px;
-  border-radius: 4px;
+  border-radius: 0;
   border: none;
   height: 42px;
   display: inline-flex;
@@ -273,7 +281,7 @@
   padding: 5px 15px;
   background-color: #333;
   color: #fff;
-  border-radius: 4px;
+  border-radius: 0;
   cursor: pointer;
   font-size: 12px;
 }
